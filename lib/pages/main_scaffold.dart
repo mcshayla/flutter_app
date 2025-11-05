@@ -42,6 +42,13 @@ class _MainScaffoldState extends State<MainScaffold> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Yes-said-easy"),
+        backgroundColor: Color(0xFFAEB081),
+        centerTitle: true,
+        elevation: 4.0
+
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
