@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
-import '../widgets/bottom_nav.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -58,11 +57,11 @@ class CollectionPageTemplate extends StatelessWidget {
           );
         }).toList(),
       ),
-      bottomNavigationBar: BottomNav( 
-            onExploreTap: () {},
-            onLovedTap: () {},
-            onYesTap: () {},
-          ),
+      // bottomNavigationBar: BottomNav( 
+      //       onExploreTap: () {},
+      //       onLovedTap: () {},
+      //       onYesTap: () {},
+      //     ),
     );
   }
 }
