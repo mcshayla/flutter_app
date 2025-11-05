@@ -1,0 +1,71 @@
+import 'package:flutter/material.dart';
+import '../widgets/card.dart';
+import '../widgets/bottom_nav.dart';
+
+class CollectionPageTemplate extends StatelessWidget {
+  final String pageTitle;
+  final Map<String, List<Map<String, String>>> categories;
+
+  const CollectionPageTemplate({
+    required this.pageTitle,
+    required this.categories,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(pageTitle)),
+      body: ListView(
+        children: categories.entries.map((entry) {
+          final categoryName = entry.key;
+          final items = entry.value;
+
+          return Padding(
+            padding: EdgeInsets.all(8),
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding( 
+                padding: const EdgeInsets.all(8.0),
+                child: Text(categoryName,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(235, 111, 51, 72),
+                  )),
+                  
+              ),
+              SizedBox(
+                height: 220,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: items.map((item) {
+                    return CustomCard(
+                      title: item['name'] ?? "",
+                      description: item['description'] ?? "",
+                      imageUrl: item['imageUrl'] ?? "",
+                      onTap: () {
+                        //navigate to detail page
+                      },
+
+
+                    );
+                  }).toList(),
+                ),
+              )
+            ]
+            )
+          );
+        }).toList(),
+      ),
+      bottomNavigationBar: BottomNav( 
+            onExploreTap: () {},
+            onLovedTap: () {},
+            onYesTap: () {},
+          ),
+    );
+  }
+}
+
+
+
