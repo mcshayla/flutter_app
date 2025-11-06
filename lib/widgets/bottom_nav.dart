@@ -30,7 +30,7 @@ class BottomNav extends StatelessWidget {
           label: 'Loved'
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.diamond),
+          icon: Icon(Icons.diamond_outlined),
           label: 'YES'
         )
       ],
