@@ -9,9 +9,10 @@ class CustomCard extends StatefulWidget {
 
   final bool initialHearted;
   final bool initialDiamonded;
+  final Function(bool)? onHeartToggled;
 
   const CustomCard({
-    required this.title, required this.description, required this.imageUrl, this.onTap, this.initialHearted = false, this.initialDiamonded = false, super.key //the super key being the id from the database for the venue or whatever
+    required this.title, required this.description, required this.imageUrl, this.onTap, this.initialHearted = false, this.initialDiamonded = false, this.onHeartToggled, super.key //the super key being the id from the database for the venue or whatever
   });
 
   @override
@@ -35,8 +36,9 @@ class _CustomCardState extends State<CustomCard> {
       isHearted = !isHearted;
     });
 
-    //TODO: update database
-    //updateDatabaseForUser(userid, cardid, ishearted, is diamondedd)
+    if (widget.onHeartToggled != null) {
+      widget.onHeartToggled!(isHearted);
+    }
   }
 
   void _toggleDiamond() {
@@ -60,8 +62,8 @@ class _CustomCardState extends State<CustomCard> {
         margin: EdgeInsets.all(8),
         decoration: BoxDecoration(
           // color: const Color.fromARGB(235, 111, 51, 72),
-          color: const Color.fromARGB(255, 143, 96, 96),
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFFF8F5F0),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
@@ -91,7 +93,7 @@ class _CustomCardState extends State<CustomCard> {
                           GestureDetector(
                             onTap: _toggleHeart,
                             child: Icon(isHearted ? Icons.favorite : Icons.favorite_border,
-                            color: Colors.white,
+                            color: Color(0xFFDCC7AA),
                             size: 24,
                             ),
                           ),
@@ -100,7 +102,7 @@ class _CustomCardState extends State<CustomCard> {
                             onTap: _toggleDiamond,
                             child: Icon(
                               isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                              color: Colors.white,
+                              color: Color(0xFFDCC7AA),
                               size: 24,
                             ),
                           ),
@@ -118,9 +120,9 @@ class _CustomCardState extends State<CustomCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                            Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                            Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3E3E3E)), overflow: TextOverflow.ellipsis),
                             SizedBox(height: 4),
-                            Text(widget.description, overflow: TextOverflow.ellipsis)
+                            Text(widget.description, overflow: TextOverflow.ellipsis, style: TextStyle(color: Color(0xFF6E6E6E)))
                           ],
                     ),   
               ),

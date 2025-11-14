@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
 
-class CollectionPageTemplate extends StatelessWidget {
+class CategoryPageTemplate extends StatelessWidget {
   final String pageTitle;
   final Map<String, List<Map<String, dynamic>>> categories;
-  final Function(String vendorId, bool isHearted)? onHeartToggled;
 
-  const CollectionPageTemplate({
+  const CategoryPageTemplate({
     required this.pageTitle,
     required this.categories,
-    this.onHeartToggled,
     super.key,
   });
 
@@ -31,7 +29,11 @@ class CollectionPageTemplate extends StatelessWidget {
               itemBuilder: (context, index) {
                 final categoryName = categoryKeys[index];
                 final items = categories[categoryName]!;
-            
+              
+              // children: categories.entries.map((entry) {
+              //   final categoryName = entry.key;
+              //   final items = entry.value;
+
                 return Padding(
                   padding: const EdgeInsets.all(8),
                   child: Column(
@@ -56,7 +58,6 @@ class CollectionPageTemplate extends StatelessWidget {
                               ),
                               onTap: () {
                                 // TODO: navigate to category page
-
                               },
                             )
                           ],
@@ -70,19 +71,14 @@ class CollectionPageTemplate extends StatelessWidget {
                           itemBuilder: (context, itemIndex) {
 
                             final item = items[itemIndex];
+                          // children: items.map((item) {
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
                               imageUrl: item['image_url'] ?? "",
                               onTap: () {
                                 // navigate to detail page
-                                // Navigator.push()
                               },
-                              onHeartToggled: (hearted) {
-                                if (onHeartToggled != null) {
-                                  onHeartToggled!(item['vendor_id'], hearted);
-                                }
-                              }
                             );
                           })
                         ),
