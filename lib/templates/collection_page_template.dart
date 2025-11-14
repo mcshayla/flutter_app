@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
-import '../widgets/bottom_nav.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -15,7 +14,7 @@ class CollectionPageTemplate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(pageTitle)),
+      appBar: AppBar(),
       body: ListView(
         children: categories.entries.map((entry) {
           final categoryName = entry.key;
@@ -31,7 +30,7 @@ class CollectionPageTemplate extends StatelessWidget {
                 child: Text(categoryName,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Color.fromARGB(235, 111, 51, 72),
+                    color:Color(0xFF995656),
                   )),
                   
               ),
@@ -58,11 +57,11 @@ class CollectionPageTemplate extends StatelessWidget {
           );
         }).toList(),
       ),
-      bottomNavigationBar: BottomNav( 
-            onExploreTap: () {},
-            onLovedTap: () {},
-            onYesTap: () {},
-          ),
+      // bottomNavigationBar: BottomNav( 
+      //       onExploreTap: () {},
+      //       onLovedTap: () {},
+      //       onYesTap: () {},
+      //     ),
     );
   }
 }
