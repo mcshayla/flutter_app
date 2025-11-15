@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
-import '../appstate.dart';
-import 'package:provider/provider.dart';
 
-class CollectionPageTemplate extends StatelessWidget {
+class CategoryPageTemplate extends StatelessWidget {
   final String pageTitle;
   final Map<String, List<Map<String, dynamic>>> categories;
-  final Function(String vendorId, bool isHearted)? onHeartToggled;
 
-  const CollectionPageTemplate({
+  const CategoryPageTemplate({
     required this.pageTitle,
     required this.categories,
-    this.onHeartToggled,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
     final categoryKeys = categories.keys.toList();
     return Scaffold(
       // appBar: AppBar(),
@@ -29,19 +24,16 @@ class CollectionPageTemplate extends StatelessWidget {
           ),
           // Constrain the main ListView inside Expanded so Column provides bounded height
           Expanded(
-            child: categoryKeys.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No vendors to display",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                )
-              : ListView.builder(
+            child: ListView.builder(
               itemCount: categoryKeys.length,
               itemBuilder: (context, index) {
                 final categoryName = categoryKeys[index];
                 final items = categories[categoryName]!;
-            
+              
+              // children: categories.entries.map((entry) {
+              //   final categoryName = entry.key;
+              //   final items = entry.value;
+
                 return Padding(
                   padding: const EdgeInsets.all(8),
                   child: Column(
@@ -66,7 +58,6 @@ class CollectionPageTemplate extends StatelessWidget {
                               ),
                               onTap: () {
                                 // TODO: navigate to category page
-
                               },
                             )
                           ],
@@ -80,28 +71,14 @@ class CollectionPageTemplate extends StatelessWidget {
                           itemBuilder: (context, itemIndex) {
 
                             final item = items[itemIndex];
-                            // bool isLoved = appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false;
+                          // children: items.map((item) {
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
                               imageUrl: item['image_url'] ?? "",
-                              isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                              isDiamonded: false,
-                              onHeartToggled: (hearted) {
-                                appState.toggleHeart(item['vendor_id'], hearted);
-                              },
-
-                              // initialHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                               onTap: () {
                                 // navigate to detail page
-                                // Navigator.push()
                               },
-                              // onHeartToggled: (hearted) {
-                              //   if (onHeartToggled != null) {
-                              //     // onHeartToggled!(item['vendor_id'], hearted);
-                              //     appState.toggleHeart(item['vendor_id'], hearted);
-                              //   }
-                              // }
                             );
                           })
                         ),

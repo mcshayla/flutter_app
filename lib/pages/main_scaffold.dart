@@ -43,8 +43,8 @@ class _MainScaffoldState extends State<MainScaffold> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Yes-said-easy"),
-        backgroundColor: Color(0xFFAEB081),
+        title: Text("Yes-said-easy", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
+        backgroundColor:Color(0xFF7B3F61) ,
         centerTitle: true,
         elevation: 4.0
 
