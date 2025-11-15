@@ -1,69 +1,32 @@
 import 'package:flutter/material.dart';
 import '../templates/collection_page_template.dart';
+import '../appstate.dart';
+import 'package:provider/provider.dart';
 
 
 class LovedPage extends StatelessWidget {
   const LovedPage({super.key});
-
   @override
   Widget build(BuildContext context) {
-    final data = {
-      "Venues": [
-      {
-        "name": "Grand Hall",
-        "description": "Elegant venue",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Rosewood Gardens",
-        "description": "Outdoor garden venue",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    "Florists": [
-      {
-        "name": "Petal & Stem",
-        "description": "Local florist",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Bloom Co.",
-        "description": "High-end wedding flowers",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Bloom bloom",
-        "description": "lotsa lotsa lotsa flowers",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    "Caterers": [
-      {
-        "name": "Yum Catering",
-        "description": "Gourmet menu",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Feast & Fun",
-        "description": "Buffet style",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Yum Yum",
-        "description": "oh yeah",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "lets eat",
-        "description": "yay yay yay",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    };
 
-    return CollectionPageTemplate(
-      pageTitle: "Loved",
-      categories: data,
+    return Consumer<AppState> (
+      builder: (context, appState, _) {
+        if (!appState.isLoaded) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final lovedCategoriesMap = appState.lovedCategorizedMap;
+
+        return CollectionPageTemplate(
+          pageTitle: "Loved",
+          categories: lovedCategoriesMap,
+          onHeartToggled: (vendorId, hearted) {
+            // Call your AppState method directly
+            appState.toggleHeart(vendorId, hearted);
+          },
+        );
+      }
     );
   }
 }
+
