@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import '../widgets/card.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
+import 'category_template.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
   final Map<String, List<Map<String, dynamic>>> categories;
   final Function(String vendorId, bool isHearted)? onHeartToggled;
+  final bool isLovedPage;
 
   const CollectionPageTemplate({
     required this.pageTitle,
     required this.categories,
     this.onHeartToggled,
+    required this.isLovedPage,
     super.key,
   });
 
@@ -65,8 +68,15 @@ class CollectionPageTemplate extends StatelessWidget {
                                 style: const TextStyle(fontSize: 12),
                               ),
                               onTap: () {
-                                // TODO: navigate to category page
-
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:(_) => CategoryPageTemplate(
+                                      categoryName: categoryName,
+                                      showOnlyLoved: isLovedPage,
+                                    )
+                                )
+                                );
                               },
                             )
                           ],

@@ -24,6 +24,7 @@ class LovedPage extends StatelessWidget {
             // Call your AppState method directly
             appState.toggleHeart(vendorId, hearted);
           },
+          isLovedPage: true,
         );
       }
     );

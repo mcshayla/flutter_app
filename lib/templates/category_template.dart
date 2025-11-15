@@ -1,97 +1,68 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
+import '../appstate.dart';
+import 'package:provider/provider.dart';
+
 
 class CategoryPageTemplate extends StatelessWidget {
-  final String pageTitle;
-  final Map<String, List<Map<String, dynamic>>> categories;
+  final String categoryName;
+  final bool showOnlyLoved;
 
   const CategoryPageTemplate({
-    required this.pageTitle,
-    required this.categories,
-    super.key,
+    required this.categoryName,
+    required this.showOnlyLoved,
+    super.key
   });
 
   @override
   Widget build(BuildContext context) {
-    final categoryKeys = categories.keys.toList();
-    return Scaffold(
-      // appBar: AppBar(),
-      body: Column(
-        children: [
-          if (Navigator.canPop(context))
-            IconButton(icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          // Constrain the main ListView inside Expanded so Column provides bounded height
-          Expanded(
-            child: ListView.builder(
-              itemCount: categoryKeys.length,
-              itemBuilder: (context, index) {
-                final categoryName = categoryKeys[index];
-                final items = categories[categoryName]!;
-              
-              // children: categories.entries.map((entry) {
-              //   final categoryName = entry.key;
-              //   final items = entry.value;
+    return Consumer<AppState>(
+      builder:(context, appState, child) {
+          final List<Map<String, dynamic>> categoryList = showOnlyLoved
+            ? (appState.lovedCategorizedMap[categoryName] ?? [])
+            : (appState.allCategorizedMap[categoryName]  ?? []);
 
-                return Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              categoryName,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF7B3F61),
-                                  ),
-                            ),
-                            GestureDetector(
-                              child: Text(
-                                "View All $categoryName",
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              onTap: () {
-                                // TODO: navigate to category page
-                              },
-                            )
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: 220,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: items.length,
-                          itemBuilder: (context, itemIndex) {
-
-                            final item = items[itemIndex];
-                          // children: items.map((item) {
-                            return CustomCard(
-                              title: item['vendor_name'] ?? "",
-                              description: item['vendor_description'] ?? "",
-                              imageUrl: item['image_url'] ?? "",
-                              onTap: () {
-                                // navigate to detail page
-                              },
-                            );
-                          })
-                        ),
-                    ],
+        return Scaffold(
+          body: (categoryList.length == 0) ? const Center(
+                  child: Text(
+                    "No vendors for this category to display",
+                    style: TextStyle(fontSize: 16),
                   ),
+                )
+          : Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: GridView.builder( 
+              itemCount: categoryList.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.75,
+              ),
+              itemBuilder:(context, index) {
+                final item = categoryList[index];
+                return CustomCard(
+                  title: item['vendor_name'] ?? "",
+                  description: item['vendor_description'] ?? "",
+                  imageUrl: item['image_url'] ?? "",
+                  isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
+                  isDiamonded: false,
+                  onHeartToggled: (hearted) {
+                    appState.toggleHeart(item['vendor_id'], hearted);
+                  },
+
+                  // initialHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
+                  onTap: () {
+                    // navigate to detail page
+                    // Navigator.push()
+                  },
                 );
-              })
-            ),
-        ],
-      ),
+              },
+            )
+          )
+
+          );
+      }
     );
   }
 }
-
-
-
