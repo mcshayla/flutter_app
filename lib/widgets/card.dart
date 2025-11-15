@@ -6,13 +6,14 @@ class CustomCard extends StatefulWidget {
   final String description;
   final String imageUrl;
   final VoidCallback? onTap;
-
-  final bool initialHearted;
-  final bool initialDiamonded;
+  final bool isHearted;
+  final bool isDiamonded;
+  // final bool initialHearted;
+  // final bool initialDiamonded;
   final Function(bool)? onHeartToggled;
 
   const CustomCard({
-    required this.title, required this.description, required this.imageUrl, this.onTap, this.initialHearted = false, this.initialDiamonded = false, this.onHeartToggled, super.key //the super key being the id from the database for the venue or whatever
+    required this.title, required this.description, required this.imageUrl, this.onTap, required this.isHearted, required this.isDiamonded, this.onHeartToggled, super.key //the super key being the id from the database for the venue or whatever
   });
 
   @override
@@ -21,33 +22,33 @@ class CustomCard extends StatefulWidget {
 }
 
 class _CustomCardState extends State<CustomCard> {
-  late bool isHearted;
-  late bool isDiamonded;
+  // late bool isHearted;
+  // late bool isDiamonded;
 
-  @override
-  void initState() {
-    super.initState();
-    isHearted = widget.initialHearted;
-    isDiamonded = widget.initialDiamonded;
-  }
+  // @override
+  // void initState() {
+  //   // super.initState();
+  //   // isHearted = widget.initialHearted;
+  //   // isDiamonded = widget.initialDiamonded;
+  // }
 
-  void _toggleHeart() {
-    setState(() {
-      isHearted = !isHearted;
-    });
+  // // void _toggleHeart() {
+  //   setState(() {
+  //     isHearted = !isHearted;
+  //   });
 
-    if (widget.onHeartToggled != null) {
-      widget.onHeartToggled!(isHearted);
-    }
-  }
+  //   if (widget.onHeartToggled != null) {
+  //     widget.onHeartToggled!(isHearted);
+  //   }
+  // }
 
-  void _toggleDiamond() {
-    setState(() {
-      isDiamonded = !isDiamonded;
-    });
+  // void _toggleDiamond() {
+  //   setState(() {
+  //     isDiamonded = !isDiamonded;
+  //   });
 
-    //TODO: udpate database for diamonded.
-  }
+  //   //TODO: udpate database for diamonded.
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -75,10 +76,12 @@ class _CustomCardState extends State<CustomCard> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            // crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Expanded( 
                 child: Stack (
+                fit: StackFit.expand,
                 children: [
                   Image.network(
                     "https://picsum.photos/200/300",
@@ -90,22 +93,40 @@ class _CustomCardState extends State<CustomCard> {
                       right: 5,
                       child: Row( 
                         children: [
-                          GestureDetector(
-                            onTap: _toggleHeart,
-                            child: Icon(isHearted ? Icons.favorite : Icons.favorite_border,
-                            color: Color(0xFFDCC7AA),
-                            size: 24,
+                          IconButton(
+                            icon: Icon(
+                              widget.isHearted ? Icons.favorite : Icons.favorite_border,
+                              color: widget.isHearted ? Color(0xFFDCC7AA) : Color(0xFFDCC7AA),
                             ),
+                            onPressed: () {
+                              if (widget.onHeartToggled != null) widget.onHeartToggled!(!widget.isHearted);
+                            },
                           ),
-                          SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: _toggleDiamond,
-                            child: Icon(
-                              isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                              color: Color(0xFFDCC7AA),
-                              size: 24,
+                        IconButton(
+                            icon: Icon(
+                              widget.isDiamonded ? Icons.diamond : Icons.diamond_outlined,
+                              color: widget.isDiamonded ? Color(0xFFDCC7AA) : Color(0xFFDCC7AA),
                             ),
-                          ),
+                            onPressed: () {
+                              // if (widget.onHeartToggled != null) widget.onHeartToggled!(!widget.isHearted);
+                            },
+                          )
+                          // GestureDetector(           
+                          //   // onTap: _toggleHeart,
+                          //   child: Icon(isHearted ? Icons.favorite : Icons.favorite_border,
+                          //   color: Color(0xFFDCC7AA),
+                          //   size: 24,
+                          //   ),
+                          // ),
+                          // SizedBox(width: 8),
+                          // GestureDetector(
+                          //   // onTap: _toggleDiamond,
+                          //   child: Icon(
+                          //     isDiamonded ? Icons.diamond : Icons.diamond_outlined,
+                          //     color: Color(0xFFDCC7AA),
+                          //     size: 24,
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/main_scaffold.dart';
+import 'package:provider/provider.dart'; 
+import 'appstate.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +14,12 @@ void main() async {
 
   await signInAnonymously();
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppState()..loadInitialData(),
+      child: const MyApp(),
+    )
+  );
 }
 
 
@@ -22,6 +29,7 @@ Future<void> signInAnonymously() async {
     final response = await supabase.auth.signInAnonymously();
 
     await supabase.from('users').upsert({
+      'user_id': response.user!.id,
       'username': response.user!.id
     });
 
@@ -31,7 +39,9 @@ Future<void> signInAnonymously() async {
     print('Error signing in anonymously: $e');
   }
 }
+
 class MyApp extends StatelessWidget {
+
   const MyApp({super.key});
 
   // This widget is the root of your application.

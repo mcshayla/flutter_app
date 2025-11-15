@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
+import '../appstate.dart';
+import 'package:provider/provider.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -15,6 +17,7 @@ class CollectionPageTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context);
     final categoryKeys = categories.keys.toList();
     return Scaffold(
       // appBar: AppBar(),
@@ -26,7 +29,14 @@ class CollectionPageTemplate extends StatelessWidget {
           ),
           // Constrain the main ListView inside Expanded so Column provides bounded height
           Expanded(
-            child: ListView.builder(
+            child: categoryKeys.isEmpty
+              ? const Center(
+                  child: Text(
+                    "No vendors to display",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                )
+              : ListView.builder(
               itemCount: categoryKeys.length,
               itemBuilder: (context, index) {
                 final categoryName = categoryKeys[index];
@@ -70,19 +80,28 @@ class CollectionPageTemplate extends StatelessWidget {
                           itemBuilder: (context, itemIndex) {
 
                             final item = items[itemIndex];
+                            // bool isLoved = appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false;
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
                               imageUrl: item['image_url'] ?? "",
+                              isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
+                              isDiamonded: false,
+                              onHeartToggled: (hearted) {
+                                appState.toggleHeart(item['vendor_id'], hearted);
+                              },
+
+                              // initialHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                               onTap: () {
                                 // navigate to detail page
                                 // Navigator.push()
                               },
-                              onHeartToggled: (hearted) {
-                                if (onHeartToggled != null) {
-                                  onHeartToggled!(item['vendor_id'], hearted);
-                                }
-                              }
+                              // onHeartToggled: (hearted) {
+                              //   if (onHeartToggled != null) {
+                              //     // onHeartToggled!(item['vendor_id'], hearted);
+                              //     appState.toggleHeart(item['vendor_id'], hearted);
+                              //   }
+                              // }
                             );
                           })
                         ),
