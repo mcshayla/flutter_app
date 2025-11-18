@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:say_yes/utils/string_extensions.dart';
 import '../widgets/card.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 import 'category_template.dart';
+import '../utils/string_extensions.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -26,10 +28,10 @@ class CollectionPageTemplate extends StatelessWidget {
       // appBar: AppBar(),
       body: Column(
         children: [
-          if (Navigator.canPop(context))
-            IconButton(icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
+          // if (Navigator.canPop(context))
+          //   IconButton(icon: const Icon(Icons.arrow_back),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
           // Constrain the main ListView inside Expanded so Column provides bounded height
           Expanded(
             child: categoryKeys.isEmpty
@@ -44,6 +46,8 @@ class CollectionPageTemplate extends StatelessWidget {
               itemBuilder: (context, index) {
                 final categoryName = categoryKeys[index];
                 final items = categories[categoryName]!;
+                String capCategoryName = categoryName.capitalize().pluralize();
+
             
                 return Padding(
                   padding: const EdgeInsets.all(8),
@@ -56,7 +60,7 @@ class CollectionPageTemplate extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              categoryName,
+                              capCategoryName,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF7B3F61),
@@ -64,7 +68,7 @@ class CollectionPageTemplate extends StatelessWidget {
                             ),
                             GestureDetector(
                               child: Text(
-                                "View All $categoryName",
+                                "View All $capCategoryName",
                                 style: const TextStyle(fontSize: 12),
                               ),
                               onTap: () {

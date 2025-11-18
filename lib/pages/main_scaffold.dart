@@ -3,6 +3,7 @@ import 'loved_page.dart';
 import 'yes_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -43,11 +44,19 @@ class _MainScaffoldState extends State<MainScaffold> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Yes-said-easy", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
+        title: Text(
+          "EASI-YEST",
+          style: GoogleFonts.bodoniModa(
+            fontSize: 36,
+            fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
+            letterSpacing: 2.0, // A little spacing for elegance
+            color: const Color(0xFFDCC7AA),
+          ),
+        ),
+        // title: Text("Easy-yest", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
         backgroundColor:Color(0xFF7B3F61) ,
         centerTitle: true,
         elevation: 4.0
-
       ),
       body: IndexedStack(
         index: _selectedIndex,
