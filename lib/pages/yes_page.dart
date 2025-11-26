@@ -64,6 +64,7 @@ class YesPage extends StatelessWidget {
     return CollectionPageTemplate(
       pageTitle: "Yes",
       categories: data,
+      isLovedPage: true,
     );
   }
 }
