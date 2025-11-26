@@ -16,6 +16,7 @@ class BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
       currentIndex: currentIndex,
       onTap: onTap,
       backgroundColor: Color(0xFF7B3F61),
@@ -32,7 +33,11 @@ class BottomNav extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.diamond_outlined),
           label: 'YES'
-        )
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.lightbulb_outline),
+          label: 'Search'
+        ),
       ],
       );
   }

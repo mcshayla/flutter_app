@@ -1,5 +1,6 @@
 import 'explore_page.dart';
 import 'loved_page.dart';
+import 'ai_search_page.dart';
 import 'yes_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
@@ -45,7 +47,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "EASI-YEST",
+          'eas-yes-t',
           style: GoogleFonts.bodoniModa(
             fontSize: 36,
             fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
@@ -64,6 +66,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           _buildTabNavigator(0, const ExplorePage()),
           _buildTabNavigator(1, const LovedPage()),
           _buildTabNavigator(2, const YesPage()),
+          _buildTabNavigator(3, const AISearchPage())
         ]
       ),
       bottomNavigationBar: BottomNav(
