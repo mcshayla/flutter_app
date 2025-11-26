@@ -4,10 +4,27 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class AppState extends ChangeNotifier {
-  Map<String, List<Map<String, dynamic>>> allCategorizedMap = {};
+  Map<String, List<Map<String, dynamic>>> allCategorizedMap = {}; 
+  //"Venue": [
+  //   {
+  //     "vendor_id": "v001",
+  //     "vendor_name": "Wadley Farms",
+  //     ...ALL THE THINGS 
+  // "Caterer": [
+  //   {
+  //     "vendor_id": "c001",
+  //     "vendor_name": "Gourmet Catering",
   Map<String, Set<String>> lovedVendorUUIDsCategorizedMap = {};
+// lovedVendorUUIDsCategorizedMap = {
+//   "Venue": {"v001"}, // user hearted Wadley Farms
+//   "Caterer": {}
+// };
   Map<String, String> vendorIdToCategory = {};
-
+//   vendorIdToCategory = {
+//   "v001": "Venue",
+//   "v002": "Venue",
+//   "c001": "Caterer"
+// };
   final supabase = Supabase.instance.client;
 
   bool isLoaded = false;

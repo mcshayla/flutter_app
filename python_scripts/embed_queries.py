@@ -11,8 +11,9 @@ url = 'https://cocmclecxanepyheygqs.supabase.co'
 service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvY21jbGVjeGFuZXB5aGV5Z3FzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjUyMjA1MiwiZXhwIjoyMDc4MDk4MDUyfQ.ZW8JOkw2A1NTbL3R9lIHMXQK5CqNe_azkwwFQBF_-HU"  # NOT the anon key
 supabase: Client = create_client(url, service_key)
 
-models = ['all-MiniLM-L6-v2', 'all-mpnet-base-v2', 'bert-base-nli-mean-tokens']
-
+# models = {'all-MiniLM-L6-v2': SentenceTransformer('all-MiniLM-L6-v2'), 'all-mpnet-base-v2': SentenceTransformer('all-mpnet-base-v2'), 'bert-base-nli-mean-tokens': SentenceTransformer('bert-base-nli-mean-tokens')}
+model = 'all-mpnet-base-v2'
+current_model = SentenceTransformer('all-mpnet-base-v2')
 app = FastAPI()
 
 class Query(BaseModel):
@@ -28,14 +29,14 @@ def search(query: Query):
 
     top_results = []
 
-    for model in models:
-        current_model = SentenceTransformer(model)
-        rows = supabase.table("vendors").select(f'vendor_id, {model}').execute().data
-        query_emb = current_model.encode([query.text])[0]
+    # for model, current_model in models.items():
+        # current_model = SentenceTransformer(model)
+    rows = supabase.table("vendors").select(f'vendor_id, {model}').execute().data
+    query_emb = current_model.encode([query.text])[0]
 
-        scores = [cosine_similarity(query_emb, np.array(json.loads(r[f'{model}']), dtype=float)) for r in rows]
+    scores = [cosine_similarity(query_emb, np.array(json.loads(r[f'{model}']), dtype=float)) for r in rows]
 
-        top_results.append(sorted(zip(rows, scores), key=lambda x: x[1], reverse=True)[:1])
+    top_results.append(sorted(zip(rows, scores), key=lambda x: x[1], reverse=True)[:4])
 
     return [row["vendor_id"] for model_top in top_results for row, score in model_top]
 
