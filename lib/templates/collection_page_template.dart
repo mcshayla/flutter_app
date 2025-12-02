@@ -28,11 +28,6 @@ class CollectionPageTemplate extends StatelessWidget {
       // appBar: AppBar(),
       body: Column(
         children: [
-          // if (Navigator.canPop(context))
-          //   IconButton(icon: const Icon(Icons.arrow_back),
-          //   onPressed: () => Navigator.pop(context),
-          // ),
-          // Constrain the main ListView inside Expanded so Column provides bounded height
           Expanded(
             child: categoryKeys.isEmpty
               ? const Center(
@@ -47,8 +42,6 @@ class CollectionPageTemplate extends StatelessWidget {
                 final categoryName = categoryKeys[index];
                 final items = categories[categoryName]!;
                 String capCategoryName = categoryName.capitalize().pluralize();
-
-            
                 return Padding(
                   padding: const EdgeInsets.all(8),
                   child: Column(
@@ -100,22 +93,17 @@ class CollectionPageTemplate extends StatelessWidget {
                               description: item['vendor_description'] ?? "",
                               imageUrl: item['image_url'] ?? "",
                               isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                              isDiamonded: false,
+                              isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
                               onHeartToggled: (hearted) {
                                 appState.toggleHeart(item['vendor_id'], hearted);
                               },
-
-                              // initialHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
+                              onDiamondToggled: (diamonded) {
+                                appState.toggleDiamond(item['vendor_id'], diamonded);
+                              },
                               onTap: () {
                                 // navigate to detail page
                                 // Navigator.push()
                               },
-                              // onHeartToggled: (hearted) {
-                              //   if (onHeartToggled != null) {
-                              //     // onHeartToggled!(item['vendor_id'], hearted);
-                              //     appState.toggleHeart(item['vendor_id'], hearted);
-                              //   }
-                              // }
                             );
                           })
                         ),

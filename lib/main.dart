@@ -4,6 +4,8 @@ import 'pages/main_scaffold.dart';
 import 'package:provider/provider.dart'; 
 import 'appstate.dart'; 
 
+// uvicorn python_scripts.embed_queries:app --reload
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

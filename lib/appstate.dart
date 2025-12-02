@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import './utils/string_extensions.dart';
 
 
 class AppState extends ChangeNotifier {
@@ -25,6 +26,11 @@ class AppState extends ChangeNotifier {
 //   "v002": "Venue",
 //   "c001": "Caterer"
 // };
+
+  Map<String, String> diamondedCards = {};
+  // diamondedCards = {
+  // "venue": "pretty mountain venue"
+  // "florist": "becca's floral"}
   final supabase = Supabase.instance.client;
 
   bool isLoaded = false;
@@ -68,11 +74,20 @@ class AppState extends ChangeNotifier {
 
       Map<String, Set<String>> lovedVendorsByCategory = {};
 
-      // for (var row in loved) {
-      //   final category = row['vendors']['vendor_category'] as String? ?? 'Other';
-      //   final vendorId = row['loved_vendor_id'] as String;
-      //   lovedVendorsByCategory.putIfAbsent(category, () => <String>{}).add(vendorId);
-      // }
+      final diamonded = await supabase
+      .from('users')
+      .select('venue, catering, florist, photographer')
+      .eq('user_id', user.id);
+
+      if (diamonded.isNotEmpty) {
+        final row = diamonded[0] as Map<String, dynamic>;
+        diamondedCards = {
+          'venue': row['venue'] ?? '',
+          'catering': row['catering'] ?? '',
+          'florist': row['florist'] ?? '',
+          'photographer': row['photographer'] ?? '',
+        };
+      }
 
       for (var row in loved) {
         final vendorId = row['loved_vendor_id'] as String;
@@ -110,6 +125,30 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     }  catch (e) {
       print("Error toggling heart: $e");
+    }
+  }
+
+  Future<void> toggleDiamond(String vendorId, bool diamonded) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
+
+    try {
+      if (diamonded) {
+        diamondedCards[category] = vendorId;
+      } else {
+        diamondedCards.remove(category);
+      }
+
+      await supabase.from('users').upsert({
+        'user_id': user.id,
+        category: vendorId,
+      });
+
+      notifyListeners();
+    }  catch (e) {
+      print("Error toggling diamond: $e");
     }
   }
 

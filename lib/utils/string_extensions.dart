@@ -5,6 +5,13 @@ extension StringCapExtension on String {
   }
 }
 
+extension StringLowerExtension on String {
+  String lowerCase() {
+    if (isEmpty) return this;
+    return this[0].toLowerCase() + substring(1);
+  }
+}
+
 extension StringPluralExtension on String {
   String pluralize() {
     if (isEmpty) return this;

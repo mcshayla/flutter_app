@@ -15,7 +15,6 @@ class SearchBatch {
     SearchBatch({required this.query, required this.results});
   }
 
-
 class AISearchPage extends StatefulWidget {
   const AISearchPage({super.key});
   @override
@@ -142,9 +141,12 @@ class _AISearchPageState extends State<AISearchPage> {
                                 .lovedVendorUUIDsCategorizedMap[vendor_id]
                                 ?.contains(vendor['vendor_id']) ??
                             false,
-                        isDiamonded: false,
                         onHeartToggled: (hearted) {
                           appState.toggleHeart(vendor['vendor_id'], hearted);
+                        },
+                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                        onDiamondToggled: (diamonded) {
+                          appState.toggleDiamond(vendor['vendor_id'], diamonded);
                         },
                       );
                     },
@@ -155,60 +157,6 @@ class _AISearchPageState extends State<AISearchPage> {
           },
         ),
 ),
-
-        // Expanded(
-        //   child: _searchBatches.isEmpty
-        //       ? Center(child: Text("Describe the type of wedding you want!"))
-        //       : ListView.builder(
-        //           controller: _scrollController,
-        //           itemCount: _searchBatches.length,
-        //           itemBuilder: (context, batchIndex) {
-        //             final batch = _searchBatches[batchIndex];
-        //             final query = batch.query;
-        //             final results = batch.results;
-
-        //             // Generate CustomCards for this batch
-        //             final cards = results.map<Widget>((vendor_id) {
-        //               final category = appState.vendorIdToCategory[vendor_id];
-        //               final vendorList =
-        //                   appState.allCategorizedMap[category] ?? [];
-        //               final vendor = vendorList.firstWhere(
-        //                 (v) => v['vendor_id'] == vendor_id,
-        //                 orElse: () => {},
-        //               );
-
-        //               return CustomCard(
-        //                 title: vendor['vendor_name'] ?? "",
-        //                 description: vendor['vendor_description'] ?? "",
-        //                 imageUrl: vendor['image_url'] ?? "",
-        //                 isHearted: appState
-        //                         .lovedVendorUUIDsCategorizedMap[vendor_id]
-        //                         ?.contains(vendor['vendor_id']) ??
-        //                     false,
-        //                 isDiamonded: false,
-        //                 onHeartToggled: (hearted) {
-        //                   appState.toggleHeart(vendor['vendor_id'], hearted);
-        //                 },
-        //               );
-        //             }).toList();
-
-        //             return Column(
-        //               crossAxisAlignment: CrossAxisAlignment.start,
-        //               children: [
-        //                 Padding(
-        //                   padding: const EdgeInsets.symmetric(
-        //                       vertical: 8.0, horizontal: 16),
-        //                   child: Text(
-        //                     'Results for: "$query"',
-        //                     style: TextStyle(
-        //                         fontWeight: FontWeight.bold, fontSize: 16),
-        //                   ),
-        //                 ),
-        //               ],
-        //             );
-        //           },
-        //         ),
-        // ),
         Padding(
         padding: const EdgeInsets.all(16.0),
         child: TextField(

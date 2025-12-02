@@ -61,11 +61,13 @@ class CategoryPageTemplate extends StatelessWidget {
                     description: item['vendor_description'] ?? "",
                     imageUrl: item['image_url'] ?? "",
                     isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                    isDiamonded: false,
                     onHeartToggled: (hearted) {
                       appState.toggleHeart(item['vendor_id'], hearted);
                     },
-
+                    isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
+                    onDiamondToggled: (diamonded) {
+                      appState.toggleDiamond(item['vendor_id'], diamonded);
+                    },
                     // initialHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                     onTap: () {
                       // navigate to detail page

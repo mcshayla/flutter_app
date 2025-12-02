@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../templates/collection_page_template.dart';
+import '../appstate.dart';
+import 'package:provider/provider.dart';
+import '../utils/string_extensions.dart';
 
 
 class YesPage extends StatelessWidget {
@@ -7,64 +10,38 @@ class YesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = {
-      "Venues": [
-      {
-        "name": "Grand Hall",
-        "description": "Elegant venue",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Rosewood Gardens",
-        "description": "Outdoor garden venue",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    "Florists": [
-      {
-        "name": "Petal & Stem",
-        "description": "Local florist",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Bloom Co.",
-        "description": "High-end wedding flowers",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Bloom bloom",
-        "description": "lotsa lotsa lotsa flowers",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    "Caterers": [
-      {
-        "name": "Yum Catering",
-        "description": "Gourmet menu",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Feast & Fun",
-        "description": "Buffet style",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "Yum Yum",
-        "description": "oh yeah",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-      {
-        "name": "lets eat",
-        "description": "yay yay yay",
-        "imageUrl": "https://picsum.photos/150?random=1"
-      },
-    ],
-    };
-
-    return CollectionPageTemplate(
-      pageTitle: "Yes",
-      categories: data,
-      isLovedPage: true,
+     final appState = Provider.of<AppState>(context);
+     final diamondedCategories = appState.diamondedCards;
+     final categoriesMap = appState.allCategorizedMap;
+     final categoryKeys = categoriesMap.keys.toList();
+    return Scaffold( 
+      body: Column(
+        children: [
+          Text("Mr. & Mrs."),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: diamondedCategories.length,
+              itemBuilder: (context, index) {
+                final category = diamondedCategories.keys.elementAt(index);
+                final vendorId = diamondedCategories[category];
+                // Get vendor name safely
+                final vendorList = categoriesMap[category.capitalize()] ?? [];
+                final vendor = vendorList.firstWhere(
+                  (v) => v['vendor_id'] == vendorId,
+                  orElse: () => {"vendor_name": "Unknown"}
+                );
+                final vendorName = vendor['vendor_name'];
+                return Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: vendorName != "Unknown"
+                      ? Text("$category -- $vendorName")
+                      : SizedBox.shrink(), // empty widget
+                );
+              })
+          )
+        ]
+      )
     );
   }
 }
