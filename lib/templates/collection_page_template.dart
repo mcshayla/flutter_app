@@ -5,6 +5,7 @@ import '../appstate.dart';
 import 'package:provider/provider.dart';
 import 'category_template.dart';
 import '../utils/string_extensions.dart';
+import '../pages/individual_card.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -101,8 +102,32 @@ class CollectionPageTemplate extends StatelessWidget {
                                 appState.toggleDiamond(item['vendor_id'], diamonded);
                               },
                               onTap: () {
-                                // navigate to detail page
-                                // Navigator.push()
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:(_) => IndividualCard(
+                                      imageUrl: item['image_url'] ?? "",
+                                      title: item['vendor_name'] ?? "",
+                                      description: item['vendor_description'] ?? "",
+                                      style_keywords: item['style_keywords'] ?? "",
+                                      location: item['vendor_location'] ?? "",
+                                      address: item['address'] ?? "",
+                                      vendor_estimated_price: item['vendor_estimated_price'] ?? "",
+                                      vendor_price: item['vendor_price'] ?? "",
+                                      contact_email: item['contaact_emal'] ?? "",
+                                      contact_phone: item['contact_phone'] ?? "",
+                                      website_url: item['website_url'] ?? "",
+                                      isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
+                                      isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
+                                      onHeartToggled: (hearted) {
+                                        appState.toggleHeart(item['vendor_id'], hearted);
+                                      },
+                                      onDiamondToggled: (diamonded) {
+                                        appState.toggleDiamond(item['vendor_id'], diamonded);
+                                      },
+                                    )
+                                  )
+                                );
                               },
                             );
                           })
