@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:say_yes/utils/string_extensions.dart';
 import '../templates/collection_page_template.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../widgets/card.dart';
 import 'dart:convert';
 import '../appstate.dart';
+import 'individual_card.dart';
 
 
 class SearchBatch {
@@ -89,7 +91,9 @@ class _AISearchPageState extends State<AISearchPage> {
         Expanded(
   child: _searchBatches.isEmpty
       ? Center(child: Text("Describe the type of wedding you want!"))
-      : ListView.builder(
+      : Padding( 
+        padding: const EdgeInsets.all(8.0),
+        child:ListView.builder(
           controller: _scrollController,
           itemCount: _searchBatches.length,
           itemBuilder: (context, batchIndex) {
@@ -132,15 +136,11 @@ class _AISearchPageState extends State<AISearchPage> {
                         (v) => v['vendor_id'] == vendor_id,
                         orElse: () => {},
                       );
-
                       return CustomCard(
                         title: vendor['vendor_name'] ?? "",
                         description: vendor['vendor_description'] ?? "",
                         imageUrl: vendor['image_url'] ?? "",
-                        isHearted: appState
-                                .lovedVendorUUIDsCategorizedMap[vendor_id]
-                                ?.contains(vendor['vendor_id']) ??
-                            false,
+                        isHearted: appState.lovedVendorUUIDsCategorizedMap[category?.capitalize()]?.contains(vendor['vendor_id']) ?? false,
                         onHeartToggled: (hearted) {
                           appState.toggleHeart(vendor['vendor_id'], hearted);
                         },
@@ -148,6 +148,36 @@ class _AISearchPageState extends State<AISearchPage> {
                         onDiamondToggled: (diamonded) {
                           appState.toggleDiamond(vendor['vendor_id'], diamonded);
                         },
+                        onTap: () {
+                          Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:(_) => IndividualCard(
+                                      vendor_id: vendor['vendor_id'],
+                                      category: category ?? "",
+                                      imageUrl: vendor['image_url'] ?? "",
+                                      title: vendor['vendor_name'] ?? "",
+                                      description: vendor['vendor_description'] ?? "",
+                                      style_keywords: vendor['style_keywords'] ?? "",
+                                      location: vendor['vendor_location'] ?? "",
+                                      address: vendor['address'] ?? "",
+                                      vendor_estimated_price: vendor['vendor_estimated_price'] ?? "",
+                                      vendor_price: vendor['vendor_price'] ?? "",
+                                      contact_email: vendor['contaact_emal'] ?? "",
+                                      contact_phone: vendor['contact_phone'] ?? "",
+                                      website_url: vendor['website_url'] ?? "",
+                                      isHearted: appState.lovedVendorUUIDsCategorizedMap[category]?.contains(vendor['vendor_id']) ?? false,
+                                      isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                                      onHeartToggled: (hearted) {
+                                        appState.toggleHeart(vendor['vendor_id'], hearted);
+                                      },
+                                      onDiamondToggled: (diamonded) {
+                                        appState.toggleDiamond(vendor['vendor_id'], diamonded);
+                                      },
+                                    )
+                                  )
+                                );
+                        }
                       );
                     },
                   ),
@@ -157,6 +187,7 @@ class _AISearchPageState extends State<AISearchPage> {
           },
         ),
 ),
+        ),
         Padding(
         padding: const EdgeInsets.all(16.0),
         child: TextField(

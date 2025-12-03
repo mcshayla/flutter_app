@@ -47,7 +47,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'eas-yes-t',
+          'easiYESt',
           style: GoogleFonts.bodoniModa(
             fontSize: 36,
             fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
@@ -65,7 +65,7 @@ class _MainScaffoldState extends State<MainScaffold> {
         children: [
           _buildTabNavigator(0, const ExplorePage()),
           _buildTabNavigator(1, const LovedPage()),
-          // _buildTabNavigator(2, const YesPage()),
+          _buildTabNavigator(2, const YesPage()),
           _buildTabNavigator(3, const AISearchPage())
         ]
       ),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:say_yes/utils/string_extensions.dart';
 import '../widgets/card.dart';
@@ -84,7 +86,8 @@ class CollectionPageTemplate extends StatelessWidget {
                         height: 220,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: items.length,
+                          // itemCount: items.length
+                          itemCount: min(items.length, 6),
                           itemBuilder: (context, itemIndex) {
 
                             final item = items[itemIndex];
@@ -105,6 +108,7 @@ class CollectionPageTemplate extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
+
                                     builder:(_) => IndividualCard(
                                       imageUrl: item['image_url'] ?? "",
                                       title: item['vendor_name'] ?? "",
@@ -114,9 +118,11 @@ class CollectionPageTemplate extends StatelessWidget {
                                       address: item['address'] ?? "",
                                       vendor_estimated_price: item['vendor_estimated_price'] ?? "",
                                       vendor_price: item['vendor_price'] ?? "",
-                                      contact_email: item['contaact_emal'] ?? "",
+                                      contact_email: item['contact_emal'] ?? "",
                                       contact_phone: item['contact_phone'] ?? "",
                                       website_url: item['website_url'] ?? "",
+                                      vendor_id: item['vendor_id'] ?? "",
+                                      category: categoryName,
                                       isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                                       isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
                                       onHeartToggled: (hearted) {

@@ -75,6 +75,8 @@ class CategoryPageTemplate extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder:(_) => IndividualCard(
+                            category: categoryName,
+                            vendor_id:item['vendor_id'],
                             imageUrl: item['image_url'] ?? "",
                             title: item['vendor_name'] ?? "",
                             description: item['vendor_description'] ?? "",
