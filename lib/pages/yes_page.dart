@@ -22,12 +22,15 @@ class YesPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(36.0),
-            child:Text("Mr. & Mrs.", style: GoogleFonts.bodoniModa(
+            child:Text("Mr. & Mrs.", 
+            // style: GoogleFonts.greatVibes(fontSize: 48)
+            style: GoogleFonts.bodoniModa(
                   fontSize: 48, 
                   fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
                   letterSpacing: 2.0, // A little spacing for elegance
                   color: const Color(0xFF7B3F61)
-                )),
+                )
+                ),
           ),
           
           Expanded(
@@ -58,41 +61,47 @@ class YesPage extends StatelessWidget {
                    padding: const EdgeInsets.all(8),
                    child:Text(
                       category.capitalize(),
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF7B3F61),
-                          ),
+                      // style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      //       fontWeight: FontWeight.bold,
+                      //       color: const Color(0xFF7B3F61),
+                      //     ),
+                      style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.2,
+                    )
+
                     ),
                 ),
                    GestureDetector(
                     onTap: () => {
                       Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:(_) => IndividualCard(
-                                      vendor_id: vendor['vendor_id'],
-                                      category: category,
-                                      imageUrl: vendor['image_url'] ?? "",
-                                      title: vendor['vendor_name'] ?? "",
-                                      description: vendor['vendor_description'] ?? "",
-                                      style_keywords: vendor['style_keywords'] ?? "",
-                                      location: vendor['vendor_location'] ?? "",
-                                      address: vendor['address'] ?? "",
-                                      vendor_estimated_price: vendor['vendor_estimated_price'] ?? "",
-                                      vendor_price: vendor['vendor_price'] ?? "",
-                                      contact_email: vendor['contaact_emal'] ?? "",
-                                      contact_phone: vendor['contact_phone'] ?? "",
-                                      website_url: vendor['website_url'] ?? "",
-                                      isHearted: appState.lovedVendorUUIDsCategorizedMap[category]?.contains(vendor['vendor_id']) ?? false,
-                                      isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
-                                      onHeartToggled: (hearted) {
-                                        appState.toggleHeart(vendor['vendor_id'], hearted);
-                                      },
-                                      onDiamondToggled: (diamonded) {
-                                        appState.toggleDiamond(vendor['vendor_id'], diamonded);
-                                      },
-                                    )
-                                  )
+                        context,
+                        MaterialPageRoute(
+                          builder:(_) => IndividualCard(
+                            vendor_id: vendor['vendor_id'],
+                            category: category.capitalize(),
+                            imageUrl: vendor['image_url'] ?? "",
+                            title: vendor['vendor_name'] ?? "",
+                            description: vendor['vendor_description'] ?? "",
+                            style_keywords: vendor['style_keywords'] ?? "",
+                            location: vendor['vendor_location'] ?? "",
+                            address: vendor['address'] ?? "",
+                            vendor_estimated_price: vendor['vendor_estimated_price'] ?? "",
+                            vendor_price: vendor['vendor_price'] ?? "",
+                            contact_email: vendor['contaact_emal'] ?? "",
+                            contact_phone: vendor['contact_phone'] ?? "",
+                            website_url: vendor['website_url'] ?? "",
+                            isHearted: appState.lovedVendorUUIDsCategorizedMap[category.capitalize()]?.contains(vendor['vendor_id']) ?? false,
+                            isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                            onHeartToggled: (hearted) {
+                              appState.toggleHeart(vendor['vendor_id'], hearted);
+                            },
+                            onDiamondToggled: (diamonded) {
+                              appState.toggleDiamond(vendor['vendor_id'], diamonded);
+                            },
+                          )
+                        )
                       )
                     },
                     child: Container(
@@ -110,35 +119,69 @@ class YesPage extends StatelessWidget {
                           )
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(3.0),
-                        child: Center(
-                          child: Text(vendorName, style: GoogleFonts.bodoniModa(
-                          fontSize: 24, 
-                          fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
-                          letterSpacing: 2.0, // A little spacing for elegance
-                          color: const Color.fromARGB(255, 0, 0, 0)
-                           )
-                           )
-                        )
-                        ),
-                    )
-
-                //   child: Container( 
-                //     width: 300,
-                //     height: 100,
-                //   padding: const EdgeInsets.all(8),
-                //   child: vendorName != "Unknown"
-                //       ? Text("$category -- $vendorName")
-                //       : SizedBox.shrink(), // empty widget
-                // )
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                vendor['image_url'] ?? "https://picsum.photos/200/300",
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                                cacheWidth: 200,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Image.network(
+                                    "https://picsum.photos/200/300",
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    cacheWidth: 200,
+                                  );
+                                }
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                vendorName,
+                              //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              // fontWeight: FontWeight.bold,
+                              // color: const Color.fromARGB(255, 9, 9, 9)
+                              style:GoogleFonts.cormorantGaramond(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                // style: GoogleFonts.bodoniModa(
+                                //   fontSize: 24, 
+                                //   fontWeight: FontWeight.w600,
+                                //   letterSpacing: 2.0,
+                                //   color: const Color.fromARGB(255, 0, 0, 0)
+                                // ),
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
+                                maxLines: 2, // You can adjust this as needed
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      ),
+                   ),
+                   
+                      ],
+                      ),
+                      
+                    );
+              },
                 ),
-                ]
-                ));
-              })
-          )
-        ]
-      )
+          ),
+                ],
+      ),
     );
   }
 }

@@ -84,6 +84,7 @@ class _CustomCardState extends State<CustomCard> {
                             icon: Icon(
                               widget.isHearted ? Icons.favorite : Icons.favorite_border,
                               color: widget.isHearted ? Color(0xFFDCC7AA) : Color(0xFFDCC7AA),
+                              // color: Color(0xFF7B3F61),
                             ),
                             onPressed: () {
                               if (widget.onHeartToggled != null) widget.onHeartToggled!(!widget.isHearted);

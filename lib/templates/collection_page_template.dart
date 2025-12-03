@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'category_template.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -61,6 +62,11 @@ class CollectionPageTemplate extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF7B3F61),
                                   ),
+                              // style: GoogleFonts.montserrat(
+                              //   fontSize: 16,
+                              //   fontWeight: FontWeight.w500,
+                              //   letterSpacing: 1.2,
+                              // )
                             ),
                             GestureDetector(
                               child: Text(
