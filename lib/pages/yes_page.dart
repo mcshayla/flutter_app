@@ -146,7 +146,7 @@ class YesPage extends StatelessWidget {
                           ),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(20.0),
                               child: Text(
                                 vendorName,
                               //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -164,7 +164,8 @@ class YesPage extends StatelessWidget {
                                 // ),
                                 softWrap: true,
                                 overflow: TextOverflow.visible,
-                                maxLines: 2, // You can adjust this as needed
+                                maxLines: 2,
+                                 // You can adjust this as needed
                               ),
                             ),
                           ),

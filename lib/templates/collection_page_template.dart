@@ -9,6 +9,7 @@ import 'category_template.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/app_styles.dart';
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;

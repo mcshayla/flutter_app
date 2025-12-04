@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:say_yes/utils/string_extensions.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
+import '../utils/app_styles.dart';
 class IndividualCard extends StatefulWidget {
 
   final String title;
@@ -63,7 +64,10 @@ class _CustomCardState extends State<IndividualCard> {
                     IconButton(icon: const Icon(Icons.arrow_back),
                       onPressed: () => Navigator.pop(context),
                     ),
-                    Text("Back")
+                    Text("Back",
+                    style: AppStyles.backButton
+                    
+                    )
                   ]
                 ),
               ConstrainedBox(
@@ -152,10 +156,15 @@ class _CustomCardState extends State<IndividualCard> {
                       children: [
                         Text(
                           "$detailTitle: ",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            ),
+                          // style: const TextStyle(
+                          //   fontWeight: FontWeight.bold,
+                          //   fontSize: 14,
+                          //   ),
+                          style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0
+                          )
                         ),
                         Expanded(
                           child:

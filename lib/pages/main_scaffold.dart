@@ -5,6 +5,8 @@ import 'yes_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -55,6 +57,25 @@ class _MainScaffoldState extends State<MainScaffold> {
             color: const Color(0xFFDCC7AA),
           ),
         ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () async {
+                final supabase = Supabase.instance.client;
+                await supabase.auth.signOut();
+
+                // Navigate back to login page
+                if (mounted) {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LoginSignup()),
+                    (route) => false, // removes all previous routes
+                  );
+                }
+              },
+              tooltip: 'Logout',
+            ),
+          ],
         // title: Text("Easy-yest", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
         backgroundColor:Color(0xFF7B3F61) ,
         centerTitle: true,
