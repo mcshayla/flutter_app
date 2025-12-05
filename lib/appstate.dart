@@ -35,9 +35,46 @@ class AppState extends ChangeNotifier {
 
   bool isLoaded = false;
 
+
+  AppState() {
+    // 👇 LISTEN TO AUTH CHANGES
+    supabase.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      final user = session?.user;
+
+      print("🔥 auth state changed, user = $user");
+
+      if (user == null) {
+        // User logged out
+        clearState();
+        notifyListeners();
+      } else {
+        // User logged in or restored → NOW load data
+        loadInitialData();
+      }
+    });
+  }
+
+  void clearState() {
+    allCategorizedMap = {};
+    lovedVendorUUIDsCategorizedMap = {};
+    vendorIdToCategory = {};
+    diamondedCards = {};
+    isLoaded = true;
+  }
+
   Future<void> loadInitialData() async {
+
     try {
-      final user = supabase.auth.currentUser!;
+      final user = supabase.auth.currentUser;
+      print("USERRRRRRRRRRRRRRR        $user");
+      if (user == null) {
+        // No signed-in user yet; avoid crashing and just set loaded=false
+        isLoaded = false;
+        notifyListeners();
+        print('loadInitialData: no authenticated user present');
+        return;
+      }
       final data = await supabase.from('vendors').select();
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};

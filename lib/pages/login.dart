@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './main_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../appstate.dart';
+import 'package:provider/provider.dart';
 
 class LoginSignup extends StatefulWidget {
   const LoginSignup({super.key});
@@ -38,7 +40,12 @@ class _LoginSignupState extends State<LoginSignup> {
         password: password,
       );
 
+      await Provider.of<AppState>(context, listen: false).loadInitialData();
+
+
       if (res.user != null) {
+        
+        print("LOGGED IN");
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -56,7 +63,10 @@ class _LoginSignupState extends State<LoginSignup> {
           data: {'username': username.isNotEmpty ? username : null},
         );
 
+        await Provider.of<AppState>(context, listen: false).loadInitialData();
         if (signupRes.user != null) {
+
+          print("SIGNED IN");
           if (mounted) {
             Navigator.pushReplacement(
               context,

@@ -19,7 +19,9 @@ void main() async {
 
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AppState()..loadInitialData(),
+      // create: (_) => AppState()..loadInitialData(),
+      // child: const MyApp(),
+      create: (_) => AppState(),
       child: const MyApp(),
     )
   );
