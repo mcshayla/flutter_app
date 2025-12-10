@@ -61,14 +61,9 @@ class YesPage extends StatelessWidget {
                    padding: const EdgeInsets.all(8),
                    child:Text(
                       category.capitalize(),
-                      // style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      //       fontWeight: FontWeight.bold,
-                      //       color: const Color(0xFF7B3F61),
-                      //     ),
-                      style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 1.2,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF7B3F61),
                     )
 
                     ),
