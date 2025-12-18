@@ -4,6 +4,7 @@ import 'pages/main_scaffold.dart';
 import 'package:provider/provider.dart'; 
 import 'appstate.dart'; 
 import './pages/login.dart';
+import 'keys.dart';
 
 // uvicorn python_scripts.embed_queries:app --reload
 
@@ -12,38 +13,18 @@ void main() async {
 
   await Supabase.initialize(
     url: 'https://cocmclecxanepyheygqs.supabase.co',
-     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvY21jbGVjeGFuZXB5aGV5Z3FzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1MjIwNTIsImV4cCI6MjA3ODA5ODA1Mn0.hBXFO-suxe26o6mqtoX5O6kIwuK8oVKC3A5cPK3EarA',
+     anonKey: annonKey
   );
 
   // await signInAnonymously();
 
   runApp(
     ChangeNotifierProvider(
-      // create: (_) => AppState()..loadInitialData(),
-      // child: const MyApp(),
       create: (_) => AppState(),
       child: const MyApp(),
     )
   );
 }
-
-
-// Future<void> signInAnonymously() async {
-//   final supabase = Supabase.instance.client;
-//   try {
-//     final response = await supabase.auth.signInAnonymously();
-
-//     await supabase.from('users').upsert({
-//       'user_id': response.user!.id,
-//       'username': response.user!.id
-//     });
-
-//     print('Signed in anonymously! UserId: ${response.user!.id}');
-
-//   } catch (e) {
-//     print('Error signing in anonymously: $e');
-//   }
-// }
 
 class MyApp extends StatelessWidget {
 
@@ -58,8 +39,23 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 174, 176, 129)),
         scaffoldBackgroundColor: Color(0xFFF8F5F0),
       ),
-      home: const LoginSignup()
+      home: const AuthCheck()
     );
+  }
+}
+
+class AuthCheck extends StatelessWidget {
+  const AuthCheck({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+
+    if (user != null) {
+      return const MainScaffold();
+    } else {
+      return const LoginSignup();
+    }
   }
 }
 

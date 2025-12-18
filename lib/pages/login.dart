@@ -17,11 +17,11 @@ class _LoginSignupState extends State<LoginSignup> {
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
   bool _isLoading = false;
+  bool _isLogin = true;
 
-  void _handleAuth() async {
+  void _loginAuth() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final username = _usernameController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,9 +54,31 @@ class _LoginSignupState extends State<LoginSignup> {
         }
         return;
       }
-    } catch (_) {
-      // Login failed, try signup
-      try {
+      
+    } catch (signupError) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Authentication failed. Please sign up or try again.')),
+        );
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _signupAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final username = _usernameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email and password cannot be empty')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    final supabase = Supabase.instance.client;
+
+    try {
         final signupRes = await supabase.auth.signUp(
           email: email,
           password: password,
@@ -76,12 +98,10 @@ class _LoginSignupState extends State<LoginSignup> {
         }
       } catch (signupError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Auth failed: $signupError')),
+          SnackBar(content: Text('signupError $signupError')),
         );
+        if (mounted) setState(() => _isLoading = false);
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   InputDecoration _inputDecoration(String label) {
@@ -97,6 +117,29 @@ class _LoginSignupState extends State<LoginSignup> {
     );
   }
 
+  Future<void> signInGuest() async {
+    final supabase = Supabase.instance.client;
+    try {
+      final response = await supabase.auth.signInAnonymously();
+
+      await supabase.from('users').upsert({
+        'user_id': response.user!.id,
+        'username': response.user!.id
+      });
+      if (mounted) {
+       Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MainScaffold()),
+            );
+      }
+
+      print('Signed in anonymously! UserId: ${response.user!.id}');
+
+    } catch (e) {
+      print('Error signing in anonymously: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,8 +150,9 @@ class _LoginSignupState extends State<LoginSignup> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Padding( padding: const EdgeInsets.all(24.0), 
-              child:Center(child:Text(
+              Padding( padding: const EdgeInsets.all(16.0), 
+              child:
+              Center(child:Text(
                 'easiYESt',
                 style: GoogleFonts.bodoniModa(
                   fontSize: 72,
@@ -117,29 +161,76 @@ class _LoginSignupState extends State<LoginSignup> {
                   color: const Color(0xFFDCC7AA),
                 ),
               ),),),
+              // login vs signup:
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _isLogin = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: _isLogin ? Colors.white : Colors.transparent, // active tab color
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white), // optional border
+                      ),
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                          color: _isLogin ? const Color(0xFF7B3F61) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => setState(() => _isLogin = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: !_isLogin ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white),
+                      ),
+                      child: Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: !_isLogin ? const Color(0xFF7B3F61) : Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: _emailController,
                 decoration: _inputDecoration('Email'),
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
+              if (!_isLogin) 
+                TextField(
+                  controller: _usernameController,
+                  decoration: _inputDecoration('Optional Username'),
+                ),
+              if(!_isLogin)
+                const SizedBox(height: 16),
               TextField(
                 controller: _passwordController,
                 decoration: _inputDecoration('Password'),
                 obscureText: true,
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _usernameController,
-                decoration: _inputDecoration('Username'),
-              ),
-              const SizedBox(height: 24),
               _isLoading
                   ? const Center(child: CircularProgressIndicator(color: Colors.white))
                   : ElevatedButton(
-                      onPressed: _handleAuth,
+                      onPressed: _isLogin ? _loginAuth : _signupAuth,
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
+                        minimumSize: const Size(0, 0), 
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -147,8 +238,26 @@ class _LoginSignupState extends State<LoginSignup> {
                         foregroundColor: const Color(0xFF7B3F61),
                         textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
-                      child: const Text('Login / Signup'),
+                      
+                      child: Text(_isLogin ? 'Login' : 'Signup'),
                     ),
+              Padding( padding: const EdgeInsets.all(24.0), 
+              child:
+              GestureDetector(
+                onTap: () {
+                  signInGuest();
+                },
+                child:Center(child:Text(
+                'Sign in as guest',
+                style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1.2,
+                      color: const Color(0xFFDCC7AA),
+                      decoration: TextDecoration.underline,
+                      decorationColor: const Color(0xFFDCC7AA),
+                    ),
+              ),),),),
             ],
           ),
         ),

@@ -4,6 +4,7 @@ import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
+import '../utils/app_styles.dart';
 
 
 class CategoryPageTemplate extends StatelessWidget {
@@ -38,10 +39,10 @@ class CategoryPageTemplate extends StatelessWidget {
                     Text("My Loved $capCategoryName") : Text(capCategoryName)
                   ]
                 ),
-              (categoryList.isEmpty) ? const Center(
+              (categoryList.isEmpty) ? Center(
                   child: Text(
                     "No vendors for this category to display",
-                    style: TextStyle(fontSize: 16),
+                    style: AppStyles.backButton,
                   ),
                 ): 
             Expanded( 

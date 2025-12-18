@@ -35,10 +35,10 @@ class CollectionPageTemplate extends StatelessWidget {
         children: [
           Expanded(
             child: categoryKeys.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
                     "No vendors to display",
-                    style: TextStyle(fontSize: 16),
+                    style: AppStyles.simpleElegant,
                   ),
                 )
               : ListView.builder(
@@ -72,7 +72,7 @@ class CollectionPageTemplate extends StatelessWidget {
                             GestureDetector(
                               child: Text(
                                 "View All $capCategoryName",
-                                style: const TextStyle(fontSize: 12),
+                                style: AppStyles.backButton,
                               ),
                               onTap: () {
                                 Navigator.push(

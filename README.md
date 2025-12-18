@@ -1,5 +1,3 @@
-# say_yes
-
 # easiYESt 
 *This is meant to be the **easiest** way to plan a wedding*
 

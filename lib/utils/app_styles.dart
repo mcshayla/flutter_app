@@ -30,7 +30,7 @@ class AppStyles {
                     );
 
   static final backButton =  GoogleFonts.montserrat(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 1.0,
                     );

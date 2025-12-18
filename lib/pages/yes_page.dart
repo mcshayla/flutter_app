@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../utils/string_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import './individual_card.dart';
+import '../utils/app_styles.dart';
 
 
 class YesPage extends StatelessWidget {
@@ -144,13 +145,19 @@ class YesPage extends StatelessWidget {
                               padding: const EdgeInsets.all(20.0),
                               child: Text(
                                 vendorName,
+                                style: GoogleFonts.bodoniModa(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
+                                  letterSpacing: 2.0,
+                                ),
+                                // style: AppStyles.fancyTitle,
                               //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               // fontWeight: FontWeight.bold,
                               // color: const Color.fromARGB(255, 9, 9, 9)
-                              style:GoogleFonts.cormorantGaramond(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              // style:GoogleFonts.cormorantGaramond(
+                              //     fontSize: 22,
+                              //     fontWeight: FontWeight.w600,
+                              //   ),
                                 // style: GoogleFonts.bodoniModa(
                                 //   fontSize: 24, 
                                 //   fontWeight: FontWeight.w600,

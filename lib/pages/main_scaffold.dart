@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
+import 'profile_page.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -57,24 +58,33 @@ class _MainScaffoldState extends State<MainScaffold> {
             color: const Color(0xFFDCC7AA),
           ),
         ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: () async {
-                final supabase = Supabase.instance.client;
-                await supabase.auth.signOut();
+        actions: [
+           IconButton(
+            icon: const Icon(Icons.person_outline, color: Colors.white),
+            onPressed: () {
+               _navigatorKeys[_selectedIndex].currentState?.push(
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+            },
+            tooltip: 'Profile',
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () async {
+              final supabase = Supabase.instance.client;
+              await supabase.auth.signOut();
 
-                // Navigate back to login page
-                if (mounted) {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LoginSignup()),
-                    (route) => false, // removes all previous routes
-                  );
-                }
-              },
-              tooltip: 'Logout',
-            ),
+              // Navigate back to login page
+              if (mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginSignup()),
+                  (route) => false, // removes all previous routes
+                );
+              }
+            },
+            tooltip: 'Logout',
+          ),
           ],
         // title: Text("Easy-yest", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
         backgroundColor:Color(0xFF7B3F61) ,

@@ -4,7 +4,10 @@ import 'package:say_yes/utils/string_extensions.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_styles.dart';
+import 'package:url_launcher/link.dart';
+import 'package:url_launcher/url_launcher.dart';
 class IndividualCard extends StatefulWidget {
+
 
   final String title;
   final String description;
@@ -35,6 +38,15 @@ class IndividualCard extends StatefulWidget {
 }
 
 class _CustomCardState extends State<IndividualCard> {
+
+  Future<void> _launchInBrowser(Uri url) async {
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +124,7 @@ class _CustomCardState extends State<IndividualCard> {
                       padding: EdgeInsets.zero,
                       icon: Icon(
                         isHearted ? Icons.favorite : Icons.favorite_border,
-                        color: isHearted ? Color(0xFFDCC7AA) : Color(0xFFDCC7AA),
+                        color: Color(0xFF7B3F61),
                       ),
                       onPressed: () {
                         if (widget.onHeartToggled != null) widget.onHeartToggled!(!isHearted);
@@ -122,7 +134,7 @@ class _CustomCardState extends State<IndividualCard> {
                     padding: EdgeInsets.zero,
                       icon: Icon(
                         isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                        color: isDiamonded ? Color(0xFFDCC7AA) : Color(0xFFDCC7AA),
+                        color: Color(0xFF7B3F61)
                       ),
                       onPressed: () {
                           if (widget.onDiamondToggled != null) widget.onDiamondToggled!(!isDiamonded);
@@ -168,14 +180,20 @@ class _CustomCardState extends State<IndividualCard> {
                         ),
                         Expanded(
                           child:
-                        Text(
-                          value,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF6E6E6E),
-                          ),
-                          softWrap: true,
-                        ),
+                            Text(
+                              value,
+                              style:GoogleFonts.montserrat(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.2,
+                                color: Color(0xFF6E6E6E)
+                              ),
+                              // style: const TextStyle(
+                              //   fontSize: 12,
+                              //   color: Color(0xFF6E6E6E),
+                              // ),
+                              softWrap: true,
+                            ),
                         ),
                       ],
                   ));

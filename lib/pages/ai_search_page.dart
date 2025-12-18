@@ -8,6 +8,7 @@ import '../widgets/card.dart';
 import 'dart:convert';
 import '../appstate.dart';
 import 'individual_card.dart';
+import '../utils/app_styles.dart';
 
 
 class SearchBatch {
@@ -90,7 +91,7 @@ class _AISearchPageState extends State<AISearchPage> {
       children: [
         Expanded(
   child: _searchBatches.isEmpty
-      ? Center(child: Text("Describe the type of wedding you want!"))
+      ? Center(child: Text("What's your dream wedding?", style: AppStyles.simpleElegant))
       : Padding( 
         padding: const EdgeInsets.all(8.0),
         child:ListView.builder(
@@ -112,7 +113,8 @@ class _AISearchPageState extends State<AISearchPage> {
                     child: Text(
                       'Results for: "$query"',
                       style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        AppStyles.simpleElegant
+                          // TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -195,7 +197,7 @@ class _AISearchPageState extends State<AISearchPage> {
           textInputAction: TextInputAction.search, // Enter key shows search
           onSubmitted: (value) => _performSearch(),
           decoration: InputDecoration(
-            hintText: 'Type your search...',
+            hintText: 'Elegant, rustic barn, ballroom, ...',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),

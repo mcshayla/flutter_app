@@ -75,7 +75,7 @@ class AppState extends ChangeNotifier {
         print('loadInitialData: no authenticated user present');
         return;
       }
-      final data = await supabase.from('vendors').select();
+      final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};
 
