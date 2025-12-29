@@ -141,7 +141,9 @@ class _AISearchPageState extends State<AISearchPage> {
                       return CustomCard(
                         title: vendor['vendor_name'] ?? "",
                         description: vendor['vendor_description'] ?? "",
-                        imageUrl: vendor['image_url'] ?? "",
+                        imageUrl: ((vendor['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
+                            ? (vendor['image_url'] as List<dynamic>)[0].toString()
+                            : "https://picsum.photos/200/300",
                         isHearted: appState.lovedVendorUUIDsCategorizedMap[category?.capitalize()]?.contains(vendor['vendor_id']) ?? false,
                         onHeartToggled: (hearted) {
                           appState.toggleHeart(vendor['vendor_id'], hearted);
@@ -157,7 +159,12 @@ class _AISearchPageState extends State<AISearchPage> {
                                     builder:(_) => IndividualCard(
                                       vendor_id: vendor['vendor_id'],
                                       category: category ?? "",
-                                      imageUrl: vendor['image_url'] ?? "",
+                                      imageUrl: (vendor['image_url'] as List<dynamic>?)
+                                          ?.whereType<String>()
+                                          .toList() ?? [],
+                                      social_media_links: (vendor['social_media_links'] as List<dynamic>?)
+                                          ?.whereType<String>()
+                                          .toList() ?? [],
                                       title: vendor['vendor_name'] ?? "",
                                       description: vendor['vendor_description'] ?? "",
                                       style_keywords: vendor['style_keywords'] ?? "",
@@ -165,7 +172,7 @@ class _AISearchPageState extends State<AISearchPage> {
                                       address: vendor['address'] ?? "",
                                       vendor_estimated_price: vendor['vendor_estimated_price'] ?? "",
                                       vendor_price: vendor['vendor_price'] ?? "",
-                                      contact_email: vendor['contaact_emal'] ?? "",
+                                      contact_email: vendor['contact_email'] ?? "",
                                       contact_phone: vendor['contact_phone'] ?? "",
                                       website_url: vendor['website_url'] ?? "",
                                       isHearted: appState.lovedVendorUUIDsCategorizedMap[category]?.contains(vendor['vendor_id']) ?? false,

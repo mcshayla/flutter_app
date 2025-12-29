@@ -102,7 +102,9 @@ class CollectionPageTemplate extends StatelessWidget {
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
-                              imageUrl: item['image_url'] ?? "",
+                              imageUrl: ((item['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
+                                  ? (item['image_url'] as List<dynamic>)[0].toString()
+                                  : "https://picsum.photos/200/300",
                               isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                               isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
                               onHeartToggled: (hearted) {
@@ -117,7 +119,6 @@ class CollectionPageTemplate extends StatelessWidget {
                                   MaterialPageRoute(
 
                                     builder:(_) => IndividualCard(
-                                      imageUrl: item['image_url'] ?? "",
                                       title: item['vendor_name'] ?? "",
                                       description: item['vendor_description'] ?? "",
                                       style_keywords: item['style_keywords'] ?? "",
@@ -125,9 +126,15 @@ class CollectionPageTemplate extends StatelessWidget {
                                       address: item['address'] ?? "",
                                       vendor_estimated_price: item['vendor_estimated_price'] ?? "",
                                       vendor_price: item['vendor_price'] ?? "",
-                                      contact_email: item['contact_emal'] ?? "",
+                                      contact_email: item['contact_email'] ?? "",
                                       contact_phone: item['contact_phone'] ?? "",
                                       website_url: item['website_url'] ?? "",
+                                      imageUrl: (item['image_url'] as List<dynamic>?)
+                                          ?.whereType<String>()
+                                          .toList() ?? [],
+                                      social_media_links: (item['social_media_links'] as List<dynamic>?)
+                                          ?.whereType<String>()
+                                          .toList() ?? [],
                                       vendor_id: item['vendor_id'] ?? "",
                                       category: categoryName,
                                       isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,

@@ -15,7 +15,7 @@ class AppState extends ChangeNotifier {
   //   {
   //     "vendor_id": "c001",
   //     "vendor_name": "Gourmet Catering",
-  Map<String, Set<String>> lovedVendorUUIDsCategorizedMap = {};
+  Map<String, List<String>> lovedVendorUUIDsCategorizedMap = {};
 // lovedVendorUUIDsCategorizedMap = {
 //   "Venue": {"v001"}, // user hearted Wadley Farms
 //   "Caterer": {}
@@ -67,7 +67,6 @@ class AppState extends ChangeNotifier {
 
     try {
       final user = supabase.auth.currentUser;
-      print("USERRRRRRRRRRRRRRR        $user");
       if (user == null) {
         // No signed-in user yet; avoid crashing and just set loaded=false
         isLoaded = false;
@@ -82,6 +81,10 @@ class AppState extends ChangeNotifier {
       for (var vendor in vendors) {
         final category = vendor['vendor_category'] ?? 'Other';
         allData.putIfAbsent(category, () => []).add(vendor);
+      }
+
+      for (var category in allData.keys) {
+        allData[category]!.shuffle();
       }
 
       allCategorizedMap = allData;
@@ -106,10 +109,11 @@ class AppState extends ChangeNotifier {
 
       final loved = await supabase
       .from('users_loved')
-      .select('loved_vendor_id, vendors(vendor_category)')
-      .eq('loved_user_id', user.id);
+      .select('loved_vendor_id, created_at')
+      .eq('loved_user_id', user.id)
+      .order('created_at', ascending: false);
 
-      Map<String, Set<String>> lovedVendorsByCategory = {};
+      Map<String, List<String>> lovedVendorsByCategory = {};
 
       final diamonded = await supabase
       .from('users')
@@ -129,7 +133,7 @@ class AppState extends ChangeNotifier {
       for (var row in loved) {
         final vendorId = row['loved_vendor_id'] as String;
         final category = vendorIdToCategory[vendorId] ?? 'Other';
-        lovedVendorsByCategory.putIfAbsent(category, () => <String>{}).add(vendorId);
+        lovedVendorsByCategory.putIfAbsent(category, () => <String>[]).add(vendorId);
       }
 
       lovedVendorUUIDsCategorizedMap = lovedVendorsByCategory;
@@ -149,7 +153,7 @@ class AppState extends ChangeNotifier {
 
     try {
       if (hearted) {
-        lovedVendorUUIDsCategorizedMap.putIfAbsent(category, () => {}).add(vendorId);
+        lovedVendorUUIDsCategorizedMap.putIfAbsent(category, () => <String>[]).insert(0, vendorId);
       } else {
         lovedVendorUUIDsCategorizedMap[category]?.remove(vendorId);
       }
