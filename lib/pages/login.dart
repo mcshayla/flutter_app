@@ -4,6 +4,7 @@ import './main_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
+import '../utils/app_styles.dart';
 
 enum LoginRedirect {
   pop,
@@ -145,7 +146,7 @@ class _LoginSignupState extends State<LoginSignup> {
        Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const MainScaffold()),
-            );
+            ); // CHANGE THIS
       }
 
       print('Signed in anonymously! UserId: ${response.user!.id}');
@@ -159,6 +160,16 @@ class _LoginSignupState extends State<LoginSignup> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF7B3F61),
+      appBar: widget.redirect == LoginRedirect.pop
+      ? AppBar(
+          backgroundColor: const Color(0xFF7B3F61),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        )
+      : null,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

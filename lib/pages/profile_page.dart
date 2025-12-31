@@ -251,8 +251,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                             ),
-                            onPressed: () {
-                              Navigator.push(
+                            onPressed: () async {
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => const LoginSignup(
