@@ -52,7 +52,6 @@ class _AISearchPageState extends State<AISearchPage> {
     final query = _controller.text;
     _controller.clear();
     setState(() {});
-    print(query);
     // final url = Uri.parse("http://127.0.0.1:8000/search");
     final url = Uri.parse("http://10.0.2.2:8000/search");
 
@@ -65,7 +64,6 @@ class _AISearchPageState extends State<AISearchPage> {
 
       if (response.statusCode == 200){
         final result = jsonDecode(response.body);
-        print("Top results: $result");
 
         setState(() {
 

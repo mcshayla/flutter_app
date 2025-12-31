@@ -4,6 +4,7 @@ import './main_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class LoginSignup extends StatefulWidget {
   const LoginSignup({super.key});
@@ -44,8 +45,6 @@ class _LoginSignupState extends State<LoginSignup> {
 
 
       if (res.user != null) {
-        
-        print("LOGGED IN");
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -88,7 +87,6 @@ class _LoginSignupState extends State<LoginSignup> {
         await Provider.of<AppState>(context, listen: false).loadInitialData();
         if (signupRes.user != null) {
 
-          print("SIGNED IN");
           if (mounted) {
             Navigator.pushReplacement(
               context,
@@ -107,6 +105,7 @@ class _LoginSignupState extends State<LoginSignup> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
+      floatingLabelBehavior: FloatingLabelBehavior.never,
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
@@ -140,6 +139,74 @@ class _LoginSignupState extends State<LoginSignup> {
     }
   }
 
+  void _showForgotPasswordDialog() {
+    final resetEmailController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Reset Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Enter your email address and we\'ll send you a link to reset your password.',
+                style: GoogleFonts.montserrat(fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: resetEmailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (resetEmailController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter your email')),
+                  );
+                  return;
+                }
+                
+                try {
+                  await Supabase.instance.client.auth.resetPasswordForEmail(
+                    resetEmailController.text.trim(),
+                    redirectTo: 'io.supabase.flutter://login-callback',
+                  );
+                  
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password reset email sent! Check your inbox.')),
+                    );
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              },
+              child: const Text('Send Reset Link'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,48 +228,58 @@ class _LoginSignupState extends State<LoginSignup> {
                   color: const Color(0xFFDCC7AA),
                 ),
               ),),),
+              const SizedBox(height: 32),
+              
               // login vs signup:
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _isLogin = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: _isLogin ? Colors.white : Colors.transparent, // active tab color
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white), // optional border
-                      ),
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: _isLogin ? const Color(0xFF7B3F61) : Colors.white,
-                          fontWeight: FontWeight.bold,
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _isLogin = true),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+                          decoration: BoxDecoration(
+                            color: _isLogin ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Login',
+                            style: TextStyle(
+                              color: _isLogin ? const Color(0xFF7B3F61) : Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => setState(() => _isLogin = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
-                      decoration: BoxDecoration(
-                        color: !_isLogin ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white),
-                      ),
-                      child: Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          color: !_isLogin ? const Color(0xFF7B3F61) : Colors.white,
-                          fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () => setState(() => _isLogin = false),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+                          decoration: BoxDecoration(
+                            color: !_isLogin ? Colors.white : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Sign Up',
+                            style: TextStyle(
+                              color: !_isLogin ? const Color(0xFF7B3F61) : Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -223,25 +300,128 @@ class _LoginSignupState extends State<LoginSignup> {
                 decoration: _inputDecoration('Password'),
                 obscureText: true,
               ),
+              const SizedBox(height: 8),
+              if (_isLogin)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => _showForgotPasswordDialog(),
+                    child: Text(
+                      'Forgot Password?',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFFDCC7AA),
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(0xFFDCC7AA),
+                      ),
+                    ),
+                  ),
+                ),
               const SizedBox(height: 16),
               _isLoading
                   ? const Center(child: CircularProgressIndicator(color: Colors.white))
-                  : ElevatedButton(
-                      onPressed: _isLogin ? _loginAuth : _signupAuth,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        minimumSize: const Size(0, 0), 
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  : Center(
+                      child: ElevatedButton(
+                        onPressed: _isLogin ? _loginAuth : _signupAuth,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 48),
+                          minimumSize: const Size(0, 0),
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF7B3F61),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF7B3F61),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        
+                        child: Text(_isLogin ? 'Login' : 'Signup'),
                       ),
-                      
-                      child: Text(_isLogin ? 'Login' : 'Signup'),
                     ),
-              Padding( padding: const EdgeInsets.all(24.0), 
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Divider(
+                      color: Color(0xFFDCC7AA),
+                      thickness: 1,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'OR',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 1.0,
+                        color: const Color(0xFFDCC7AA),
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    child: Divider(
+                      color: Color(0xFFDCC7AA),
+                      thickness: 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await Supabase.instance.client.auth.signInWithOAuth(
+                        OAuthProvider.google,
+                        redirectTo: 'io.supabase.flutter://login-callback',
+                      );
+                      await Provider.of<AppState>(context, listen: false).loadInitialData();
+                      if (mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MainScaffold()),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Google Sign-In failed: $e')),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 40),
+                    minimumSize: const Size(0, 0),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(color: Color(0xFFDDDDDD), width: 1),
+                    ),
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF1F2937),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const FaIcon(
+                        FontAwesomeIcons.google,
+                        size: 18,
+                        color: Color(0xFF4285F4),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Continue with Google',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding( padding: const EdgeInsets.all(36.0), 
               child:
               GestureDetector(
                 onTap: () {

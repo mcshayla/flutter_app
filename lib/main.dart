@@ -4,6 +4,7 @@ import 'pages/main_scaffold.dart';
 import 'package:provider/provider.dart'; 
 import 'appstate.dart'; 
 import './pages/login.dart';
+import './pages/update_password.dart';
 import 'keys.dart';
 
 // uvicorn python_scripts.embed_queries:app --reload
@@ -44,8 +45,40 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthCheck extends StatelessWidget {
+class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
+
+  @override
+  State<AuthCheck> createState() => _AuthCheckState();
+}
+
+class _AuthCheckState extends State<AuthCheck> {
+  @override
+  void initState() {
+    super.initState();
+    // Listen for auth state changes (important for OAuth redirects and password recovery)
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      final event = data.event;
+
+      if (event == AuthChangeEvent.passwordRecovery) {
+        // User clicked password reset link, show update password page
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const UpdatePasswordPage(),
+            ),
+          );
+        }
+      } else if (session != null && mounted) {
+        // User is logged in, navigate to home screen
+        Navigator.of(context).pushReplacementNamed('/');
+      } else if (session == null && mounted) {
+        // User is logged out, show login screen
+        setState(() {});
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

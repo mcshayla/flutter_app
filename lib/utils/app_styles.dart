@@ -9,6 +9,7 @@ class AppStyles {
   static const accentColor = Color(0xFFDCC7AA);
   static const darkWords = Color(0xFF3E3E3E);
   static const lightWrods = Color(0xFF6E6E6E);
+  // const Color.fromARGB(255, 176, 195, 135), green that I like
 
   static final fancyTitle = GoogleFonts.bodoniModa(
             fontSize: 36,
