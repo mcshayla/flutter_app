@@ -23,17 +23,25 @@ class YesPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(36.0),
-            child:Text("Mr. & Mrs.", 
-            // style: GoogleFonts.greatVibes(fontSize: 48)
-            style: GoogleFonts.bodoniModa(
-                  fontSize: 48, 
-                  fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
-                  letterSpacing: 2.0, // A little spacing for elegance
-                  color: const Color(0xFF7B3F61)
-                )
+            child: Column(
+              children: [
+                Text("Mr. & Mrs.", 
+                  style: GoogleFonts.bodoniModa(
+                    fontSize: 48, 
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 2.0,
+                    color: const Color(0xFF7B3F61)
+                  )
                 ),
+                const SizedBox(height: 20),
+                Container(
+                  height: 1,
+                  color: const Color(0xFFDCC7AA),
+                ),
+
+              ],
+            ),
           ),
-          
           Expanded(
             
             child: ListView.builder(
