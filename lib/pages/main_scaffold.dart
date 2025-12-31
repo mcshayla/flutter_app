@@ -76,10 +76,13 @@ class _MainScaffoldState extends State<MainScaffold> {
 
               // Navigate back to login page
               if (mounted) {
-                Navigator.pushAndRemoveUntil(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (_) => const LoginSignup()),
-                  (route) => false, // removes all previous routes
+                  MaterialPageRoute(
+                    builder: (_) => const LoginSignup(
+                      redirect: LoginRedirect.home,
+                    ),
+                  ),
                 );
               }
             },

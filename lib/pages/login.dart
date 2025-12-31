@@ -5,8 +5,15 @@ import 'package:google_fonts/google_fonts.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 
+enum LoginRedirect {
+  pop,
+  home,
+}
+
 class LoginSignup extends StatefulWidget {
-  const LoginSignup({super.key});
+  final LoginRedirect redirect;
+
+  const LoginSignup({super.key, this.redirect = LoginRedirect.home});
 
   @override
   State<LoginSignup> createState() => _LoginSignupState();
@@ -18,6 +25,24 @@ class _LoginSignupState extends State<LoginSignup> {
   final _usernameController = TextEditingController();
   bool _isLoading = false;
   bool _isLogin = true;
+
+  void _onAuthSuccess() {
+  if (!mounted) return;
+
+  switch (widget.redirect) {
+    case LoginRedirect.pop:
+      Navigator.pop(context);
+      break;
+
+    case LoginRedirect.home:
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScaffold()),
+      );
+      break;
+  }
+}
+
 
   void _loginAuth() async {
     final email = _emailController.text.trim();
@@ -40,20 +65,13 @@ class _LoginSignupState extends State<LoginSignup> {
         password: password,
       );
 
+
+     if (res.user != null) {
+      print("LOGGED IN");
       await Provider.of<AppState>(context, listen: false).loadInitialData();
-
-
-      if (res.user != null) {
-        
-        print("LOGGED IN");
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const MainScaffold()),
-          );
-        }
-        return;
-      }
+      _onAuthSuccess();
+      return;
+    }
       
     } catch (signupError) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -79,22 +97,19 @@ class _LoginSignupState extends State<LoginSignup> {
     final supabase = Supabase.instance.client;
 
     try {
-        final signupRes = await supabase.auth.signUp(
+        final signupRes = await supabase.auth.updateUser(
+        UserAttributes(
           email: email,
           password: password,
           data: {'username': username.isNotEmpty ? username : null},
+        ),
         );
 
-        await Provider.of<AppState>(context, listen: false).loadInitialData();
+        
         if (signupRes.user != null) {
-
           print("SIGNED IN");
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const MainScaffold()),
-            );
-          }
+          await Provider.of<AppState>(context, listen: false).loadInitialData();
+          _onAuthSuccess();
         }
       } catch (signupError) {
         ScaffoldMessenger.of(context).showSnackBar(

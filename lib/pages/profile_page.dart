@@ -5,6 +5,7 @@ import '../utils/string_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -14,11 +15,24 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _showSignupForm = false;
+  // bool _showSignupForm = false;
   bool _isGuest = false;
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  late Future<Map<String, dynamic>?> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = _fetchUser();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh user data when returning to this page
+    setState(() {
+      _userFuture = _fetchUser();
+    });
+  }
 
   Future<Map<String, dynamic>?> _fetchUser() async {
     final supabase = Supabase.instance.client;
@@ -33,52 +47,60 @@ class _ProfilePageState extends State<ProfilePage> {
         .single();
   }
 
-  void _signupAuth() async {
-    final supabase = Supabase.instance.client;
-    final user = supabase.auth.currentUser;
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final username = _usernameController.text.trim();
+  bool _isValidUsername(Map<String, dynamic> data) {
+    // Check if username exists, is a string, is not empty, and is not an anonymous ID
+    return data['username'] != null &&
+        data['username'] is String &&
+        (data['username'] as String).isNotEmpty &&
+        !(data['username'] as String).contains('-'); // Filter out UUIDs (anonymous IDs have hyphens)
+  }
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email and password cannot be empty')),
-      );
-      return;
-    }
+  // void _signupAuth() async {
+  //   final supabase = Supabase.instance.client;
+  //   final user = supabase.auth.currentUser;
+  //   final email = _emailController.text.trim();
+  //   final password = _passwordController.text.trim();
+  //   final username = _usernameController.text.trim();
 
-    try {
-      await supabase.auth.updateUser(
-      UserAttributes(
-        email: email,
-        password: password,
-        data: {
-          if (username.isNotEmpty) 'username': username,
-        },
-      ),
-      );
+  //   if (email.isEmpty || password.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Email and password cannot be empty')),
+  //     );
+  //     return;
+  //   }
 
-      // OPTIONAL: update your public users table
-      await supabase.from('users').update({
-        'email': email,
-        'username': username,
-      }).eq('user_id', user!.id);
+  //   try {
+  //     await supabase.auth.updateUser(
+  //     UserAttributes(
+  //       email: email,
+  //       password: password,
+  //       data: {
+  //         if (username.isNotEmpty) 'username': username,
+  //       },
+  //     ),
+  //     );
+
+  //     // OPTIONAL: update your public users table
+  //     await supabase.from('users').update({
+  //       'email': email,
+  //       'username': username,
+  //     }).eq('user_id', user!.id);
 
     
-      setState(() {
-        _isGuest = false;
-        _showSignupForm = false;
-      });
+  //     setState(() {
+  //       _isGuest = false;
+  //       // _showSignupForm = false;
+  //     });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account upgraded successfully!')),
-      );
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Signup error: $error')),
-      );
-    }
-  }
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Account upgraded successfully!')),
+  //     );
+  //   } catch (error) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Signup error: $error')),
+  //     );
+  //   }
+  // }
 
 
 
@@ -89,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       body: FutureBuilder<Map<String, dynamic>?>(
-        future: _fetchUser(),
+        future: _userFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -146,8 +168,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               radius: 50,
                               backgroundColor: const Color(0xFF7B3F61), // your purple
                               child: Text(
-                                ((data['email'] != null)
-                                ? (data['username'] as String).capitalize()[0] : 'G'),
+                                _isValidUsername(data)
+                                ? (data['username'] as String).capitalize()[0]
+                                : (data['email'] != null) ? 'U' : 'G',
                                 style: const TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
@@ -157,16 +180,18 @@ class _ProfilePageState extends State<ProfilePage> {
                             )),
 
                             const SizedBox(height: 24),
-                            Text((data['email'] != null)
-                                ? (data['username'] as String).capitalize()
-                                : 'Guest', 
+                            Text(data['email'] == null 
+                                ? 'Guest'
+                                : _isValidUsername(data)
+                                  ? (data['username'] as String).capitalize()
+                                  : 'User', 
                                 style: GoogleFonts.bodoniModa(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
                                 letterSpacing: 2.0,
                             )),
                             const SizedBox(height: 12),
-                            Text('${data['email'] ?? ''}', style: GoogleFonts.montserrat(
+                            Text(data['email'] ?? '', style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 1.2,
@@ -183,51 +208,74 @@ class _ProfilePageState extends State<ProfilePage> {
                           Center(child:
                           Column(
                             children: [
-                          if (_showSignupForm)
-                            Column(
-                              children: [
-                                TextField(
-                                  controller: _emailController,
-                                  decoration: const InputDecoration(labelText: 'Email'),
-                                ),
-                                TextField(
-                                  controller: _usernameController,
-                                  decoration: const InputDecoration(labelText: 'Username'),
-                                ),
-                                TextField(
-                                  controller: _passwordController,
-                                  decoration: const InputDecoration(labelText: 'Password'),
-                                  obscureText: true,
-                                ),
-                                const SizedBox(height: 16),
-                                ActionChip(
-                                  label: Text(
-                                    'Sign Up',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFFF8F5F0),
-                                    ),
-                                  ),
-                                  backgroundColor: const Color(0xFF7B3F61),
-                                  onPressed: _signupAuth,
-                                ),
-                              ],
+                          // if (_showSignupForm)
+                          //   Column(
+                          //     children: [
+                          //       TextField(
+                          //         controller: _emailController,
+                          //         decoration: const InputDecoration(labelText: 'Email'),
+                          //       ),
+                          //       TextField(
+                          //         controller: _usernameController,
+                          //         decoration: const InputDecoration(labelText: 'Username'),
+                          //       ),
+                          //       TextField(
+                          //         controller: _passwordController,
+                          //         decoration: const InputDecoration(labelText: 'Password'),
+                          //         obscureText: true,
+                          //       ),
+                          //       const SizedBox(height: 16),
+                          //       ActionChip(
+                          //         label: Text(
+                          //           'Sign Up',
+                          //           style: GoogleFonts.montserrat(
+                          //             fontSize: 14,
+                          //             fontWeight: FontWeight.w500,
+                          //             color: const Color(0xFFF8F5F0),
+                          //           ),
+                          //         ),
+                          //         backgroundColor: const Color(0xFF7B3F61),
+                          //         onPressed: _signupAuth,
+                          //       ),
+                          //     ],
+                          //   ),
+
+                          // const SizedBox(height: 12),
+
+                          if (_isGuest )
+                           ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF7B3F61),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                             ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LoginSignup(
+                                    redirect: LoginRedirect.pop,
+                                  ),
+                                ),
+                              );
 
-                          const SizedBox(height: 12),
-
-                          if (_isGuest && !_showSignupForm)
-                            ActionChip(
-                              label: Text('Sign Up', style: GoogleFonts.montserrat(
+                              setState(() {
+                                _userFuture = _fetchUser();
+                              });
+                            },
+                            child: Text(
+                              'Create account',
+                              style: GoogleFonts.montserrat(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 letterSpacing: 1.0,
-                                color: Color(0xFFF8F5F0)
-                                )),
-                              backgroundColor: const Color(0xFF7B3F61),
-                              onPressed: () => setState(() => _showSignupForm = true),
+                                color: const Color(0xFFF8F5F0),
+                              ),
                             ),
+                          ),
+
                         ]
                       ),)
                         ],

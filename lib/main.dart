@@ -43,19 +43,42 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-class AuthCheck extends StatelessWidget {
+class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
+  State<AuthCheck> createState() => _AuthCheckState();
+}
 
-    if (user != null) {
-      return const MainScaffold();
-    } else {
-      return const LoginSignup();
+class _AuthCheckState extends State<AuthCheck> {
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuth();
+  }
+
+  Future<void> _checkAuth() async {
+    final supabase = Supabase.instance.client;
+    print(supabase.auth.currentUser);
+    if (supabase.auth.currentUser == null) {
+      await supabase.auth.signInAnonymously();
     }
+
+    if (!mounted) return;
+    setState(() => _ready = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return const MainScaffold();
   }
 }
 
