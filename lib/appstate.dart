@@ -35,14 +35,13 @@ class AppState extends ChangeNotifier {
 
   bool isLoaded = false;
 
+  
 
   AppState() {
     // 👇 LISTEN TO AUTH CHANGES
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
-
-      print("🔥 auth state changed, user = $user");
 
       if (user == null) {
         // User logged out
@@ -184,7 +183,7 @@ class AppState extends ChangeNotifier {
 
       await supabase.from('users').upsert({
         'user_id': user.id,
-        category: vendorId,
+        category: diamonded ? vendorId : null,
       });
 
       notifyListeners();
