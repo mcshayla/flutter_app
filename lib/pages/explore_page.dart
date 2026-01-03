@@ -6,10 +6,10 @@ import 'package:provider/provider.dart';
 
 class ExplorePage extends StatelessWidget {
   const ExplorePage({super.key});
+
   @override
   Widget build(BuildContext context) {
-
-    return Consumer<AppState> (
+    return Consumer<AppState>(
       builder: (context, appState, _) {
         if (!appState.isLoaded) {
           return const Center(child: CircularProgressIndicator());
@@ -26,7 +26,7 @@ class ExplorePage extends StatelessWidget {
           },
           isLovedPage: false,
         );
-      }
+      },
     );
   }
 }
