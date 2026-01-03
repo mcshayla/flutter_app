@@ -90,7 +90,7 @@ class _AuthCheckState extends State<AuthCheck> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (widget.routeName == '/landing' || widget.routeName == '/landing/') {
+    if (widget.routeName == '/vendorRegistration' || widget.routeName == '/vendorRegistration/') {
       return const WebLandingPage();
     }
 
