@@ -32,11 +32,14 @@ class CategoryPageTemplate extends StatelessWidget {
               if (Navigator.canPop(context))
                 Row( 
                   children: [
-                    IconButton(icon: const Icon(Icons.arrow_back),
+
+                    TextButton.icon(
                       onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.arrow_back),
+                      label: showOnlyLoved ?
+                        Text("My Loved $capCategoryName", style: AppStyles.backButton) : Text(capCategoryName, style: AppStyles.backButton)
                     ),
-                    showOnlyLoved ?
-                    Text("My Loved $capCategoryName") : Text(capCategoryName)
+                    
                   ]
                 ),
               (categoryList.isEmpty) ? Center(

@@ -246,7 +246,7 @@ class _LoginSignupState extends State<LoginSignup> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding( padding: const EdgeInsets.all(16.0), 
-              child:
+              child: widget.redirect == LoginRedirect.home ?
               Center(child:Text(
                 'easiYESt',
                 style: GoogleFonts.bodoniModa(
@@ -255,7 +255,7 @@ class _LoginSignupState extends State<LoginSignup> {
                   letterSpacing: 2.0, // A little spacing for elegance
                   color: const Color(0xFFDCC7AA),
                 ),
-              ),),),
+              ),): null ),
               // login vs signup:
                Center(
                 child: Container(
@@ -374,7 +374,7 @@ class _LoginSignupState extends State<LoginSignup> {
                       ),
                     ),
               Padding( padding: const EdgeInsets.all(24.0), 
-              child:
+              child: widget.redirect == LoginRedirect.home ?
               GestureDetector(
                 onTap: () {
                   signInGuest();
@@ -389,7 +389,7 @@ class _LoginSignupState extends State<LoginSignup> {
                       decoration: TextDecoration.underline,
                       decorationColor: const Color(0xFFDCC7AA),
                     ),
-              ),),),),
+              ),),): null),
             ],
           ),
         ),

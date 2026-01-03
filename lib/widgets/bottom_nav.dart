@@ -6,10 +6,18 @@ class BottomNav extends StatelessWidget {
 
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final GlobalKey? lovedTabKey;
+  final GlobalKey? diamondTabKey;
+  final GlobalKey? profileTabKey;
+
 
   const BottomNav({super.key,  
     required this.currentIndex,
     required this.onTap,
+    this.lovedTabKey,
+    this.diamondTabKey,
+    this.profileTabKey
+
   });
 
   @override
@@ -27,11 +35,17 @@ class BottomNav extends StatelessWidget {
           icon: Icon(Icons.home_outlined),
           label: 'Explore'
         ),BottomNavigationBarItem(
-          icon: Icon(Icons.favorite_border),
+          icon: Container(
+            key: lovedTabKey, // ← Loved tab key
+            child: Icon(Icons.favorite_border),
+          ),
           label: 'Loved'
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.diamond_outlined),
+          icon: Container(
+            key: diamondTabKey, // ← Diamond tab key
+            child: Icon(Icons.diamond_outlined),
+          ),
           label: 'YES'
         ),
         BottomNavigationBarItem(

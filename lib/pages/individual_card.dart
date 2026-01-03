@@ -94,12 +94,13 @@ class _CustomCardState extends State<IndividualCard> {
               if (Navigator.canPop(context))
                 Row( 
                   children: [
-                    IconButton(icon: const Icon(Icons.arrow_back),
+                    TextButton.icon(
                       onPressed: () => Navigator.pop(context),
-                    ),
-                    Text("Back",
-                    style: AppStyles.backButton
-                    
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(
+                        "Back",
+                        style: AppStyles.backButton,
+                      ),
                     )
                   ]
                 ),

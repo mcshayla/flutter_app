@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import './utils/string_extensions.dart';
 
 
@@ -35,7 +36,7 @@ class AppState extends ChangeNotifier {
 
   bool isLoaded = false;
 
-  
+  bool showOnboarding = false;
 
   AppState() {
     // 👇 LISTEN TO AUTH CHANGES
@@ -52,6 +53,19 @@ class AppState extends ChangeNotifier {
         loadInitialData();
       }
     });
+  }
+
+  Future<void> loadOnboardingFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    showOnboarding = !(prefs.getBool('seen_onboarding') ?? false);
+    notifyListeners();
+  }
+
+  Future<void> markOnboardingSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_onboarding', true);
+    showOnboarding = false;
+    notifyListeners();
   }
 
   void clearState() {

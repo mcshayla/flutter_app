@@ -37,7 +37,7 @@ class CollectionPageTemplate extends StatelessWidget {
             child: categoryKeys.isEmpty
               ? Center(
                   child: Text(
-                    "No vendors to display",
+                    "Heart vendors to see them here!",
                     style: AppStyles.simpleElegant,
                   ),
                 )
@@ -57,17 +57,25 @@ class CollectionPageTemplate extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            GestureDetector(
+                              child: Text(
                               capCategoryName,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF7B3F61),
+                                    color: const Color.fromRGBO(123, 63, 97, 1),
                                   ),
-                              // style: GoogleFonts.montserrat(
-                              //   fontSize: 16,
-                              //   fontWeight: FontWeight.w500,
-                              //   letterSpacing: 1.2,
-                              // )
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:(_) => CategoryPageTemplate(
+                                      categoryName: categoryName,
+                                      showOnlyLoved: isLovedPage,
+                                    )
+                                )
+                                );
+                              },
                             ),
                             GestureDetector(
                               child: Text(
