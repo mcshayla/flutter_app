@@ -61,6 +61,12 @@ class CategoryPageTemplate extends StatelessWidget {
                 ),
                 itemBuilder:(context, index) {
                   final item = categoryList[index];
+                  return Selector<AppState, bool>(
+                              selector: (_, appState) =>
+                                  appState.lovedVendorUUIDsCategorizedMap[categoryName]
+                                      ?.contains(item['vendor_id']) ??
+                                  false,
+                              builder: (_, isHearted, __) {
                   return CustomCard(
                     title: item['vendor_name'] ?? "",
                     description: item['vendor_description'] ?? "",
@@ -112,6 +118,7 @@ class CategoryPageTemplate extends StatelessWidget {
                       );
                     },
                   );
+                });
                 },
               )
             )

@@ -80,13 +80,11 @@ class _CustomCardState extends State<IndividualCard> {
     final images = widget.imageUrl
     .where((url) => url.trim().isNotEmpty)
     .toList();
-    // final List<dynamic> imageUrls =
-    // widget.imageUrl.where((url) => url.trim().isNotEmpty).toList();
-    final appState = Provider.of<AppState>(context);
-    final isHearted = appState.lovedVendorUUIDsCategorizedMap[widget.category]?.contains(widget.vendor_id) ?? false;
-    final isDiamonded = appState.diamondedCards[widget.category.lowerCase()] == widget.vendor_id;
+    
     return Consumer<AppState>(
       builder:(context, appState, child) {
+      final isHearted = appState.lovedVendorUUIDsCategorizedMap[widget.category]?.contains(widget.vendor_id) ?? false;
+      final isDiamonded = appState.diamondedCards[widget.category.lowerCase()] == widget.vendor_id;
       return Scaffold(
         body: SingleChildScrollView(
           child: Column(
@@ -381,7 +379,10 @@ class _CustomCardState extends State<IndividualCard> {
                           Expanded(
                             child: GestureDetector(
                               onTap: isClickable && launchUrl != null 
-                                ? () => _launchInBrowser(Uri.parse(launchUrl!))
+                                ? () {
+                                    appState.trackLinksClick(widget.vendor_id);
+                                    _launchInBrowser(Uri.parse(launchUrl!));
+                                  }
                                 : null,
                               child: Text(
                                 value,
@@ -445,6 +446,7 @@ class _CustomCardState extends State<IndividualCard> {
                           padding: const EdgeInsets.only(right: 16.0),
                           child: GestureDetector(
                             onTap: () {
+                              appState.trackLinksClick(widget.vendor_id);
                               _launchInBrowser(Uri.parse(url));
                             },
                             child: FaIcon(
