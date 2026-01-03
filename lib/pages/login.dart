@@ -68,7 +68,7 @@ class _LoginSignupState extends State<LoginSignup> {
 
 
      if (res.user != null) {
-      print("LOGGED IN");
+      // print("LOGGED IN");
       await Provider.of<AppState>(context, listen: false).loadInitialData();
       _onAuthSuccess();
       return;
@@ -176,7 +176,7 @@ class _LoginSignupState extends State<LoginSignup> {
 
         
         if (signupRes.user != null) {
-          print("SIGNED IN");
+          // print("SIGNED IN");
           await Provider.of<AppState>(context, listen: false).loadInitialData();
           _onAuthSuccess();
         }

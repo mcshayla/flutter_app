@@ -27,14 +27,16 @@ class CollectionPageTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
+    // final appState = Provider.of<AppState>(context);
     final categoryKeys = categories.keys.toList();
     return Scaffold(
       // appBar: AppBar(),
       body: Column(
         children: [
           Expanded(
-            child: categoryKeys.isEmpty
+            child: Consumer<AppState>(
+              builder: (context, appState, _) {
+            return categoryKeys.isEmpty
               ? Center(
                   child: Text(
                     "Heart vendors to see them here!",
@@ -107,6 +109,12 @@ class CollectionPageTemplate extends StatelessWidget {
 
                             final item = items[itemIndex];
                             // bool isLoved = appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false;
+                            return Selector<AppState, bool>(
+                              selector: (_, appState) =>
+                                  appState.lovedVendorUUIDsCategorizedMap[categoryName]
+                                      ?.contains(item['vendor_id']) ??
+                                  false,
+                              builder: (_, isHearted, __) {
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
@@ -158,11 +166,13 @@ class CollectionPageTemplate extends StatelessWidget {
                                 );
                               },
                             );
+                            });
                           })
                         ),
                     ],
                   ),
                 );
+              });
               })
             ),
         ],

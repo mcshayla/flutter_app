@@ -84,7 +84,7 @@ class AppState extends ChangeNotifier {
         // No signed-in user yet; avoid crashing and just set loaded=false
         isLoaded = false;
         notifyListeners();
-        print('loadInitialData: no authenticated user present');
+        // print('loadInitialData: no authenticated user present');
         return;
       }
       final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
@@ -106,13 +106,13 @@ class AppState extends ChangeNotifier {
 
       for (var entry in allCategorizedMap.entries) {
         final category = entry.key;
-        print('category $category');
+        // print('category $category');
         final vendors = entry.value;
 
         for (var vendor in vendors) {
 
           final id = vendor['vendor_id'];
-          print('id $id');
+          // print('id $id');
           if (id != null) {
             vendorIdToCategory[id] = category;
           }
