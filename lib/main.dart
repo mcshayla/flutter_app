@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:say_yes/pages/web_landing_page.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'pages/main_scaffold.dart';
 import 'package:provider/provider.dart'; 
 import 'appstate.dart'; 
 import './pages/login.dart';
 import 'keys.dart';
+import 'dart:html' as html;
 
 // uvicorn python_scripts.embed_queries:app --reload
 
@@ -34,17 +37,27 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Wedding Planner App',
+      title: 'Wedding Planner App | Easiyest',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 174, 176, 129)),
         scaffoldBackgroundColor: Color(0xFFF8F5F0),
       ),
-      home: const AuthCheck()
+      onGenerateRoute: (RouteSettings settings) {
+        String routePath = settings.name ?? '/';
+        if (kIsWeb) {
+          routePath = html.window.location.pathname ?? '/';
+        }        
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) => AuthCheck(routeName: routePath),
+        );
+      },
     );
   }
 }
 class AuthCheck extends StatefulWidget {
-  const AuthCheck({super.key});
+  final String routeName;
+  const AuthCheck({super.key, required this.routeName});
 
   @override
   State<AuthCheck> createState() => _AuthCheckState();
@@ -76,6 +89,9 @@ class _AuthCheckState extends State<AuthCheck> {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
+    }
+    if (widget.routeName == '/landing' || widget.routeName == '/landing/') {
+      return const WebLandingPage();
     }
 
     return const MainScaffold();
