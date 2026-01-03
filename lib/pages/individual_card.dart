@@ -94,12 +94,13 @@ class _CustomCardState extends State<IndividualCard> {
               if (Navigator.canPop(context))
                 Row( 
                   children: [
-                    IconButton(icon: const Icon(Icons.arrow_back),
+                    TextButton.icon(
                       onPressed: () => Navigator.pop(context),
-                    ),
-                    Text("Back",
-                    style: AppStyles.backButton
-                    
+                      icon: const Icon(Icons.arrow_back),
+                      label: Text(
+                        "Back",
+                        style: AppStyles.backButton,
+                      ),
                     )
                   ]
                 ),
@@ -133,6 +134,67 @@ class _CustomCardState extends State<IndividualCard> {
                               );
                             },
                           ),
+                          // Left arrow
+                          if (images.length > 1)
+                            Positioned(
+                              left: 12,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _pageController.previousPage(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black.withOpacity(0.4),
+                                    ),
+                                    child: Transform.translate(
+                                      offset: const Offset(2, 0),
+                                      child: const Icon(
+                                        Icons.arrow_back_ios,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Right arrow
+                          if (images.length > 1)
+                            Positioned(
+                              right: 12,
+                              top: 0,
+                              bottom: 0,
+                              child: Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    _pageController.nextPage(
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.black.withOpacity(0.4),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           // Image indicators
                           if (images.length > 1)
                             Positioned(
@@ -167,7 +229,7 @@ class _CustomCardState extends State<IndividualCard> {
               ),
             Padding(
               padding: const EdgeInsets.only(
-                top: 36.0,
+                top: 16.0,
                 left: 36.0,
                 right: 36.0,
                 bottom: 0.0, // no padding at the bottom
@@ -213,52 +275,134 @@ class _CustomCardState extends State<IndividualCard> {
                 )
               ],)
             ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36.0),
+              child: Container(
+                height: 1,
+                color: const Color(0xFFDCC7AA),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(
-                top: 10.0,
+                top: 14.0,
                 left: 38.0,
                 right: 36.0,
                 bottom: 10.0, // no padding at the bottom
               ),
               child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                details
-                  .where((item) => item[1] != null && (item[1] as String).trim().isNotEmpty && item[1] != "Unknown")
-                  .map((item) {
-                final detailTitle = item[0];
-                final value = item[1] as String;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3.0),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(
-                          "$detailTitle: ",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0
-                          )
-                        ),
-                        Expanded(
-                          child: Text(
-                            value,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 1.2,
-                              color: Color(0xFF6E6E6E)
+              children: [
+                // Style Keywords as pills
+                if (widget.style_keywords.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: widget.style_keywords
+                          .split(',')
+                          .map((keyword) => keyword.trim())
+                          .where((keyword) => keyword.isNotEmpty)
+                          .map((keyword) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCC7AA).withOpacity(0.2),
+                              border: Border.all(color: const Color(0xFFDCC7AA)),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            softWrap: true,
-                          ),
-                        ),
-                      ],
-                  ));
+                            child: Text(
+                              keyword,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.8,
+                                color: const Color(0xFF7B3F61),
+                              ),
+                            ),
+                          ))
+                          .toList(),
+                    ),
+                  ),
+                // Other details (excluding Style Keywords and Description heading)
+                ...details
+                    .where((item) => item[1] != null && (item[1] as String).trim().isNotEmpty && item[1] != "Unknown" && item[0] != 'Style Keywords')
+                    .map((item) {
+                  final detailTitle = item[0];
+                  final value = item[1] as String;
+                    
+                  bool isClickable = false;
+                  String? launchUrl;
+                  
+                  if (detailTitle == 'Email') {
+                    isClickable = true;
+                    launchUrl = 'mailto:$value';
+                  } else if (detailTitle == 'Phone') {
+                    isClickable = true;
+                    launchUrl = 'tel:$value';
+                  } else if (detailTitle == 'Website') {
+                    isClickable = true;
+                    launchUrl = value.startsWith('http') ? value : 'https://$value';
                   }
-              ).toList()
+                  
+                  // For Description, just show the text without the label
+                  if (detailTitle == 'Description') {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        value,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.2,
+                          height: 1.4,
+                          color: const Color(0xFF6E6E6E),
+                        ),
+                        softWrap: true,
+                      ),
+                    );
+                  }
+              
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            "$detailTitle: ",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0
+                            )
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: isClickable && launchUrl != null 
+                                ? () => _launchInBrowser(Uri.parse(launchUrl!))
+                                : null,
+                              child: Text(
+                                value,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: 1.2,
+                                  height: 1.4,
+                                  color: isClickable ? const Color(0xFF7B3F61) : const Color(0xFF6E6E6E),
+                                  decoration: isClickable ? TextDecoration.underline : TextDecoration.none,
+                                  decorationColor: isClickable ? const Color(0xFF7B3F61) : null,
+                                ),
+                                softWrap: true,
+                              ),
+                            ),
+                          ),
+                        ],
+                    ));
+                    }
+                ).toList(),
+              ],
             ),
             ),
             if (widget.social_media_links.isNotEmpty)

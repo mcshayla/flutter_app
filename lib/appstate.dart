@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import './utils/string_extensions.dart';
 
 
@@ -35,14 +36,13 @@ class AppState extends ChangeNotifier {
 
   bool isLoaded = false;
 
+  bool showOnboarding = false;
 
   AppState() {
     // 👇 LISTEN TO AUTH CHANGES
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
-
-      print("🔥 auth state changed, user = $user");
 
       if (user == null) {
         // User logged out
@@ -53,6 +53,19 @@ class AppState extends ChangeNotifier {
         loadInitialData();
       }
     });
+  }
+
+  Future<void> loadOnboardingFlag() async {
+    final prefs = await SharedPreferences.getInstance();
+    showOnboarding = !(prefs.getBool('seen_onboarding') ?? false);
+    notifyListeners();
+  }
+
+  Future<void> markOnboardingSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('seen_onboarding', true);
+    showOnboarding = false;
+    notifyListeners();
   }
 
   void clearState() {
@@ -71,7 +84,7 @@ class AppState extends ChangeNotifier {
         // No signed-in user yet; avoid crashing and just set loaded=false
         isLoaded = false;
         notifyListeners();
-        print('loadInitialData: no authenticated user present');
+        // print('loadInitialData: no authenticated user present');
         return;
       }
       final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
@@ -93,13 +106,13 @@ class AppState extends ChangeNotifier {
 
       for (var entry in allCategorizedMap.entries) {
         final category = entry.key;
-        print('category $category');
+        // print('category $category');
         final vendors = entry.value;
 
         for (var vendor in vendors) {
 
           final id = vendor['vendor_id'];
-          print('id $id');
+          // print('id $id');
           if (id != null) {
             vendorIdToCategory[id] = category;
           }
@@ -184,7 +197,7 @@ class AppState extends ChangeNotifier {
 
       await supabase.from('users').upsert({
         'user_id': user.id,
-        category: vendorId,
+        category: diamonded ? vendorId : null,
       });
 
       notifyListeners();

@@ -27,17 +27,19 @@ class CollectionPageTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
+    // final appState = Provider.of<AppState>(context);
     final categoryKeys = categories.keys.toList();
     return Scaffold(
       // appBar: AppBar(),
       body: Column(
         children: [
           Expanded(
-            child: categoryKeys.isEmpty
+            child: Consumer<AppState>(
+              builder: (context, appState, _) {
+            return categoryKeys.isEmpty
               ? Center(
                   child: Text(
-                    "No vendors to display",
+                    "Heart vendors to see them here!",
                     style: AppStyles.simpleElegant,
                   ),
                 )
@@ -57,17 +59,25 @@ class CollectionPageTemplate extends StatelessWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            GestureDetector(
+                              child: Text(
                               capCategoryName,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF7B3F61),
+                                    color: const Color.fromRGBO(123, 63, 97, 1),
                                   ),
-                              // style: GoogleFonts.montserrat(
-                              //   fontSize: 16,
-                              //   fontWeight: FontWeight.w500,
-                              //   letterSpacing: 1.2,
-                              // )
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:(_) => CategoryPageTemplate(
+                                      categoryName: categoryName,
+                                      showOnlyLoved: isLovedPage,
+                                    )
+                                )
+                                );
+                              },
                             ),
                             GestureDetector(
                               child: Text(
@@ -99,6 +109,12 @@ class CollectionPageTemplate extends StatelessWidget {
 
                             final item = items[itemIndex];
                             // bool isLoved = appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false;
+                            return Selector<AppState, bool>(
+                              selector: (_, appState) =>
+                                  appState.lovedVendorUUIDsCategorizedMap[categoryName]
+                                      ?.contains(item['vendor_id']) ??
+                                  false,
+                              builder: (_, isHearted, __) {
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",
@@ -150,11 +166,13 @@ class CollectionPageTemplate extends StatelessWidget {
                                 );
                               },
                             );
+                            });
                           })
                         ),
                     ],
                   ),
                 );
+              });
               })
             ),
         ],
