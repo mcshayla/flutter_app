@@ -93,21 +93,21 @@ class _LandingPageState extends State<WebLandingPage> {
                 const SizedBox(width: 24),
                 _buildNavLink('Sign Up', () => _scrollToSection(_signupKey)),
                 const SizedBox(width: 24),
-                TextButton(
-                  onPressed: () {
-                    if (kIsWeb) {
-                      html.window.history.pushState(null, '', '/');
-                    }
-                    Navigator.pushReplacementNamed(context, '/');
-                  },
-                  child: const Text(
-                    'Browse Listings',
-                    style: TextStyle(
-                      color: Color(0xFF7B3F61),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+                // TextButton(
+                //   onPressed: () {
+                //     if (kIsWeb) {
+                //       html.window.history.pushState(null, '', '/');
+                //     }
+                //     Navigator.pushReplacementNamed(context, '/');
+                //   },
+                //   child: const Text(
+                //     'Browse Listings',
+                //     style: TextStyle(
+                //       color: Color(0xFF7B3F61),
+                //       fontWeight: FontWeight.w500,
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ],
@@ -239,7 +239,7 @@ class _LandingPageState extends State<WebLandingPage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Fill out this form to learn more about advertising opportunities.',
+            'Fill out this form to join now.',
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF7B3F61),
@@ -282,10 +282,15 @@ class _LandingPageState extends State<WebLandingPage> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatItem('2M+', 'Engaged Couples'),
-                _buildStatItem('50K+', 'Active Vendors'),
-                _buildStatItem('10M+', 'Monthly Searches'),
-                _buildStatItem('99%', 'Customer Satisfaction'),
+                // _buildStatItem('2M+', 'Engaged Couples'),
+                // _buildStatItem('50K+', 'Active Vendors'),
+                // _buildStatItem('10M+', 'Monthly Searches'),
+                // _buildStatItem('99%', 'Customer Satisfaction'),
+                _buildStatItem('Built For', 'Wedding Vendors'),
+                _buildStatItem('Local Focus', 'Utah County & Nearby'),
+                _buildStatItem('Mobile App', 'Launching Soon'),
+                _buildStatItem('Free to Start', '3 Month Free Trial'),
+
               ],
             );
           } else {
@@ -294,10 +299,14 @@ class _LandingPageState extends State<WebLandingPage> {
               runSpacing: 40,
               alignment: WrapAlignment.center,
               children: [
-                _buildStatItem('2M+', 'Engaged Couples'),
-                _buildStatItem('50K+', 'Active Vendors'),
-                _buildStatItem('10M+', 'Monthly Searches'),
-                _buildStatItem('99%', 'Customer Satisfaction'),
+                // _buildStatItem('2M+', 'Engaged Couples'),
+                // _buildStatItem('50K+', 'Active Vendors'),
+                // _buildStatItem('10M+', 'Monthly Searches'),
+                // _buildStatItem('99%', 'Customer Satisfaction'),
+                _buildStatItem('Designed For', 'Wedding Vendors'),
+                _buildStatItem('Local Focus', 'Utah County & Nearby'),
+                _buildStatItem('Mobile App', 'Launching Soon'),
+                _buildStatItem('Free to Start', '3 Month Free Trial'),
               ],
             );
           }
@@ -357,23 +366,23 @@ class _LandingPageState extends State<WebLandingPage> {
                     constraints.maxWidth > 900 ? constraints.maxWidth / 3 - 16 : constraints.maxWidth,
                   ),
                   _buildFeatureCard(
-                    'Targeted Visibility',
-                    'Be seen by couples actively planning their weddings in your area. Our advanced matching system connects you with high-intent leads ready to book.',
+                    'Local Discovery',
+                    'Be seen by couples actively planning weddings in Utah County. easiYESt focuses on local discovery—so your business reaches the right people, not a national audience you’ll never book.',
                     constraints.maxWidth > 900 ? constraints.maxWidth / 3 - 16 : constraints.maxWidth,
                   ),
                   _buildFeatureCard(
-                    'Analytics & Insights',
-                    'Track your profile performance to monitor real business insights like impressions and leads generated from your page.',
+                    'Fair Vendor Visibility',
+                    'No pay-to-win listings. Vendor profiles rotate so everyone gets real visibility, giving small and growing businesses a fair chance to be discovered.',
                     constraints.maxWidth > 900 ? constraints.maxWidth / 3 - 16 : constraints.maxWidth,
                   ),
                   _buildFeatureCard(
-                    'Direct Communication',
-                    'Connect instantly with interested couples who message you from our system. Respond quickly to inquiries and convert leads into bookings.',
+                    'High-Intent Leads',
+                    'Fewer vendors and a local-only audience means couples browsing easiYESt are serious about booking—leading to higher-quality inquiries, not wasted clicks.',
                     constraints.maxWidth > 900 ? constraints.maxWidth / 3 - 16 : constraints.maxWidth,
                   ),
                   _buildFeatureCard(
-                    'Reviews & Reputation',
-                    'Build credibility with verified reviews from real couples. Showcase your five-star ratings and testimonials to attract more clients.',
+                    'Affordable, No-Risk Pricing',
+                    'Try easiYESt free for 3 months after launch. Then just \$20/month—no contracts, and cancel anytime.',
                     constraints.maxWidth > 900 ? constraints.maxWidth / 3 - 16 : constraints.maxWidth,
                   ),
                   _buildFeatureCard(
@@ -475,18 +484,18 @@ class _LandingPageState extends State<WebLandingPage> {
                 return Column(
                   children: [
                     _buildTestimonialCard(
-                      'This platform has generated so many leads for our small business! Being featured has helped us book more clients and grow our business.',
-                      'Sarah Williams',
-                      'Enchanted Gardens Venue',
-                      'SW',
+                      'I think this is great...there\'s a huge lack of service like this for brides. Utah Valley Bride and Utah Wedding Magazine have gone higher end, which is great but they\'ve cut out a huge portion of the actual local market.',
+                      'Kristy',
+                      '',
+                      'K',
                     ),
-                    const SizedBox(height: 24),
-                    _buildTestimonialCard(
-                      'As a wedding photographer, this platform has transformed my business. The quality of inquiries is exceptional, and the couples I meet are genuinely excited to work with me. It\'s the best investment I\'ve made for my business.',
-                      'Michael Chen',
-                      'Moments Photography Studio',
-                      'MC',
-                    ),
+                    // const SizedBox(height: 24),
+                    // _buildTestimonialCard(
+                    //   'As a wedding photographer, this platform has transformed my business. The quality of inquiries is exceptional, and the couples I meet are genuinely excited to work with me. It\'s the best investment I\'ve made for my business.',
+                    //   'Michael Chen',
+                    //   'Moments Photography Studio',
+                    //   'MC',
+                    // ),
                   ],
                 );
               }
@@ -612,7 +621,7 @@ class _LandingPageState extends State<WebLandingPage> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Join thousands of wedding professionals who are booking more weddings and building lasting relationships with engaged couples. Get started today or speak with our team to learn about pricing and advertising options.',
+              'Connect with engaged couples who are actively planning their weddings. Build real relationships, showcase your work, and be part of a platform designed for local vendors.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 18,
