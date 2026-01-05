@@ -158,6 +158,31 @@ class AppState extends ChangeNotifier {
   
   }
 
+
+  Future<void> trackCardClick(String vendorId) async {
+    final supabase = Supabase.instance.client;
+
+    await supabase.rpc(
+      'increment_vendor_click',
+      params: {
+        'vendor_uuid': vendorId,
+        'field_name': 'clicks_on_card',
+      },
+      );
+    }
+
+  Future<void> trackLinksClick(String vendorId) async {
+    final supabase = Supabase.instance.client;
+
+    await supabase.rpc(
+      'increment_vendor_click',
+      params: {
+        'vendor_uuid': vendorId,
+        'field_name': 'clicks_on_links',
+      },
+      );
+    }
+
   Future<void> toggleHeart(String vendorId, bool hearted) async {
     final user = supabase.auth.currentUser;
     if (user == null) return;

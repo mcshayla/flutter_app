@@ -10,6 +10,9 @@ import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_styles.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../appstate.dart';
+
 
 class CollectionPageTemplate extends StatelessWidget {
   final String pageTitle;
@@ -29,6 +32,7 @@ class CollectionPageTemplate extends StatelessWidget {
   Widget build(BuildContext context) {
     // final appState = Provider.of<AppState>(context);
     final categoryKeys = categories.keys.toList();
+    final supabase = Supabase.instance.client;
     return Scaffold(
       // appBar: AppBar(),
       body: Column(
@@ -130,10 +134,11 @@ class CollectionPageTemplate extends StatelessWidget {
                                 appState.toggleDiamond(item['vendor_id'], diamonded);
                               },
                               onTap: () {
+                                appState.trackCardClick(item['vendor_id']);
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-
+                                    
                                     builder:(_) => IndividualCard(
                                       title: item['vendor_name'] ?? "",
                                       description: item['vendor_description'] ?? "",
