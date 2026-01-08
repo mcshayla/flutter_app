@@ -75,8 +75,11 @@ class _AuthCheckState extends State<AuthCheck> {
 
   Future<void> _checkAuth() async {
     final supabase = Supabase.instance.client;
-    print(supabase.auth.currentUser);
-    if (supabase.auth.currentUser == null) {
+
+    final path = widget.routeName;
+    final isRecoveryRoute = path == '/resetPassword' || path == '/resetPassword/';
+
+    if (!isRecoveryRoute && supabase.auth.currentUser == null) {
       await supabase.auth.signInAnonymously();
     }
 
@@ -93,6 +96,13 @@ class _AuthCheckState extends State<AuthCheck> {
     }
     if (widget.routeName == '/vendorRegistration' || widget.routeName == '/vendorRegistration/') {
       return const WebLandingPage();
+    }
+    if (widget.routeName == '/resetPassword' || widget.routeName == '/resetPassword/') {
+      return const Scaffold(
+        body: Center(
+          child: Text('Reset Password Page Loads Here'),
+        ),
+      );
     }
 
     return const MainScaffold();
