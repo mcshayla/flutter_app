@@ -1,6 +1,6 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:say_yes/utils/string_extensions.dart';
 import '../widgets/card.dart';
 import '../appstate.dart';
@@ -28,6 +28,18 @@ class CollectionPageTemplate extends StatelessWidget {
     super.key,
   });
 
+  int _calculateItemCount(int itemsLength, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = 160.0; // CustomCard width
+    final padding = 16.0; // horizontal padding
+    
+    final availableWidth = screenWidth - (padding * 2);
+    final cardsPerScreen = (availableWidth / cardWidth).floor();
+    final cardsToShow = (cardsPerScreen * 1.5).round();
+    
+    return min(itemsLength, max(cardsToShow, 6)); 
+  }
+
   @override
   Widget build(BuildContext context) {
     // final appState = Provider.of<AppState>(context);
@@ -37,6 +49,20 @@ class CollectionPageTemplate extends StatelessWidget {
       // appBar: AppBar(),
       body: Column(
         children: [
+          if (kIsWeb)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+              child: Text(
+                'the easiYESt way to plan your perfect wedding',
+                style: GoogleFonts.montserrat(
+                  fontSize: 20,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           Expanded(
             child: Consumer<AppState>(
               builder: (context, appState, _) {
@@ -107,8 +133,7 @@ class CollectionPageTemplate extends StatelessWidget {
                         height: 220,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          // itemCount: items.length
-                          itemCount: min(items.length, 6),
+                          itemCount: _calculateItemCount(items.length, context),
                           itemBuilder: (context, itemIndex) {
 
                             final item = items[itemIndex];
@@ -119,6 +144,11 @@ class CollectionPageTemplate extends StatelessWidget {
                                       ?.contains(item['vendor_id']) ??
                                   false,
                               builder: (_, isHearted, __) {
+                            // return Padding(
+                            //   padding: EdgeInsets.symmetric(
+                            //     horizontal: kIsWeb ? 12.0 : 6.0,
+                            //   ),
+                            //   child: 
                             return CustomCard(
                               title: item['vendor_name'] ?? "",
                               description: item['vendor_description'] ?? "",

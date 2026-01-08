@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'appstate.dart'; 
 import './pages/login.dart';
 import 'keys.dart';
-import 'dart:html' as html;
+// import 'dart:html' as html;
 
 // uvicorn python_scripts.embed_queries:app --reload
 
@@ -46,7 +46,9 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (RouteSettings settings) {
         String routePath = settings.name ?? '/';
         if (kIsWeb) {
-          routePath = html.window.location.pathname ?? '/';
+          // routePath = html.window.location.pathname ?? '/';
+          final uri = Uri.base;
+          routePath = uri.path;
         }        
         return MaterialPageRoute(
           settings: settings,

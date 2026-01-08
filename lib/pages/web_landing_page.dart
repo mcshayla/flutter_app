@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:html' as html;
+// import 'dart:html' as html;
 
 
 class WebLandingPage extends StatefulWidget {

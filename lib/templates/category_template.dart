@@ -49,15 +49,18 @@ class CategoryPageTemplate extends StatelessWidget {
                   ),
                 ): 
             Expanded( 
-              child:Padding(
-              padding: const EdgeInsets.all(12.0),
-              child:GridView.builder( 
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: GridView.builder( 
                 itemCount: categoryList.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 300,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.9,
                 ),
                 itemBuilder:(context, index) {
                   final item = categoryList[index];
@@ -120,7 +123,7 @@ class CategoryPageTemplate extends StatelessWidget {
                   );
                 });
                 },
-              )
+              )))
             )
             )
             ]

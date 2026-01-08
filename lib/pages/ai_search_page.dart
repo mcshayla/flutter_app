@@ -53,8 +53,8 @@ class _AISearchPageState extends State<AISearchPage> {
     _controller.clear();
     setState(() {});
     print(query);
-    // final url = Uri.parse("http://127.0.0.1:8000/search");
-    final url = Uri.parse("http://10.0.2.2:8000/search");
+    final url = Uri.parse("http://127.0.0.1:8000/search");
+    // final url = Uri.parse("http://10.0.2.2:8000/search");
 
     try {
       final response = await http.post(

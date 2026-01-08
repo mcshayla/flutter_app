@@ -4,6 +4,7 @@ import 'ai_search_page.dart';
 import 'yes_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -114,7 +115,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
+    // GlobalKey<NavigatorState>(),
   ];
 
   void _onTabTapped(int index) {
@@ -144,19 +145,90 @@ class _MainScaffoldState extends State<MainScaffold> {
           'easiYESt',
           style: GoogleFonts.bodoniModa(
             fontSize: 36,
-            fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
-            letterSpacing: 2.0, // A little spacing for elegance
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2.0,
             color: const Color(0xFFDCC7AA),
           ),
         ),
         actions: [
-           IconButton(
+          if (kIsWeb) ...[
+            if (MediaQuery.of(context).size.width > 800)
+              // Wide screen: Show tabs directly
+              ...[
+                _buildWebTabButton(0, 'Explore'),
+                _buildWebTabButton(1, 'Loved'),
+                _buildWebTabButton(2, 'YES'),
+                // _buildWebTabButton(3, 'Search'),
+                const SizedBox(width: 16),
+              ]
+            else
+              // Narrow screen: Show hamburger menu
+              PopupMenuButton<int>(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onSelected: (index) => _onTabTapped(index),
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem(
+                    value: 0,
+                    child: Text(
+                      'Explore',
+                      style: TextStyle(
+                        color: _selectedIndex == 0 ? const Color(0xFF7B3F61) : Colors.black,
+                        fontWeight: _selectedIndex == 0 ? FontWeight.bold : FontWeight.normal,
+                        decoration: _selectedIndex == 0 ? TextDecoration.underline : TextDecoration.none,
+                        decorationColor: const Color(0xFF7B3F61),
+                        decorationThickness: 2,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 1,
+                    child: Text(
+                      'Loved',
+                      style: TextStyle(
+                        color: _selectedIndex == 1 ? const Color(0xFF7B3F61) : Colors.black,
+                        fontWeight: _selectedIndex == 1 ? FontWeight.bold : FontWeight.normal,
+                        decoration: _selectedIndex == 1 ? TextDecoration.underline : TextDecoration.none,
+                        decorationColor: const Color(0xFF7B3F61),
+                        decorationThickness: 2,
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 2,
+                    child: Text(
+                      'YES',
+                      style: TextStyle(
+                        color: _selectedIndex == 2 ? const Color(0xFF7B3F61) : Colors.black,
+                        fontWeight: _selectedIndex == 2 ? FontWeight.bold : FontWeight.normal,
+                        decoration: _selectedIndex == 2 ? TextDecoration.underline : TextDecoration.none,
+                        decorationColor: const Color(0xFF7B3F61),
+                        decorationThickness: 2,
+                      ),
+                    ),
+                  ),
+                  // PopupMenuItem(
+                  //   value: 3,
+                  //   child: Text(
+                  //     'Search',
+                  //     style: TextStyle(
+                  //       color: _selectedIndex == 3 ? const Color(0xFF7B3F61) : Colors.black,
+                  //       fontWeight: _selectedIndex == 3 ? FontWeight.bold : FontWeight.normal,
+                  //       decoration: _selectedIndex == 3 ? TextDecoration.underline : TextDecoration.none,
+                  //       decorationColor: const Color(0xFF7B3F61),
+                  //       decorationThickness: 2,
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+          ],
+          IconButton(
             key: _profileTabKey,
             icon: const Icon(Icons.person_outline, color: Colors.white),
             onPressed: () {
-               _navigatorKeys[_selectedIndex].currentState?.push(
-                  MaterialPageRoute(builder: (_) => const ProfilePage()),
-                );
+              _navigatorKeys[_selectedIndex].currentState?.push(
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
+              );
             },
             tooltip: 'Profile',
           ),
@@ -166,30 +238,28 @@ class _MainScaffoldState extends State<MainScaffold> {
               final supabase = Supabase.instance.client;
               
               // Clear tutorial flag for testing
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('seen_main_tutorial');
+              // final prefs = await SharedPreferences.getInstance();
+              // await prefs.remove('seen_main_tutorial');
               
               await supabase.auth.signOut();
 
-              // Navigate back to login page
               if (mounted) {
                 Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const LoginSignup(
-                    redirect: LoginRedirect.home,
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LoginSignup(
+                      redirect: LoginRedirect.home,
+                    ),
                   ),
-                ),
-              );
+                );
               }
             },
             tooltip: 'Logout',
           ),
-          ],
-        // title: Text("Easy-yest", style: TextStyle(fontFamily: 'GreatVibes', color:Color(0xFFDCC7AA) )),
-        backgroundColor:Color(0xFF7B3F61) ,
+        ],
+        backgroundColor: const Color(0xFF7B3F61),
         centerTitle: true,
-        elevation: 4.0
+        elevation: kIsWeb ? 8.0 : 4.0,
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -197,16 +267,39 @@ class _MainScaffoldState extends State<MainScaffold> {
           _buildTabNavigator(0, const ExplorePage()),
           _buildTabNavigator(1, const LovedPage()),
           _buildTabNavigator(2, const YesPage()),
-          _buildTabNavigator(3, const AISearchPage())
-        ]
+          // _buildTabNavigator(3, const AISearchPage())
+        ],
       ),
-      bottomNavigationBar: BottomNav(
+      bottomNavigationBar: kIsWeb ? null : BottomNav(
         currentIndex: _selectedIndex,
         onTap: _onTabTapped,
         lovedTabKey: _lovedTabKey,
         diamondTabKey: _diamondKey,
         profileTabKey: _profileTabKey,
-      )
+      ),
+    );
+  }
+
+  Widget _buildWebTabButton(int index, String label) {
+    final isSelected = _selectedIndex == index;
+    final labels = ['Explore', 'Loved', 'YES']; //, 'Search'
+    
+    return TextButton(
+      onPressed: () => _onTabTapped(index),
+      style: TextButton.styleFrom(
+        backgroundColor: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 14,
+          letterSpacing: 0.8,
+        ),
+      ),
     );
   }
 }

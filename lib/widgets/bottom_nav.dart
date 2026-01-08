@@ -48,10 +48,10 @@ class BottomNav extends StatelessWidget {
           ),
           label: 'YES'
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.lightbulb_outline),
-          label: 'Search'
-        ),
+        // BottomNavigationBarItem(
+        //   icon: Icon(Icons.lightbulb_outline),
+        //   label: 'Search'
+        // ),
       ],
       );
   }
