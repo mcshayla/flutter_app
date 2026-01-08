@@ -12,9 +12,7 @@ import '../appstate.dart';
 import 'login.dart';
 import 'profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-
-
+import 'tutorial.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -25,8 +23,6 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
-  late TutorialCoachMark _tutorialCoachMark;
-  List<TargetFocus> _targets = [];
 
   @override
   void initState() {
@@ -35,77 +31,25 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   Future<void> _showTutorialIfFirstTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeen = prefs.getBool('seen_main_tutorial') ?? false;
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeen = prefs.getBool('seen_main_tutorial') ?? false;
 
-    if (!hasSeen) {
-      _buildTargets();
-
-      _tutorialCoachMark = TutorialCoachMark(
-      targets: _targets,
-      colorShadow: Colors.black,
-      opacityShadow: 0.8,
-      hideSkip: false, // 👈 SHOWS SKIP BUTTON
-      textSkip: "Skip",
-      onFinish: () async {
-        await prefs.setBool('seen_main_tutorial', true);
-      },
-      onSkip: () {
-        prefs.setBool('seen_main_tutorial', true);
-        return true;
-      },
-    );
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _tutorialCoachMark.show(context: context);
-      });
-    }
+  if (!hasSeen) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => TutorialOverlay(
+          onComplete: () async {
+            await prefs.setBool('seen_main_tutorial', true);
+            if (mounted) Navigator.of(context).pop();
+          },
+        ),
+      );
+    });
   }
+}
 
-  // 👇 buildTargets also lives here
-  void _buildTargets() {
-    _targets = [
-      TargetFocus(
-        identify: "LovedTab",
-        keyTarget: _lovedTabKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: const Text(
-              "Tap the hearts on the cards to save vendors you love and see them here!",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "DiamondTab",
-        keyTarget: _diamondKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            child: const Text(
-              "Diamond your number one pick in each category and view them here!",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ],
-      ),
-      TargetFocus(
-        identify: "Profile",
-        keyTarget: _profileTabKey,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            child: const Text(
-              "Create an account to save your favorites and come back anytime!",
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-          ),
-        ],
-      ),
-    ];
-  }
 
   final GlobalKey _lovedTabKey = GlobalKey();
   final GlobalKey _profileTabKey = GlobalKey();
@@ -238,8 +182,8 @@ class _MainScaffoldState extends State<MainScaffold> {
               final supabase = Supabase.instance.client;
               
               // Clear tutorial flag for testing
-              // final prefs = await SharedPreferences.getInstance();
-              // await prefs.remove('seen_main_tutorial');
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('seen_main_tutorial');
               
               await supabase.auth.signOut();
 
