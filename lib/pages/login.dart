@@ -125,10 +125,17 @@ class _LoginSignupState extends State<LoginSignup> {
                 }
                 
                 try {
+                  // await Supabase.instance.client.auth.resetPasswordForEmail(
+                  //   resetEmailController.text.trim(),
+                  //   redirectTo: 'io.supabase.flutter://login-callback',
+                  // );
                   await Supabase.instance.client.auth.resetPasswordForEmail(
-                    resetEmailController.text.trim(),
-                    redirectTo: 'io.supabase.flutter://login-callback',
-                  );
+                   resetEmailController.text.trim(),
+                  //  redirectTo: 'https://cocmclecxanepyheygqs.supabase.co/auth/v1/reset-password'
+                   
+                  //  redirectTo: 'https://app.supabase.com/auth/v1/reset-password'
+                   redirectTo: 'https://easiyest.com/resetPassword',
+                );
                   
                   if (mounted) {
                     Navigator.pop(context);
