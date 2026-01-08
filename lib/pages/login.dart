@@ -164,15 +164,22 @@ class _LoginSignupState extends State<LoginSignup> {
 
     setState(() => _isLoading = true);
     final supabase = Supabase.instance.client;
-
+    final signupRes;
     try {
-        final signupRes = await supabase.auth.updateUser(
-        UserAttributes(
-          email: email,
-          password: password,
-          data: {'username': username.isNotEmpty ? username : null},
-        ),
-        );
+        if (supabase.auth.currentSession == null) {
+          signupRes = await supabase.auth.signUp(
+              email: email,
+              password: password,
+            );
+        } else {
+          signupRes = await supabase.auth.updateUser(
+          UserAttributes(
+            email: email,
+            password: password,
+            data: {'username': username.isNotEmpty ? username : null},
+          ),
+          );
+        }
 
         
         if (signupRes.user != null) {
