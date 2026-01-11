@@ -46,13 +46,12 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (RouteSettings settings) {
         String routePath = settings.name ?? '/';
         if (kIsWeb) {
-          // routePath = html.window.location.pathname ?? '/';
           final uri = Uri.base;
           routePath = uri.path;
         }        
         return MaterialPageRoute(
           settings: settings,
-          builder: (context) => AuthCheck(routeName: routePath),
+          builder: (context) => AuthCheck(routeName: routePath, hash: Uri.base.fragment),
         );
       },
     );
@@ -60,7 +59,8 @@ class MyApp extends StatelessWidget {
 }
 class AuthCheck extends StatefulWidget {
   final String routeName;
-  const AuthCheck({super.key, required this.routeName});
+  final String hash;
+  const AuthCheck({super.key, required this.routeName, required this.hash});
 
   @override
   State<AuthCheck> createState() => _AuthCheckState();
@@ -79,9 +79,11 @@ class _AuthCheckState extends State<AuthCheck> {
     final supabase = Supabase.instance.client;
 
     final path = widget.routeName;
-    final isRecoveryRoute = path == '/resetPassword' || path == '/resetPassword/';
+    final isRecoveryRoute = path.contains('resetPassword') || 
+                           widget.hash.contains('access_token');
 
     if (!isRecoveryRoute && supabase.auth.currentUser == null) {
+      print("signed in annonymously");
       await supabase.auth.signInAnonymously();
     }
 
@@ -91,15 +93,17 @@ class _AuthCheckState extends State<AuthCheck> {
 
   @override
   Widget build(BuildContext context) {
+    print('DEBUG: routeName = ${widget.routeName}');
+    
     if (!_ready) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    if (widget.routeName == '/vendorRegistration' || widget.routeName == '/vendorRegistration/') {
+    if (widget.routeName.contains('vendorRegistration')) {
       return const WebLandingPage();
     }
-    if (widget.routeName == '/resetPassword' || widget.routeName == '/resetPassword/') {
+    if (widget.routeName.contains('resetPassword') || widget.hash.contains('access_token')) {
       return const Scaffold(
         body: Center(
           child: Text('Reset Password Page Loads Here'),

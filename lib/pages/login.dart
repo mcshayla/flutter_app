@@ -131,10 +131,8 @@ class _LoginSignupState extends State<LoginSignup> {
                   // );
                   await Supabase.instance.client.auth.resetPasswordForEmail(
                    resetEmailController.text.trim(),
-                  //  redirectTo: 'https://cocmclecxanepyheygqs.supabase.co/auth/v1/reset-password'
-                   
-                  //  redirectTo: 'https://app.supabase.com/auth/v1/reset-password'
-                   redirectTo: 'https://easiyest.com/resetPassword',
+                   redirectTo: 'https://easiyest.com/resetPassword.html',
+                    // redirectTo: 'http://localhost:49700/resetPassword.html',
                 );
                   
                   if (mounted) {
@@ -183,7 +181,8 @@ class _LoginSignupState extends State<LoginSignup> {
           UserAttributes(
             email: email,
             password: password,
-            data: {'username': username.isNotEmpty ? username : null},
+            data: {'username': username.isNotEmpty ? username : null,
+                  'is_anonymous': false,},
           ),
           );
         }
