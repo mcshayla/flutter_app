@@ -47,6 +47,33 @@ class _ProfilePageState extends State<ProfilePage> {
         .single();
   }
 
+  Future<void> deleteAccount() async {
+    final supabase = Supabase.instance.client;
+    try {
+      final response = await supabase.functions.invoke('delete-user');
+      
+      if (response.status == 200) {
+        await supabase.auth.signOut();
+        if (context.mounted) {
+          await Navigator.of(context, rootNavigator: true).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const LoginSignup(
+                redirect: LoginRedirect.home,
+              ),
+            ),
+          );
+        }
+          // Navigate to login
+        }
+    } catch (e) {
+      if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+    }
+  }
+
   bool _isValidUsername(Map<String, dynamic> data) {
     // Check if username exists, is a string, is not empty, and is not an anonymous ID
     return data['username'] != null &&
@@ -54,55 +81,6 @@ class _ProfilePageState extends State<ProfilePage> {
         (data['username'] as String).isNotEmpty &&
         !(data['username'] as String).contains('-'); // Filter out UUIDs (anonymous IDs have hyphens)
   }
-
-  // void _signupAuth() async {
-  //   final supabase = Supabase.instance.client;
-  //   final user = supabase.auth.currentUser;
-  //   final email = _emailController.text.trim();
-  //   final password = _passwordController.text.trim();
-  //   final username = _usernameController.text.trim();
-
-  //   if (email.isEmpty || password.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Email and password cannot be empty')),
-  //     );
-  //     return;
-  //   }
-
-  //   try {
-  //     await supabase.auth.updateUser(
-  //     UserAttributes(
-  //       email: email,
-  //       password: password,
-  //       data: {
-  //         if (username.isNotEmpty) 'username': username,
-  //       },
-  //     ),
-  //     );
-
-  //     // OPTIONAL: update your public users table
-  //     await supabase.from('users').update({
-  //       'email': email,
-  //       'username': username,
-  //     }).eq('user_id', user!.id);
-
-    
-  //     setState(() {
-  //       _isGuest = false;
-  //       // _showSignupForm = false;
-  //     });
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Account upgraded successfully!')),
-  //     );
-  //   } catch (error) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Signup error: $error')),
-  //     );
-  //   }
-  // }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -275,7 +253,59 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                             ),
                           ),
+                          if (!_isGuest) 
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF7B3F61),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Delete Account'),
+                                    content: Text('Are you sure? This action cannot be undone.', style: AppStyles.backButton),
+                                    actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, false),
+                                      child: Text('Cancel', style: AppStyles.backButton),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context, true),
+                                      child: Text(
+                                        'Delete',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 1.0,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
 
+                              if (confirm == true) {
+                                await deleteAccount();
+                              }
+                            },
+                            child: Text(
+                              'Delete Account',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 1.0,
+                                color: const Color(0xFFF8F5F0),
+                              ),
+                            ),
+                          ),
+                          )
                         ]
                       ),)
                         ],

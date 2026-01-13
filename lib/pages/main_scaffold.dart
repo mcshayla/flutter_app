@@ -31,23 +31,23 @@ class _MainScaffoldState extends State<MainScaffold> {
   }
 
   Future<void> _showTutorialIfFirstTime() async {
-  final prefs = await SharedPreferences.getInstance();
-  final hasSeen = prefs.getBool('seen_main_tutorial') ?? false;
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('seen_main_tutorial') ?? false;
 
-  if (!hasSeen) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => TutorialOverlay(
-          onComplete: () async {
-            await prefs.setBool('seen_main_tutorial', true);
-            if (mounted) Navigator.of(context).pop();
-          },
-        ),
-      );
-    });
-  }
+    if (!hasSeen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => TutorialOverlay(
+            onComplete: () async {
+              await prefs.setBool('seen_main_tutorial', true);
+              if (mounted) Navigator.of(context).pop();
+            },
+          ),
+        );
+      });
+    }
 }
 
 
@@ -181,9 +181,9 @@ class _MainScaffoldState extends State<MainScaffold> {
             onPressed: () async {
               final supabase = Supabase.instance.client;
               
-              // Clear tutorial flag for testing
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('seen_main_tutorial');
+              // When commented out, this is making the flags basically appear for device. They logout and then login, won't see tutorial again. But not connected to user.
+              // final prefs = await SharedPreferences.getInstance();
+              // await prefs.remove('seen_main_tutorial');
               
               await supabase.auth.signOut();
 
