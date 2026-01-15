@@ -111,7 +111,7 @@ class CollectionPageTemplate extends StatelessWidget {
                             ),
                             GestureDetector(
                               child: Text(
-                                "View All $capCategoryName",
+                                "View All",
                                 style: AppStyles.backButton,
                               ),
                               onTap: () {

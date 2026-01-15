@@ -59,13 +59,15 @@ class _CustomCardState extends State<CustomCard> {
                     widget.imageUrl,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    cacheWidth: 200,
+                    filterQuality: FilterQuality.medium,
+                    cacheWidth: 400,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.network(
                         "https://picsum.photos/200/300",
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        cacheWidth: 200,
+                        filterQuality: FilterQuality.medium,
+                        cacheWidth: 400,
                       );
                     }
                   ),
