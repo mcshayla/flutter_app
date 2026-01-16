@@ -261,7 +261,7 @@ class _LoginSignupState extends State<LoginSignup> {
               Padding( padding: const EdgeInsets.all(16.0), 
               child: widget.redirect == LoginRedirect.home ?
               Center(child:Text(
-                'easiYEStest',
+                'easiYESt',
                 style: GoogleFonts.bodoniModa(
                   fontSize: 54,
                   fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
