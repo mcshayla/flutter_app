@@ -852,7 +852,347 @@ class _CustomCardState extends State<IndividualCard> {
               ],
             ),
           ),
+        
+        // Reviews Section
+        _buildReviewsSection(context, appState),
       ],
+    );
+  }
+
+  Widget _buildReviewsSection(BuildContext context, AppState appState) {
+  return FutureBuilder<List<Map<String, dynamic>>?>(
+    future: appState.getReviewsForVendor(widget.vendor_id),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: const Color(0xFF7B3F61),
+            ),
+          ),
+        );
+      }
+
+      final reviews = snapshot.data ?? [];
+      final averageRating = _calculateAverageRating(reviews);
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Divider
+            Container(
+              height: 1,
+              color: const Color(0xFFDCC7AA),
+            ),
+            const SizedBox(height: 24),
+
+            // Reviews Header with Average Rating
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Reviews',
+                  style: GoogleFonts.bodoniModa(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                    color: const Color(0xFF7B3F61),
+                  ),
+                ),
+                if (reviews.isNotEmpty)
+                  Row(
+                    children: [
+                      _buildStarRating(averageRating, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${averageRating.toStringAsFixed(1)} (${reviews.length})',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF7B3F61),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Leave a Review Button - only show if user is logged in
+            if (appState.supabase.auth.currentUser != null && appState.supabase.auth.currentUser?.isAnonymous == false) ...[
+              OutlinedButton(
+                onPressed: () => _showReviewDialog(context, appState),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFF7B3F61)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                ),
+                child: Text(
+                  'Leave a Review',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.0,
+                    color: const Color(0xFF7B3F61),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Reviews List
+            if (reviews.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Center(
+                  child: Text(
+                    'No reviews yet. Be the first to review!',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF6E6E6E),
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...reviews.map((review) => _buildReviewCard(review)).toList(),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+  Widget _buildReviewCard(Map<String, dynamic> review) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDCC7AA).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFDCC7AA).withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  review['userName'] ?? 'Anonymous',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.8,
+                    color: const Color(0xFF7B3F61),
+                  ),
+                ),
+              ),
+              _buildStarRating(review['rating']?.toDouble() ?? 0, size: 14),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (review['comment'] != null && review['comment'].toString().trim().isNotEmpty)
+            Text(
+              review['comment'],
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 1.0,
+                height: 1.4,
+                color: const Color(0xFF6E6E6E),
+              ),
+            ),
+          if (review['date'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                _formatDate(review['date']),
+                style: GoogleFonts.montserrat(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF6E6E6E).withOpacity(0.7),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStarRating(double rating, {double size = 16}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < rating.floor()
+              ? Icons.star
+              : (index < rating ? Icons.star_half : Icons.star_border),
+          size: size,
+          color: const Color(0xFF7B3F61),
+        );
+      }),
+    );
+  }
+
+  double _calculateAverageRating(List<Map<String, dynamic>> reviews) {
+    if (reviews.isEmpty) return 0.0;
+    final sum = reviews.fold<double>(
+        0.0, (sum, review) => sum + (review['rating']?.toDouble() ?? 0));
+    return sum / reviews.length;
+  }
+
+  String _formatDate(dynamic date) {
+    // Adjust based on your date format
+    if (date is DateTime) {
+      return '${date.month}/${date.day}/${date.year}';
+    }
+    return date.toString();
+  }
+
+  void _showReviewDialog(BuildContext context, AppState appState) {
+    int selectedRating = 0;
+    final commentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Leave a Review',
+                style: GoogleFonts.bodoniModa(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF7B3F61),
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Rating',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedRating = index + 1;
+                            });
+                          },
+                          child: Icon(
+                            index < selectedRating ? Icons.star : Icons.star_border,
+                            size: 36,
+                            color: const Color(0xFF7B3F61),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Comment (Optional)',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: commentController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: 'Share your experience...',
+                        hintStyle: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: const Color(0xFF6E6E6E).withOpacity(0.5),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF7B3F61)),
+                        ),
+                      ),
+                      style: GoogleFonts.montserrat(fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      color: const Color(0xFF6E6E6E),
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: selectedRating > 0
+                      ? () {
+                          appState.submitReview(
+                            widget.vendor_id,
+                            selectedRating,
+                            commentController.text.trim(),
+                          );
+                          Navigator.of(context).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Review submitted successfully!',
+                                style: GoogleFonts.montserrat(fontSize: 11),
+                              ),
+                              backgroundColor: const Color(0xFF7B3F61),
+                            ),
+                          );
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7B3F61),
+                    disabledBackgroundColor: const Color(0xFF7B3F61).withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Text(
+                    'Submit',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

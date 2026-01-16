@@ -32,6 +32,8 @@ class AppState extends ChangeNotifier {
   // diamondedCards = {
   // "venue": "pretty mountain venue"
   // "florist": "becca's floral"}
+  Map<String, List<Map<String, dynamic>>> _vendorReviews = {};
+
   final supabase = Supabase.instance.client;
 
   bool isLoaded = false;
@@ -241,4 +243,81 @@ class AppState extends ChangeNotifier {
     });
     return lovedMap;
   }
+
+// Get reviews for a specific vendor
+Future<List<Map<String, dynamic>>?> getReviewsForVendor(String vendorId) async {
+  final supabase = Supabase.instance.client;
+  
+  try {
+    // Fetch reviews from database
+    final response = await supabase
+        .from('reviews')
+        .select()
+        .eq('vendor_id', vendorId)
+        .order('created_at', ascending: false);
+    
+    // Transform the data
+    final reviews = (response as List).map((review) {
+      return {
+        'id': review['id'],
+        'rating': review['rating'],
+        'comment': review['comment'] ?? '',
+        'userName': 'User', // You can fetch user names separately if needed
+        'date': DateTime.parse(review['created_at']),
+        'userId': review['user_id'],
+      };
+    }).toList();
+    
+    // Cache in memory
+    _vendorReviews[vendorId] = reviews;
+    
+    return reviews;
+  } catch (e) {
+    print("Error fetching reviews: $e");
+    // Return cached data if available
+    return _vendorReviews[vendorId];
+  }
+}
+
+// Submit a new review
+Future<void> submitReview(String vendorId, int rating, String comment) async {
+  final supabase = Supabase.instance.client;
+  final user = supabase.auth.currentUser;
+  
+  if (user == null) return;
+  
+  try {
+    // Insert or update review
+    await supabase.from('reviews').upsert({
+      'user_id': user.id,
+      'vendor_id': vendorId,
+      'rating': rating,
+      'comment': comment,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    
+    // Refresh reviews for this vendor
+    await getReviewsForVendor(vendorId);
+    
+    notifyListeners();
+  } catch (e) {
+    print("Error submitting review: $e");
+  }
+}
+
+// Optional: Get average rating without fetching all reviews
+Future<double> getAverageRating(String vendorId) async {
+  final supabase = Supabase.instance.client;
+  
+  try {
+    final response = await supabase
+        .rpc('get_average_rating', params: {'vendor_uuid': vendorId});
+    
+    return (response ?? 0.0).toDouble();
+  } catch (e) {
+    print("Error getting average rating: $e");
+    return 0.0;
+  }
+}
+
 }
