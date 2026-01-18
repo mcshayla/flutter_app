@@ -214,7 +214,9 @@ class AppState extends ChangeNotifier {
     if (user == null) return;
 
     final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
-
+    print(category);
+    print(diamondedCards);
+  
     try {
       if (diamonded) {
         diamondedCards[category] = vendorId;
