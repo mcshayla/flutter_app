@@ -204,24 +204,60 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // Future<void> toggleDiamond(String vendorId, bool diamonded) async {
+  //   final user = supabase.auth.currentUser;
+  //   if (user == null) return;
+
+  //   final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
+  //   print(category);
+  //   print(diamondedCards);
+  
+  //   try {
+  //     if (diamonded) {
+  //       diamondedCards[category] = vendorId;
+  //     } else {
+  //       diamondedCards.remove(category);
+  //     }
+
+  //     await supabase.from('users').upsert({
+  //       'user_id': user.id,
+  //       category: diamonded ? vendorId : null,
+  //     });
+
+  //     notifyListeners();
+  //   }  catch (e) {
+  //     print("Error toggling diamond: $e");
+  //   }
+  // }
   Future<void> toggleDiamond(String vendorId, bool diamonded) async {
     final user = supabase.auth.currentUser;
-    if (user == null) return;
+    if (user == null || vendorId.isEmpty) return;
 
-    final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
-    print(category);
-    print(diamondedCards);
-  
+    // Get display format for diamondedCards (capitalized)
+    final displayCategory = (vendorIdToCategory[vendorId] ?? 'other');
+      // .replaceAll('_', ' ')
+      // .replaceAll('and', '&');
+    
+    // Get database format for upsert (lowercase with underscores)
+    final dbCategory = (vendorIdToCategory[vendorId] ?? 'other')
+      .toLowerCase()
+      .replaceAll(' ', '_')
+      .replaceAll('&', 'and');
+
+    print(displayCategory);
+    print(dbCategory);
+    
     try {
       if (diamonded) {
-        diamondedCards[category] = vendorId;
+        diamondedCards[dbCategory] = vendorId;
+        print("diamonded");
       } else {
-        diamondedCards.remove(category);
+        diamondedCards.remove(dbCategory);
       }
 
       await supabase.from('users').upsert({
         'user_id': user.id,
-        category: diamonded ? vendorId : null,
+        dbCategory: diamonded ? vendorId : null,
       });
 
       notifyListeners();
