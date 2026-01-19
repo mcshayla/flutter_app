@@ -17,12 +17,30 @@ class YesPage extends StatelessWidget {
     final categoriesMap = appState.allCategorizedMap;
     final categoryKeys = categoriesMap.keys.toList();
     final filteredEntries = diamondedCategories.entries.where((entry) => entry.value.isNotEmpty).toList();
+    
+    // final vendorMap = <String, dynamic>{};
+    // for (var entry in filteredEntries) {
+    //   final vendorList = categoriesMap[entry.key.capitalize()] ?? [];
+    //   final vendor = vendorList.firstWhere((v) => v['vendor_id'] == entry.value, orElse: () => {});
+    //   vendorMap[entry.value] = vendor;
+    // }
     final vendorMap = <String, dynamic>{};
-    for (var entry in filteredEntries) {
-      final vendorList = categoriesMap[entry.key.capitalize()] ?? [];
-      final vendor = vendorList.firstWhere((v) => v['vendor_id'] == entry.value, orElse: () => {});
-      vendorMap[entry.value] = vendor;
-    }
+      for (var entry in filteredEntries) {
+        // Special case for DJ (acronym that needs all caps)
+        final categoryKey = entry.key == 'dj' 
+            ? 'DJ'
+            : entry.key
+                .split('_')
+                .map((word) => word == 'and' ? '&' : word.capitalize())
+                .join(' ');
+        
+        final vendorList = categoriesMap[categoryKey] ?? [];
+        final vendor = vendorList.firstWhere(
+          (v) => v['vendor_id'] == entry.value, 
+          orElse: () => {}
+        );
+        vendorMap[entry.value] = vendor;
+      }
     return Scaffold(
       body: Column(
         children: [
@@ -58,13 +76,16 @@ class YesPage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final category = filteredEntries[index].key;
                       final vendorId = filteredEntries[index].value;
-                      print("#################");
-                      print(category);
-                      print( appState.lovedVendorUUIDsCategorizedMap);
-                      print(appState.diamondedCards);
+                      // print("#################");
+                      // print(category);
+                      // print(vendorId);
+                      // print( appState.lovedVendorUUIDsCategorizedMap);
+                      // print(appState.diamondedCards);
                       // Get vendor name safely
                       final vendor = vendorMap[vendorId] ?? {"vendor_name": "Unknown"};
+                      // print(vendorMap);
                       final vendorName = vendor['vendor_name'];
+                      // print(vendor);
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
