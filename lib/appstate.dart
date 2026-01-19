@@ -83,10 +83,8 @@ class AppState extends ChangeNotifier {
     try {
       final user = supabase.auth.currentUser;
       if (user == null) {
-        // No signed-in user yet; avoid crashing and just set loaded=false
         isLoaded = false;
         notifyListeners();
-        // print('loadInitialData: no authenticated user present');
         return;
       }
       final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
@@ -108,13 +106,11 @@ class AppState extends ChangeNotifier {
 
       for (var entry in allCategorizedMap.entries) {
         final category = entry.key;
-        // print('category $category');
         final vendors = entry.value;
 
         for (var vendor in vendors) {
 
           final id = vendor['vendor_id'];
-          // print('id $id');
           if (id != null) {
             vendorIdToCategory[id] = category;
           }
@@ -132,18 +128,17 @@ class AppState extends ChangeNotifier {
 
       final diamonded = await supabase
       .from('users')
-      .select('venue, catering, florist, photographer')
-      .eq('user_id', user.id);
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-      if (diamonded.isNotEmpty) {
-        final row = diamonded[0] as Map<String, dynamic>;
-        diamondedCards = {
-          'venue': row['venue'] ?? '',
-          'catering': row['catering'] ?? '',
-          'florist': row['florist'] ?? '',
-          'photographer': row['photographer'] ?? '',
-        };
-      }
+      const ignoreFields = {'user_id', 'email', 'username', 'created_at'};
+
+      diamondedCards = {
+        for (var entry in diamonded.entries)
+          if (!ignoreFields.contains(entry.key))
+            entry.key: entry.value ?? ''
+      };
 
       for (var row in loved) {
         final vendorId = row['loved_vendor_id'] as String;

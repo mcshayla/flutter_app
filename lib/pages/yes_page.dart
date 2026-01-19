@@ -58,6 +58,10 @@ class YesPage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final category = filteredEntries[index].key;
                       final vendorId = filteredEntries[index].value;
+                      print("#################");
+                      print(category);
+                      print( appState.lovedVendorUUIDsCategorizedMap);
+                      print(appState.diamondedCards);
                       // Get vendor name safely
                       final vendor = vendorMap[vendorId] ?? {"vendor_name": "Unknown"};
                       final vendorName = vendor['vendor_name'];
@@ -99,7 +103,8 @@ class YesPage extends StatelessWidget {
                                                           ?.whereType<String>()
                                                           .toList() ?? [],
                                               isHearted: appState.lovedVendorUUIDsCategorizedMap[category.capitalize()]?.contains(vendor['vendor_id']) ?? false,
-                                              isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                                              // isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                                              isDiamonded: appState.diamondedCards[category] == vendor['vendor_id'],
                                               onHeartToggled: (hearted) {
                                                 appState.toggleHeart(vendor['vendor_id'], hearted);
                                               },
@@ -157,27 +162,12 @@ class YesPage extends StatelessWidget {
                                           vendorName,
                                           style: GoogleFonts.bodoniModa(
                                             fontSize: 22,
-                                            fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
+                                            fontWeight: FontWeight.w600,
                                             letterSpacing: 2.0,
                                           ),
-                                          // style: AppStyles.fancyTitle,
-                                          //   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                          // fontWeight: FontWeight.bold,
-                                          // color: const Color.fromARGB(255, 9, 9, 9)
-                                          // style:GoogleFonts.cormorantGaramond(
-                                          //     fontSize: 22,
-                                          //     fontWeight: FontWeight.w600,
-                                          //   ),
-                                          // style: GoogleFonts.bodoniModa(
-                                          //   fontSize: 24, 
-                                          //   fontWeight: FontWeight.w600,
-                                          //   letterSpacing: 2.0,
-                                          //   color: const Color.fromARGB(255, 0, 0, 0)
-                                          // ),
                                           softWrap: true,
                                           overflow: TextOverflow.visible,
                                           maxLines: 2,
-                                          // You can adjust this as needed
                                         ),
                                       ),
                                     ),
