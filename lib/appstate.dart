@@ -41,7 +41,6 @@ class AppState extends ChangeNotifier {
   bool showOnboarding = false;
 
   AppState() {
-    // 👇 LISTEN TO AUTH CHANGES
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
@@ -96,7 +95,7 @@ class AppState extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
+      final data = await supabase.from('vendors').select(); 
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};
 

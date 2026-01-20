@@ -1218,7 +1218,7 @@ class _CustomCardState extends State<IndividualCard> {
                 ?.contains(widget.vendor_id) ??
             false;
         final isDiamonded =
-            appState.diamondedCards[widget.category.capitalizeWords()] ==
+            appState.diamondedCards[widget.category] ==
                 widget.vendor_id;
 
         return Scaffold(

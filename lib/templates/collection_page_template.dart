@@ -321,7 +321,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                 itemBuilder: (context, index) {
                   final categoryName = filteredCategoryKeys[index];
                   final items = filteredCategories[categoryName]!;
-                  String capCategoryName = categoryName.capitalizeWords().pluralize();
+                  String capCategoryName = categoryName.pluralize();
                   return Padding(
                     padding: const EdgeInsets.all(8),
                     child: Column(
@@ -393,7 +393,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                                     ? (item['image_url'] as List<dynamic>)[0].toString()
                                     : "https://picsum.photos/200/300",
                                 isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                                isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
+                                isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]] == item['vendor_id'],
                                 onHeartToggled: (hearted) {
                                   appState.toggleHeart(item['vendor_id'], hearted);
                                 },
@@ -427,7 +427,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                                         category: categoryName,
                                         isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                                         
-                                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
+                                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]] == item['vendor_id'],
                                         onHeartToggled: (hearted) {
                                           appState.toggleHeart(item['vendor_id'], hearted);
                                         },

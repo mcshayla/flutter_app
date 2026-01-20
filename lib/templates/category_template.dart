@@ -111,7 +111,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
 
   @override
   Widget build(BuildContext context) {
-    String capCategoryName = widget.categoryName.capitalize().pluralize();
+    String capCategoryName = widget.categoryName.pluralize();
     return Consumer<AppState>(
       builder:(context, appState, child) {
           final List<Map<String, dynamic>> categoryList = widget.showOnlyLoved
@@ -310,7 +310,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     onHeartToggled: (hearted) {
                       appState.toggleHeart(item['vendor_id'], hearted);
                     },
-                    isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
+                    isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]] == item['vendor_id'],
                     onDiamondToggled: (diamonded) {
                       appState.toggleDiamond(item['vendor_id'], diamonded);
                     },
@@ -338,7 +338,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                                           ?.whereType<String>()
                                           .toList() ?? [],
                             isHearted: appState.lovedVendorUUIDsCategorizedMap[widget.categoryName]?.contains(item['vendor_id']) ?? false,
-                            isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
+                            isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]] == item['vendor_id'],
                             onHeartToggled: (hearted) {
                               appState.toggleHeart(item['vendor_id'], hearted);
                             },
