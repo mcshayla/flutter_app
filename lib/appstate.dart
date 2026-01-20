@@ -78,6 +78,15 @@ class AppState extends ChangeNotifier {
     isLoaded = true;
   }
 
+  String _transformCategoryKey(String dbColumnName) {
+        if (dbColumnName == 'dj') return 'DJ';
+        
+        return dbColumnName
+            .split('_')
+            .map((word) => word == 'and' ? '&' : word.capitalize())
+            .join(' ');
+      }
+
   Future<void> loadInitialData() async {
 
     try {
@@ -137,7 +146,7 @@ class AppState extends ChangeNotifier {
       diamondedCards = {
         for (var entry in diamonded.entries)
           if (!ignoreFields.contains(entry.key))
-            entry.key: entry.value ?? ''
+            _transformCategoryKey(entry.key): entry.value ?? ''
       };
 
       for (var row in loved) {
@@ -204,55 +213,21 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // Future<void> toggleDiamond(String vendorId, bool diamonded) async {
-  //   final user = supabase.auth.currentUser;
-  //   if (user == null) return;
-
-  //   final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
-  //   print(category);
-  //   print(diamondedCards);
-  
-  //   try {
-  //     if (diamonded) {
-  //       diamondedCards[category] = vendorId;
-  //     } else {
-  //       diamondedCards.remove(category);
-  //     }
-
-  //     await supabase.from('users').upsert({
-  //       'user_id': user.id,
-  //       category: diamonded ? vendorId : null,
-  //     });
-
-  //     notifyListeners();
-  //   }  catch (e) {
-  //     print("Error toggling diamond: $e");
-  //   }
-  // }
   Future<void> toggleDiamond(String vendorId, bool diamonded) async {
     final user = supabase.auth.currentUser;
     if (user == null || vendorId.isEmpty) return;
 
-    // Get display format for diamondedCards (capitalized)
     final displayCategory = (vendorIdToCategory[vendorId] ?? 'other');
-      // .replaceAll('_', ' ')
-      // .replaceAll('and', '&');
-    
-    // Get database format for upsert (lowercase with underscores)
     final dbCategory = (vendorIdToCategory[vendorId] ?? 'other')
       .toLowerCase()
       .replaceAll(' ', '_')
       .replaceAll('&', 'and');
 
-    print(displayCategory);
-    print(dbCategory);
-    
     try {
       if (diamonded) {
-        diamondedCards[dbCategory] = vendorId;
-        print("diamonded");
+        diamondedCards[displayCategory] = vendorId;
       } else {
-        diamondedCards.remove(dbCategory);
+        diamondedCards.remove(displayCategory);
       }
 
       await supabase.from('users').upsert({

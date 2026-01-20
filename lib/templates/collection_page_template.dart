@@ -393,7 +393,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                                     ? (item['image_url'] as List<dynamic>)[0].toString()
                                     : "https://picsum.photos/200/300",
                                 isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                                isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
+                                isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
                                 onHeartToggled: (hearted) {
                                   appState.toggleHeart(item['vendor_id'], hearted);
                                 },
@@ -426,7 +426,8 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                                         vendor_id: item['vendor_id'] ?? "",
                                         category: categoryName,
                                         isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
-                                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.toLowerCase()] == item['vendor_id'],
+                                        
+                                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]?.capitalizeWords()] == item['vendor_id'],
                                         onHeartToggled: (hearted) {
                                           appState.toggleHeart(item['vendor_id'], hearted);
                                         },

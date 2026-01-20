@@ -18,29 +18,13 @@ class YesPage extends StatelessWidget {
     final categoryKeys = categoriesMap.keys.toList();
     final filteredEntries = diamondedCategories.entries.where((entry) => entry.value.isNotEmpty).toList();
     
-    // final vendorMap = <String, dynamic>{};
-    // for (var entry in filteredEntries) {
-    //   final vendorList = categoriesMap[entry.key.capitalize()] ?? [];
-    //   final vendor = vendorList.firstWhere((v) => v['vendor_id'] == entry.value, orElse: () => {});
-    //   vendorMap[entry.value] = vendor;
-    // }
     final vendorMap = <String, dynamic>{};
-      for (var entry in filteredEntries) {
-        // Special case for DJ (acronym that needs all caps)
-        final categoryKey = entry.key == 'dj' 
-            ? 'DJ'
-            : entry.key
-                .split('_')
-                .map((word) => word == 'and' ? '&' : word.capitalize())
-                .join(' ');
-        
-        final vendorList = categoriesMap[categoryKey] ?? [];
-        final vendor = vendorList.firstWhere(
-          (v) => v['vendor_id'] == entry.value, 
-          orElse: () => {}
-        );
-        vendorMap[entry.value] = vendor;
-      }
+    for (var entry in filteredEntries) {
+      final vendorList = categoriesMap[entry.key] ?? [];
+      final vendor = vendorList.firstWhere((v) => v['vendor_id'] == entry.value, orElse: () => {});
+      vendorMap[entry.value] = vendor;
+    }
+  
     return Scaffold(
       body: Column(
         children: [
@@ -79,13 +63,6 @@ class YesPage extends StatelessWidget {
                       final vendor = vendorMap[vendorId] ?? {"vendor_name": "Unknown"};
                       final vendorName = vendor['vendor_name'];
 
-                      final categoryDisplay = category == 'dj' 
-                        ? 'DJ'
-                        : category
-                            .split('_')
-                            .map((word) => word == 'and' ? '&' : word.capitalize())
-                            .join(' ');
-
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -93,7 +70,7 @@ class YesPage extends StatelessWidget {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Text(categoryDisplay,
+                              child: Text(category,
                                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: const Color(0xFF7B3F61),
@@ -106,7 +83,7 @@ class YesPage extends StatelessWidget {
                                     MaterialPageRoute(
                                         builder: (_) => IndividualCard(
                                               vendor_id: vendor['vendor_id'],
-                                              category: categoryDisplay,
+                                              category: category,
                                               title: vendor['vendor_name'] ?? "",
                                               description: vendor['vendor_description'] ?? "",
                                               style_keywords: vendor['style_keywords'] ?? "",
@@ -123,8 +100,7 @@ class YesPage extends StatelessWidget {
                                                   social_media_links: (vendor['social_media_links'] as List<dynamic>?)
                                                           ?.whereType<String>()
                                                           .toList() ?? [],
-                                              isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryDisplay]?.contains(vendor['vendor_id']) ?? false,
-                                              // isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                                              isHearted: appState.lovedVendorUUIDsCategorizedMap[category]?.contains(vendor['vendor_id']) ?? false,
                                               isDiamonded: appState.diamondedCards[category] == vendor['vendor_id'],
                                               onHeartToggled: (hearted) {
                                                 appState.toggleHeart(vendor['vendor_id'], hearted);
