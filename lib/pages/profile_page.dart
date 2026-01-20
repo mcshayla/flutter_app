@@ -15,7 +15,6 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // bool _showSignupForm = false;
   bool _isGuest = false;
   late Future<Map<String, dynamic>?> _userFuture;
 
@@ -28,7 +27,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh user data when returning to this page
     setState(() {
       _userFuture = _fetchUser();
     });
@@ -75,11 +73,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   bool _isValidUsername(Map<String, dynamic> data) {
-    // Check if username exists, is a string, is not empty, and is not an anonymous ID
     return data['username'] != null &&
         data['username'] is String &&
         (data['username'] as String).isNotEmpty &&
-        !(data['username'] as String).contains('-'); // Filter out UUIDs (anonymous IDs have hyphens)
+        !(data['username'] as String).contains('-'); 
   }
 
   @override
@@ -186,40 +183,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           Center(child:
                           Column(
                             children: [
-                          // if (_showSignupForm)
-                          //   Column(
-                          //     children: [
-                          //       TextField(
-                          //         controller: _emailController,
-                          //         decoration: const InputDecoration(labelText: 'Email'),
-                          //       ),
-                          //       TextField(
-                          //         controller: _usernameController,
-                          //         decoration: const InputDecoration(labelText: 'Username'),
-                          //       ),
-                          //       TextField(
-                          //         controller: _passwordController,
-                          //         decoration: const InputDecoration(labelText: 'Password'),
-                          //         obscureText: true,
-                          //       ),
-                          //       const SizedBox(height: 16),
-                          //       ActionChip(
-                          //         label: Text(
-                          //           'Sign Up',
-                          //           style: GoogleFonts.montserrat(
-                          //             fontSize: 14,
-                          //             fontWeight: FontWeight.w500,
-                          //             color: const Color(0xFFF8F5F0),
-                          //           ),
-                          //         ),
-                          //         backgroundColor: const Color(0xFF7B3F61),
-                          //         onPressed: _signupAuth,
-                          //       ),
-                          //     ],
-                          //   ),
-
-                          // const SizedBox(height: 12),
-
                           if (_isGuest )
                            ElevatedButton(
                             style: ElevatedButton.styleFrom(

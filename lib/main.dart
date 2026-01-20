@@ -7,9 +7,6 @@ import 'package:provider/provider.dart';
 import 'appstate.dart'; 
 import './pages/login.dart';
 import 'keys.dart';
-// import 'dart:html' as html;
-
-// uvicorn python_scripts.embed_queries:app --reload
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +15,6 @@ void main() async {
     url: 'https://cocmclecxanepyheygqs.supabase.co',
      anonKey: annonKey
   );
-
-  // await signInAnonymously();
 
   runApp(
     ChangeNotifierProvider(
@@ -32,8 +27,6 @@ void main() async {
 class MyApp extends StatelessWidget {
 
   const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -93,7 +86,6 @@ class _AuthCheckState extends State<AuthCheck> {
 
   @override
   Widget build(BuildContext context) {
-    print('DEBUG: routeName = ${widget.routeName}');
     
     if (!_ready) {
       return const Scaffold(

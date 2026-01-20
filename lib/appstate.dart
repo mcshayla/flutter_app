@@ -41,7 +41,6 @@ class AppState extends ChangeNotifier {
   bool showOnboarding = false;
 
   AppState() {
-    // 👇 LISTEN TO AUTH CHANGES
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
       final user = session?.user;
@@ -78,18 +77,25 @@ class AppState extends ChangeNotifier {
     isLoaded = true;
   }
 
+  String _transformCategoryKey(String dbColumnName) {
+        if (dbColumnName == 'dj') return 'DJ';
+        
+        return dbColumnName
+            .split('_')
+            .map((word) => word == 'and' ? '&' : word.capitalize())
+            .join(' ');
+      }
+
   Future<void> loadInitialData() async {
 
     try {
       final user = supabase.auth.currentUser;
       if (user == null) {
-        // No signed-in user yet; avoid crashing and just set loaded=false
         isLoaded = false;
         notifyListeners();
-        // print('loadInitialData: no authenticated user present');
         return;
       }
-      final data = await supabase.from('vendors').select(); //CHANGE TO VENDORS
+      final data = await supabase.from('vendors').select(); 
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};
 
@@ -108,13 +114,11 @@ class AppState extends ChangeNotifier {
 
       for (var entry in allCategorizedMap.entries) {
         final category = entry.key;
-        // print('category $category');
         final vendors = entry.value;
 
         for (var vendor in vendors) {
 
           final id = vendor['vendor_id'];
-          // print('id $id');
           if (id != null) {
             vendorIdToCategory[id] = category;
           }
@@ -132,18 +136,17 @@ class AppState extends ChangeNotifier {
 
       final diamonded = await supabase
       .from('users')
-      .select('venue, catering, florist, photographer')
-      .eq('user_id', user.id);
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-      if (diamonded.isNotEmpty) {
-        final row = diamonded[0] as Map<String, dynamic>;
-        diamondedCards = {
-          'venue': row['venue'] ?? '',
-          'catering': row['catering'] ?? '',
-          'florist': row['florist'] ?? '',
-          'photographer': row['photographer'] ?? '',
-        };
-      }
+      const ignoreFields = {'user_id', 'email', 'username', 'created_at'};
+
+      diamondedCards = {
+        for (var entry in diamonded.entries)
+          if (!ignoreFields.contains(entry.key))
+            _transformCategoryKey(entry.key): entry.value ?? ''
+      };
 
       for (var row in loved) {
         final vendorId = row['loved_vendor_id'] as String;
@@ -211,20 +214,24 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleDiamond(String vendorId, bool diamonded) async {
     final user = supabase.auth.currentUser;
-    if (user == null) return;
+    if (user == null || vendorId.isEmpty) return;
 
-    final category = vendorIdToCategory[vendorId]?.lowerCase() ?? 'Other';
+    final displayCategory = (vendorIdToCategory[vendorId] ?? 'other');
+    final dbCategory = (vendorIdToCategory[vendorId] ?? 'other')
+      .toLowerCase()
+      .replaceAll(' ', '_')
+      .replaceAll('&', 'and');
 
     try {
       if (diamonded) {
-        diamondedCards[category] = vendorId;
+        diamondedCards[displayCategory] = vendorId;
       } else {
-        diamondedCards.remove(category);
+        diamondedCards.remove(displayCategory);
       }
 
       await supabase.from('users').upsert({
         'user_id': user.id,
-        category: diamonded ? vendorId : null,
+        dbCategory: diamonded ? vendorId : null,
       });
 
       notifyListeners();
