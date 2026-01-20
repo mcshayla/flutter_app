@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:say_yes/pages/vendor_signup.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './main_scaffold.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_styles.dart';
+import 'vendor_login.dart';
 
 enum LoginRedirect {
   pop,
@@ -403,6 +405,22 @@ class _LoginSignupState extends State<LoginSignup> {
                       decorationColor: const Color(0xFFDCC7AA),
                     ),
               ),),): null),
+              // In your main navigation or menu
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const VendorSignup()),
+                  );
+                },
+                child: Text(
+                  'Vendor Signup',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: const Color(0xFFDCC7AA),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

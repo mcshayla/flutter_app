@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-
 class BottomNav extends StatelessWidget {
-
   final int currentIndex;
   final ValueChanged<int> onTap;
   final GlobalKey? lovedTabKey;
   final GlobalKey? diamondTabKey;
   final GlobalKey? profileTabKey;
+  final bool hasVendor;
 
-
-  const BottomNav({super.key,  
+  const BottomNav({
+    super.key,  
     required this.currentIndex,
     required this.onTap,
     this.lovedTabKey,
     this.diamondTabKey,
-    this.profileTabKey
-
+    this.profileTabKey,
+    this.hasVendor = false,
   });
 
   @override
   Widget build(BuildContext context) {
-
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       currentIndex: currentIndex,
@@ -34,25 +32,27 @@ class BottomNav extends StatelessWidget {
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),
           label: 'Explore'
-        ),BottomNavigationBarItem(
+        ),
+        BottomNavigationBarItem(
           icon: Container(
-            key: lovedTabKey, // ← Loved tab key
+            key: lovedTabKey,
             child: Icon(Icons.favorite_border),
           ),
           label: 'Loved'
         ),
         BottomNavigationBarItem(
           icon: Container(
-            key: diamondTabKey, // ← Diamond tab key
+            key: diamondTabKey,
             child: Icon(Icons.diamond_outlined),
           ),
           label: 'YES'
         ),
-        // BottomNavigationBarItem(
-        //   icon: Icon(Icons.lightbulb_outline),
-        //   label: 'Search'
-        // ),
+        if (hasVendor)
+          BottomNavigationBarItem(
+            icon: Icon(Icons.business_outlined),
+            label: 'Vendor'
+          ),
       ],
-      );
+    );
   }
 }

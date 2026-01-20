@@ -315,6 +315,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                       appState.toggleDiamond(item['vendor_id'], diamonded);
                     },
                     onTap: () {
+                      appState.trackCardClick(item['vendor_id']);
                       Navigator.push(
                         context,
                         MaterialPageRoute(

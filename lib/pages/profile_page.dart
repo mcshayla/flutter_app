@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
+import 'vendor_claim.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -30,6 +31,24 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _userFuture = _fetchUser();
     });
+  }
+
+  Future<bool> _hasClaimedVendor() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      final result = await Supabase.instance.client
+          .from('vendor_profiles')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      return result != null;
+    } catch (e) {
+      print('Error checking vendor claim status: $e');
+      return false;
+    }
   }
 
   Future<Map<String, dynamic>?> _fetchUser() async {

@@ -13,6 +13,7 @@ import 'login.dart';
 import 'profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'tutorial.dart';
+import 'vendor_dashboard.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -23,11 +24,49 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
+  bool _hasVendor = false;
+  late List<GlobalKey<NavigatorState>> _navigatorKeys;
 
   @override
   void initState() {
     super.initState();
+    _initializeNavigatorKeys();
     _showTutorialIfFirstTime();
+    _checkVendorStatus();
+  }
+
+  Future<void> _checkVendorStatus() async {
+    final hasVendor = await _hasClaimedVendor();
+    setState(() {
+      _hasVendor = hasVendor;
+    });
+  }
+
+  Future<bool> _hasClaimedVendor() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      final result = await Supabase.instance.client
+          .from('vendor_profiles')
+          .select()
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      return result != null;
+    } catch (e) {
+      print('Error checking vendor claim status: $e');
+      return false;
+    }
+  }
+
+  void _initializeNavigatorKeys() {
+    _navigatorKeys = [
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(),
+      GlobalKey<NavigatorState>(), // Vendor tab key (always create it)
+    ];
   }
 
   Future<void> _showTutorialIfFirstTime() async {
@@ -48,19 +87,11 @@ class _MainScaffoldState extends State<MainScaffold> {
         );
       });
     }
-}
-
+  }
 
   final GlobalKey _lovedTabKey = GlobalKey();
   final GlobalKey _profileTabKey = GlobalKey();
   final GlobalKey _diamondKey = GlobalKey();
-
-  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
-    GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
-    GlobalKey<NavigatorState>(),
-    // GlobalKey<NavigatorState>(),
-  ];
 
   void _onTabTapped(int index) {
     if (_selectedIndex == index) {
@@ -79,10 +110,12 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
  
+ 
+
+
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -102,7 +135,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                 _buildWebTabButton(0, 'Explore'),
                 _buildWebTabButton(1, 'Loved'),
                 _buildWebTabButton(2, 'YES'),
-                // _buildWebTabButton(3, 'Search'),
+                if (_hasVendor) _buildWebTabButton(3, 'Vendor'),
                 const SizedBox(width: 16),
               ]
             else
@@ -150,19 +183,20 @@ class _MainScaffoldState extends State<MainScaffold> {
                       ),
                     ),
                   ),
-                  // PopupMenuItem(
-                  //   value: 3,
-                  //   child: Text(
-                  //     'Search',
-                  //     style: TextStyle(
-                  //       color: _selectedIndex == 3 ? const Color(0xFF7B3F61) : Colors.black,
-                  //       fontWeight: _selectedIndex == 3 ? FontWeight.bold : FontWeight.normal,
-                  //       decoration: _selectedIndex == 3 ? TextDecoration.underline : TextDecoration.none,
-                  //       decorationColor: const Color(0xFF7B3F61),
-                  //       decorationThickness: 2,
-                  //     ),
-                  //   ),
-                  // ),
+                  if (_hasVendor)
+                    PopupMenuItem(
+                      value: 3,
+                      child: Text(
+                        'Vendor',
+                        style: TextStyle(
+                          color: _selectedIndex == 3 ? const Color(0xFF7B3F61) : Colors.black,
+                          fontWeight: _selectedIndex == 3 ? FontWeight.bold : FontWeight.normal,
+                          decoration: _selectedIndex == 3 ? TextDecoration.underline : TextDecoration.none,
+                          decorationColor: const Color(0xFF7B3F61),
+                          decorationThickness: 2,
+                        ),
+                      ),
+                    ),
                 ],
               ),
           ],
@@ -170,7 +204,11 @@ class _MainScaffoldState extends State<MainScaffold> {
             key: _profileTabKey,
             icon: const Icon(Icons.person_outline, color: Colors.white),
             onPressed: () {
-              _navigatorKeys[_selectedIndex].currentState?.push(
+              // Use the current selected index, but make sure it's valid
+              final navigatorIndex = _selectedIndex < _navigatorKeys.length 
+                  ? _selectedIndex 
+                  : 0;
+              _navigatorKeys[navigatorIndex].currentState?.push(
                 MaterialPageRoute(builder: (_) => const ProfilePage()),
               );
             },
@@ -211,7 +249,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           _buildTabNavigator(0, const ExplorePage()),
           _buildTabNavigator(1, const LovedPage()),
           _buildTabNavigator(2, const YesPage()),
-          // _buildTabNavigator(3, const AISearchPage())
+          if (_hasVendor) _buildTabNavigator(3, const VendorDashboard()),
         ],
       ),
       bottomNavigationBar: kIsWeb ? null : BottomNav(
@@ -220,13 +258,13 @@ class _MainScaffoldState extends State<MainScaffold> {
         lovedTabKey: _lovedTabKey,
         diamondTabKey: _diamondKey,
         profileTabKey: _profileTabKey,
+        hasVendor: _hasVendor,
       ),
     );
   }
 
   Widget _buildWebTabButton(int index, String label) {
     final isSelected = _selectedIndex == index;
-    final labels = ['Explore', 'Loved', 'YES']; //, 'Search'
     
     return TextButton(
       onPressed: () => _onTabTapped(index),
