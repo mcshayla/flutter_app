@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
 
 class VendorCreatePage extends StatefulWidget {
   final String userId;
@@ -18,6 +21,7 @@ class VendorCreatePage extends StatefulWidget {
 class _VendorCreatePageState extends State<VendorCreatePage> {
   final _formKey = GlobalKey<FormState>();
   final supabase = Supabase.instance.client;
+  final _picker = ImagePicker();
   bool _isLoading = false;
 
   // Controllers
@@ -27,6 +31,10 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final _locationController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+
+  // Photo management
+  List<XFile> _selectedImages = [];
+  List<String> _uploadedImageUrls = [];
 
   @override
   void dispose() {
@@ -39,50 +47,125 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
     super.dispose();
   }
 
-  Future<void> _createVendor() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
+  Future<void> _pickImages() async {
     try {
-      // Create new vendor record
-      final vendorResponse = await supabase.from('vendors').insert({
-        'vendor_name': _businessNameController.text.trim(),
-        'vendor_description': _descriptionController.text.trim(),
-        'vendor_category': _categoryController.text.trim(),
-        'vendor_location': _locationController.text.trim(),
-        'contact_email': _emailController.text.trim(),
-        'contact_phone': _phoneController.text.trim(),
-        'vendor_user_id': widget.userId,
-        'is_claimed': true,
-        'claimed_at': DateTime.now().toIso8601String(),
-      }).select().single();
-
-      // Create vendor profile
-      await supabase.from('vendor_profiles').insert({
-        'user_id': widget.userId,
-        'vendor_id': vendorResponse['vendor_id'],
-        'business_name': _businessNameController.text.trim(),
-      });
-
-      if (mounted) {
-        Navigator.pop(context, true); // Return true to indicate success
+      final List<XFile> images = await _picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          _selectedImages.addAll(images);
+        });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error creating vendor: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking images: $e')),
+      );
     }
   }
+
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  Future<List<String>> _uploadImages(String vendorName) async {
+    List<String> uploadedUrls = [];
+    
+    for (int i = 0; i < _selectedImages.length; i++) {
+      final image = _selectedImages[i];
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.${image.path.split('.').last}';
+      final filePath = '$vendorName/$fileName';
+
+      try {
+        final bytes = await image.readAsBytes();
+        
+        await supabase.storage
+            .from('vendor-photos')
+            .uploadBinary(
+              filePath,
+              bytes,
+              fileOptions: FileOptions(
+                contentType: 'image/${image.path.split('.').last}',
+              ),
+            );
+
+        final publicUrl = supabase.storage
+            .from('vendor-photos')
+            .getPublicUrl(filePath);
+
+        uploadedUrls.add(publicUrl);
+      } catch (e) {
+        print('Error uploading image $i: $e');
+      }
+    }
+
+    return uploadedUrls;
+  }
+
+  Future<void> _createVendor() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  setState(() => _isLoading = true);
+
+  try {
+    final businessName = _businessNameController.text.trim();
+    
+    // Create vendor record FIRST (without images)
+    final vendorResponse = await supabase.from('vendors').insert({
+      'vendor_name': businessName,
+      'vendor_description': _descriptionController.text.trim(),
+      'vendor_category': _categoryController.text.trim(),
+      'vendor_location': _locationController.text.trim(),
+      'contact_email': _emailController.text.trim(),
+      'contact_phone': _phoneController.text.trim(),
+      'vendor_user_id': widget.userId,
+      'is_claimed': true,
+      'claimed_at': DateTime.now().toIso8601String(),
+    }).select().single();
+
+    List<String> imageUrls = [];
+    if (_selectedImages.isNotEmpty) {
+      imageUrls = await _uploadImages(businessName);
+      
+      // Update vendor with image URLs
+      await supabase.from('vendors').update({
+        'image_url': imageUrls,
+      }).eq('vendor_id', vendorResponse['vendor_id']);
+    }
+
+    await supabase.from('vendor_profiles').insert({
+      'user_id': widget.userId,
+      'vendor_id': vendorResponse['vendor_id'],
+      'business_name': businessName,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Vendor profile created successfully!',
+            style: GoogleFonts.montserrat(fontSize: 12),
+          ),
+          backgroundColor: const Color(0xFF7B3F61),
+        ),
+      );
+      Navigator.pop(context, true);
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating vendor: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -310,6 +393,80 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
               ),
               style: GoogleFonts.montserrat(fontSize: 14),
             ),
+            const SizedBox(height: 32),
+
+            // Photo Upload Section
+            Text(
+              'Photos',
+              style: GoogleFonts.bodoniModa(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B3F61),
+              ),
+            ),
+            const SizedBox(height: 12),
+            
+            OutlinedButton.icon(
+              onPressed: _pickImages,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: Text(
+                'Add Photos',
+                style: GoogleFonts.montserrat(fontSize: 12),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF7B3F61),
+                side: const BorderSide(color: Color(0xFFDCC7AA)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            if (_selectedImages.isNotEmpty)
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: _selectedImages.length,
+                itemBuilder: (context, index) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      kIsWeb
+                          ? Image.network(
+                              _selectedImages[index].path,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(_selectedImages[index].path),
+                              fit: BoxFit.cover,
+                            ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => _removeImage(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
             const SizedBox(height: 32),
 
             ElevatedButton(
