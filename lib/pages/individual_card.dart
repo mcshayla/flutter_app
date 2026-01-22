@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:say_yes/utils/string_extensions.dart';
 import '../appstate.dart';
@@ -56,6 +57,7 @@ class IndividualCard extends StatefulWidget {
 
 class _CustomCardState extends State<IndividualCard> {
   int _currentImageIndex = 0;
+  int _desktopImagePage = 0;
   late PageController _pageController;
 
   @override
@@ -157,6 +159,15 @@ class _CustomCardState extends State<IndividualCard> {
       );
     }
 
+    // On web, show carousel with arrows; on desktop, show static 3-image grid
+    if (kIsWeb) {
+      return _buildWebImageCarousel(images);
+    } else {
+      return _buildDesktopStaticImageGrid(images);
+    }
+  }
+
+  Widget _buildDesktopStaticImageGrid(List<String> images) {
     // Show up to 3 images in a grid
     final displayImages = images.take(3).toList();
     
@@ -208,6 +219,115 @@ class _CustomCardState extends State<IndividualCard> {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildWebImageCarousel(List<String> images) {
+    const itemsToShow = 3;
+    final maxStartIndex = (images.length - itemsToShow).clamp(0, images.length);
+    final startIndex = _desktopImagePage.clamp(0, maxStartIndex);
+    final endIndex = (startIndex + itemsToShow).clamp(0, images.length);
+    final displayImages = images.sublist(startIndex, endIndex);
+
+    return SizedBox(
+      height: 500,
+      child: Stack(
+        children: [
+          Row(
+            children: displayImages.asMap().entries.map((entry) {
+              final index = entry.key;
+              final url = entry.value;
+              
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < displayImages.length - 1 ? 12 : 0,
+                  ),
+                 child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: AspectRatio(
+                    aspectRatio: 4 / 3,
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      cacheWidth: 800,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.network(
+                          "https://picsum.photos/800/600",
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                ),
+              );
+            }).toList(),
+          ),
+          // Left arrow
+          if (_desktopImagePage > 0)
+            Positioned(
+              left: 12,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _desktopImagePage--;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.4),
+                    ),
+                    child: Transform.translate(
+                      offset: const Offset(2, 0),
+                      child: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          // Right arrow
+          if (_desktopImagePage < maxStartIndex)
+            Positioned(
+              right: 12,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _desktopImagePage++;
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withOpacity(0.4),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
