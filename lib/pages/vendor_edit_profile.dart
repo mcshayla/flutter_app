@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 
 class VendorEditProfile extends StatefulWidget {
@@ -20,6 +21,7 @@ class VendorEditProfile extends StatefulWidget {
 class _VendorEditProfileState extends State<VendorEditProfile> {
   final _formKey = GlobalKey<FormState>();
   final supabase = Supabase.instance.client;
+  final _picker = ImagePicker();
   bool _isLoading = false;
 
   // Controllers
@@ -59,12 +61,17 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     'West Virginia', 'Wisconsin', 'Wyoming', 'Any'
   ];
 
+  // Photo management
+  List<String> existingImageUrls = [];
+  List<XFile> newImages = [];
+
   @override
   void initState() {
     super.initState();
     _initializeControllers();
     _loadSocialMediaLinks();
     _loadStateAndCounty();
+    _loadExistingImages();
   }
 
   void _initializeControllers() {
@@ -130,6 +137,15 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     }
   }
 
+  void _loadExistingImages() {
+    final images = widget.vendorData['image_url'];
+    if (images is List) {
+      existingImageUrls = images.map((e) => e.toString()).toList();
+    } else if (images != null && images.toString().isNotEmpty) {
+      existingImageUrls = [images.toString()];
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -152,6 +168,74 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     super.dispose();
   }
 
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> images = await _picker.pickMultiImage();
+      if (images.isNotEmpty) {
+        setState(() {
+          newImages.addAll(images);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking images: $e')),
+      );
+    }
+  }
+
+  void _removeNewImage(int index) {
+    setState(() {
+      newImages.removeAt(index);
+    });
+  }
+
+  Future<void> _removeExistingImage(int index) async {
+    final imageUrl = existingImageUrls[index];
+    
+    // Extract the file path from the URL
+    // Format: https://[project].supabase.co/storage/v1/object/public/vendor-photos/VendorName/filename.jpg
+    final uri = Uri.parse(imageUrl);
+    final pathSegments = uri.pathSegments;
+    
+    // Find the index where 'vendor-photos' appears and get everything after it
+    final bucketIndex = pathSegments.indexOf('vendor-photos');
+    if (bucketIndex != -1 && bucketIndex + 1 < pathSegments.length) {
+      final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+      
+      try {
+        await supabase.storage.from('vendor-photos').remove([filePath]);
+        
+        setState(() {
+          existingImageUrls.removeAt(index);
+        });
+
+         await supabase
+          .from('vendors')
+          .update({
+            'image_url': existingImageUrls,
+          })
+          .eq('vendor_id', widget.vendorData['vendor_id']);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Image deleted',
+              style: GoogleFonts.montserrat(fontSize: 12),
+            ),
+            backgroundColor: const Color(0xFF7B3F61),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting image: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   List<String> _collectSocialMediaLinks() {
     List<String> links = [];
     if (_facebookController.text.trim().isNotEmpty) links.add(_facebookController.text.trim());
@@ -164,14 +248,59 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     return links;
   }
 
+  Future<List<String>> _uploadNewImages(String vendorName) async {
+    List<String> uploadedUrls = [];
+    
+    for (int i = 0; i < newImages.length; i++) {
+      final image = newImages[i];
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.${image.path.split('.').last}';
+      final filePath = '$vendorName/$fileName';
+
+      try {
+        final bytes = await image.readAsBytes();
+        
+        await supabase.storage
+            .from('vendor-photos')
+            .uploadBinary(
+              filePath,
+              bytes,
+              fileOptions: FileOptions(
+                contentType: 'image/${image.path.split('.').last}',
+              ),
+            );
+
+        final publicUrl = supabase.storage
+            .from('vendor-photos')
+            .getPublicUrl(filePath);
+
+        uploadedUrls.add(publicUrl);
+      } catch (e) {
+        print('Error uploading image $i: $e');
+      }
+    }
+
+    return uploadedUrls;
+  }
+
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      final vendorName = _nameController.text.trim();
+      
+      // Upload new images
+      List<String> newImageUrls = [];
+      if (newImages.isNotEmpty) {
+        newImageUrls = await _uploadNewImages(vendorName);
+      }
+      
+      // Combine existing and new image URLs
+      final allImageUrls = [...existingImageUrls, ...newImageUrls];
+
       final updates = {
-        'vendor_name': _nameController.text.trim(),
+        'vendor_name': vendorName,
         'vendor_description': _descriptionController.text.trim(),
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
@@ -184,12 +313,14 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'social_media_links': _collectSocialMediaLinks(),
         'vendor_state': selectedStates,
         'vendor_county': selectedCounties,
+        'image_url': allImageUrls,
       };
 
       await supabase
           .from('vendors')
           .update(updates)
-          .eq('vendor_id', widget.vendorData['vendor_id']);
+          .eq('vendor_id', widget.vendorData['vendor_id'])
+          .select();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -201,7 +332,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             backgroundColor: const Color(0xFF7B3F61),
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -291,13 +422,12 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             ),
             const SizedBox(height: 16),
 
-            // County Input (free text since counties vary by state)
             _buildTextField(
               controller: TextEditingController(
                 text: selectedCounties.join(', '),
               ),
               label: 'Counties Served (comma-separated)',
-              hint: 'e.g., Salt Lake, Utah, Davis, or "Any"',
+              hint: 'e.g., Salt Lake County, Utah County, "Any"',
               onChanged: (value) {
                 selectedCounties = value
                     .split(',')
@@ -396,6 +526,153 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
               keyboardType: TextInputType.url,
               prefixIcon: Icons.music_note,
             ),
+            const SizedBox(height: 32),
+
+            // Photos Section
+            _buildSectionHeader('Photos'),
+            const SizedBox(height: 16),
+            
+            // Existing Photos
+            if (existingImageUrls.isNotEmpty) ...[
+              Text(
+                'Current Photos',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF7B3F61),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: existingImageUrls.length,
+                itemBuilder: (context, index) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          existingImageUrls[index],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.broken_image),
+                            );
+                          },
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => _removeExistingImage(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.delete,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Add New Photos Button
+            OutlinedButton.icon(
+              onPressed: _pickImages,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: Text(
+                'Add More Photos',
+                style: GoogleFonts.montserrat(fontSize: 12),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF7B3F61),
+                side: const BorderSide(color: Color(0xFFDCC7AA)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // New Photos Preview
+            if (newImages.isNotEmpty) ...[
+              Text(
+                'New Photos to Upload',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF7B3F61),
+                ),
+              ),
+              const SizedBox(height: 8),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: newImages.length,
+                itemBuilder: (context, index) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: kIsWeb
+                            ? Image.network(
+                                newImages[index].path,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(newImages[index].path),
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => _removeNewImage(index),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+
             const SizedBox(height: 32),
 
             // Save Button
