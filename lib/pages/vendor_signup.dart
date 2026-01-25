@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_claim.dart';
+import 'vendor_subscription_page.dart';
 
 class VendorSignup extends StatefulWidget {
   const VendorSignup({super.key});
@@ -44,11 +45,11 @@ class _VendorSignupState extends State<VendorSignup> {
       );
 
       if (mounted) {
-        // Navigate to claim vendor page
+        // Navigate to subscription page instead of claim page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => VendorClaimPage(
+            builder: (_) => VendorSubscriptionPage(
               userId: response.user!.id,
             ),
           ),

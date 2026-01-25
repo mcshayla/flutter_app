@@ -406,21 +406,21 @@ class _LoginSignupState extends State<LoginSignup> {
                     ),
               ),),): null),
               // In your main navigation or menu
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const VendorSignup()),
-                  );
-                },
-                child: Text(
-                  'Vendor Signup',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: const Color(0xFFDCC7AA),
-                  ),
-                ),
-              ),
+              // TextButton(
+              //   onPressed: () {
+              //     Navigator.push(
+              //       context,
+              //       MaterialPageRoute(builder: (_) => const VendorSignup()),
+              //     );
+              //   },
+              //   child: Text(
+              //     'Vendor Signup',
+              //     style: GoogleFonts.montserrat(
+              //       fontSize: 12,
+              //       color: const Color(0xFFDCC7AA),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

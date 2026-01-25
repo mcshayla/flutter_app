@@ -6,6 +6,7 @@ import 'pages/main_scaffold.dart';
 import 'package:provider/provider.dart'; 
 import 'appstate.dart'; 
 import './pages/login.dart';
+import 'pages/vendor_success_page.dart';
 import 'keys.dart';
 
 void main() async {
@@ -53,7 +54,8 @@ class MyApp extends StatelessWidget {
 class AuthCheck extends StatefulWidget {
   final String routeName;
   final String hash;
-  const AuthCheck({super.key, required this.routeName, required this.hash});
+  final Map<String, String> queryParams;
+  const AuthCheck({super.key, required this.routeName, required this.hash, this.queryParams = const {}});
 
   @override
   State<AuthCheck> createState() => _AuthCheckState();
@@ -74,8 +76,10 @@ class _AuthCheckState extends State<AuthCheck> {
     final path = widget.routeName;
     final isRecoveryRoute = path.contains('resetPassword') || 
                            widget.hash.contains('access_token');
+    final isLandingPage = path.contains('vendorRegistration');
+    final isVendorSuccess = path.contains('vendor-success');
 
-    if (!isRecoveryRoute && supabase.auth.currentUser == null) {
+    if (!isRecoveryRoute && !isLandingPage && !isVendorSuccess && supabase.auth.currentUser == null) {
       print("signed in annonymously");
       await supabase.auth.signInAnonymously();
     }
@@ -94,6 +98,10 @@ class _AuthCheckState extends State<AuthCheck> {
     }
     if (widget.routeName.contains('vendorRegistration')) {
       return const WebLandingPage();
+    }
+    if (widget.routeName.contains('vendor-success')) {
+      final sessionId = widget.queryParams['session_id'];
+      return VendorSuccessPage(sessionId: sessionId);
     }
     if (widget.routeName.contains('resetPassword') || widget.hash.contains('access_token')) {
       return const Scaffold(

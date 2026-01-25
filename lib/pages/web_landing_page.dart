@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'vendor_signup.dart';
 // import 'dart:html' as html;
 
 
@@ -189,7 +190,12 @@ class _LandingPageState extends State<WebLandingPage> {
         ),
         const SizedBox(height: 32),
         ElevatedButton(
-          onPressed: () => _scrollToSection(_signupKey),
+          onPressed: () => {
+            Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VendorSignup()),
+              )
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF7B3F61),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
@@ -239,10 +245,35 @@ class _LandingPageState extends State<WebLandingPage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Fill out this form to join now.',
+            'Sign up online or fill out the form below to join now.',
             style: TextStyle(
               fontSize: 16,
               color: Color(0xFF7B3F61),
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VendorSignup()),
+              )
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF7B3F61),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              'Signup Online',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 24),
