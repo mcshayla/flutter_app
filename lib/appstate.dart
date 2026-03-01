@@ -84,7 +84,7 @@ class AppState extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      final data = await supabase.from('vendors').select(); 
+      final data = await supabase.from('vendors').select();
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};
 
@@ -97,7 +97,18 @@ class AppState extends ChangeNotifier {
         allData[category]!.shuffle();
       }
 
-      allCategorizedMap = allData;
+      final categoryRows = await supabase
+          .from('categories')
+          .select('name')
+          .order('display_order', ascending: true);
+      final orderedNames = (categoryRows as List).map((r) => r['name'] as String).toList();
+
+      allCategorizedMap = {
+        for (final name in orderedNames)
+          if (allData.containsKey(name)) name: allData[name]!,
+        for (final entry in allData.entries)
+          if (!orderedNames.contains(entry.key)) entry.key: entry.value,
+      };
 
       vendorIdToCategory.clear();
 
