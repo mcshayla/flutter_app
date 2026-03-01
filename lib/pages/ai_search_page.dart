@@ -148,7 +148,7 @@ class _AISearchPageState extends State<AISearchPage> {
                         onHeartToggled: (hearted) {
                           appState.toggleHeart(vendor['vendor_id'], hearted);
                         },
-                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                        isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]] == vendor['vendor_id'],
                         onDiamondToggled: (diamonded) {
                           appState.toggleDiamond(vendor['vendor_id'], diamonded);
                         },
@@ -176,7 +176,7 @@ class _AISearchPageState extends State<AISearchPage> {
                                       contact_phone: vendor['contact_phone'] ?? "",
                                       website_url: vendor['website_url'] ?? "",
                                       isHearted: appState.lovedVendorUUIDsCategorizedMap[category]?.contains(vendor['vendor_id']) ?? false,
-                                      isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]?.toLowerCase()] == vendor['vendor_id'],
+                                      isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[vendor['vendor_id']]] == vendor['vendor_id'],
                                       onHeartToggled: (hearted) {
                                         appState.toggleHeart(vendor['vendor_id'], hearted);
                                       },

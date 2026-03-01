@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import './utils/string_extensions.dart';
-
 
 class AppState extends ChangeNotifier {
   Map<String, List<Map<String, dynamic>>> allCategorizedMap = {}; 
@@ -77,15 +75,6 @@ class AppState extends ChangeNotifier {
     isLoaded = true;
   }
 
-  String _transformCategoryKey(String dbColumnName) {
-        if (dbColumnName == 'dj') return 'DJ';
-        
-        return dbColumnName
-            .split('_')
-            .map((word) => word == 'and' ? '&' : word.capitalize())
-            .join(' ');
-      }
-
   Future<void> loadInitialData() async {
 
     try {
@@ -134,18 +123,14 @@ class AppState extends ChangeNotifier {
 
       Map<String, List<String>> lovedVendorsByCategory = {};
 
-      final diamonded = await supabase
-      .from('users')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-      const ignoreFields = {'user_id', 'email', 'username', 'created_at'};
+      final diamondedRows = await supabase
+          .from('user_diamonds')
+          .select('vendor_id, category')
+          .eq('user_id', user.id);
 
       diamondedCards = {
-        for (var entry in diamonded.entries)
-          if (!ignoreFields.contains(entry.key))
-            _transformCategoryKey(entry.key): entry.value ?? ''
+        for (final row in diamondedRows as List)
+          row['category'] as String: row['vendor_id'] as String
       };
 
       for (var row in loved) {
@@ -216,27 +201,27 @@ class AppState extends ChangeNotifier {
     final user = supabase.auth.currentUser;
     if (user == null || vendorId.isEmpty) return;
 
-    final displayCategory = (vendorIdToCategory[vendorId] ?? 'other');
-    final dbCategory = (vendorIdToCategory[vendorId] ?? 'other')
-      .toLowerCase()
-      .replaceAll(' ', '_')
-      .replaceAll('&', 'and');
+    final category = vendorIdToCategory[vendorId] ?? 'Other';
 
     try {
       if (diamonded) {
-        diamondedCards[displayCategory] = vendorId;
+        diamondedCards[category] = vendorId;
+        await supabase.from('user_diamonds').upsert({
+          'user_id': user.id,
+          'vendor_id': vendorId,
+          'category': category,
+        });
       } else {
-        diamondedCards.remove(displayCategory);
+        diamondedCards.remove(category);
+        await supabase
+            .from('user_diamonds')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('category', category);
       }
-
-      await supabase.from('users').upsert({
-        'user_id': user.id,
-        dbCategory: diamonded ? vendorId : null,
-      });
-
       notifyListeners();
-    }  catch (e) {
-      print("Error toggling diamond: $e");
+    } catch (e) {
+      print('Error toggling diamond: $e');
     }
   }
 
