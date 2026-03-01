@@ -138,13 +138,20 @@ setState(() {
 
   List<String> _collectSocialMediaLinks() {
     List<String> links = [];
-    if (_facebookController.text.trim().isNotEmpty) links.add(_facebookController.text.trim());
-    if (_instagramController.text.trim().isNotEmpty) links.add(_instagramController.text.trim());
-    if (_twitterController.text.trim().isNotEmpty) links.add(_twitterController.text.trim());
-    if (_linkedinController.text.trim().isNotEmpty) links.add(_linkedinController.text.trim());
-    if (_pinterestController.text.trim().isNotEmpty) links.add(_pinterestController.text.trim());
-    if (_youtubeController.text.trim().isNotEmpty) links.add(_youtubeController.text.trim());
-    if (_tiktokController.text.trim().isNotEmpty) links.add(_tiktokController.text.trim());
+
+    void addLinks(String text) {
+      links.addAll(
+        text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty),
+      );
+    }
+
+    addLinks(_facebookController.text);
+    addLinks(_instagramController.text);
+    addLinks(_twitterController.text);
+    addLinks(_linkedinController.text);
+    addLinks(_pinterestController.text);
+    addLinks(_youtubeController.text);
+    addLinks(_tiktokController.text);
     return links;
   }
 
