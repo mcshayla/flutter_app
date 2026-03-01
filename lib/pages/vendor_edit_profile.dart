@@ -98,24 +98,42 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   void _loadSocialMediaLinks() {
     final links = widget.vendorData['social_media_links'] as List<dynamic>?;
     if (links != null) {
+      Map<String, List<String>> socialMediaUrls = {
+        'facebook': [],
+        'instagram': [],
+        'twitter': [],
+        'linkedin': [],
+        'pinterest': [],
+        'youtube': [],
+        'tiktok': [],
+      };
+      
       for (var link in links) {
         final url = link.toString().toLowerCase();
         if (url.contains('facebook')) {
-          _facebookController.text = link.toString();
+          socialMediaUrls['facebook']!.add(link.toString());
         } else if (url.contains('instagram')) {
-          _instagramController.text = link.toString();
+          socialMediaUrls['instagram']!.add(link.toString());
         } else if (url.contains('twitter')) {
-          _twitterController.text = link.toString();
+          socialMediaUrls['twitter']!.add(link.toString());
         } else if (url.contains('linkedin')) {
-          _linkedinController.text = link.toString();
+          socialMediaUrls['linkedin']!.add(link.toString());
         } else if (url.contains('pinterest')) {
-          _pinterestController.text = link.toString();
+          socialMediaUrls['pinterest']!.add(link.toString());
         } else if (url.contains('youtube')) {
-          _youtubeController.text = link.toString();
+          socialMediaUrls['youtube']!.add(link.toString());
         } else if (url.contains('tiktok')) {
-          _tiktokController.text = link.toString();
+          socialMediaUrls['tiktok']!.add(link.toString());
         }
       }
+      
+      _facebookController.text = socialMediaUrls['facebook']!.join(', ');
+      _instagramController.text = socialMediaUrls['instagram']!.join(', ');
+      _twitterController.text = socialMediaUrls['twitter']!.join(', ');
+      _linkedinController.text = socialMediaUrls['linkedin']!.join(', ');
+      _pinterestController.text = socialMediaUrls['pinterest']!.join(', ');
+      _youtubeController.text = socialMediaUrls['youtube']!.join(', ');
+      _tiktokController.text = socialMediaUrls['tiktok']!.join(', ');
     }
   }
 
@@ -238,13 +256,24 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
 
   List<String> _collectSocialMediaLinks() {
     List<String> links = [];
-    if (_facebookController.text.trim().isNotEmpty) links.add(_facebookController.text.trim());
-    if (_instagramController.text.trim().isNotEmpty) links.add(_instagramController.text.trim());
-    if (_twitterController.text.trim().isNotEmpty) links.add(_twitterController.text.trim());
-    if (_linkedinController.text.trim().isNotEmpty) links.add(_linkedinController.text.trim());
-    if (_pinterestController.text.trim().isNotEmpty) links.add(_pinterestController.text.trim());
-    if (_youtubeController.text.trim().isNotEmpty) links.add(_youtubeController.text.trim());
-    if (_tiktokController.text.trim().isNotEmpty) links.add(_tiktokController.text.trim());
+    
+    void addLinks(String text) {
+      final urls = text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      links.addAll(urls);
+    }
+    
+    addLinks(_facebookController.text);
+    addLinks(_instagramController.text);
+    addLinks(_twitterController.text);
+    addLinks(_linkedinController.text);
+    addLinks(_pinterestController.text);
+    addLinks(_youtubeController.text);
+    addLinks(_tiktokController.text);
+    
     return links;
   }
 
@@ -354,6 +383,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Edit Profile',
           style: GoogleFonts.bodoniModa(
@@ -481,6 +511,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _facebookController,
               label: 'Facebook URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.facebook,
             ),
@@ -488,6 +519,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _instagramController,
               label: 'Instagram URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.camera_alt,
             ),
@@ -495,6 +527,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _twitterController,
               label: 'Twitter URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.tag,
             ),
@@ -502,6 +535,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _linkedinController,
               label: 'LinkedIn URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.business,
             ),
@@ -509,6 +543,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _pinterestController,
               label: 'Pinterest URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.push_pin,
             ),
@@ -516,6 +551,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _youtubeController,
               label: 'YouTube URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.play_circle,
             ),
@@ -523,6 +559,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _tiktokController,
               label: 'TikTok URL',
+              hint: 'Multiple URLs separated by comma',
               keyboardType: TextInputType.url,
               prefixIcon: Icons.music_note,
             ),

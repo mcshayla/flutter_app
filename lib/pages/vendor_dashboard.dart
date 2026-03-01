@@ -7,7 +7,12 @@ import 'vendor_edit_profile.dart';
 import 'login.dart';
 
 class VendorDashboard extends StatefulWidget {
-  const VendorDashboard({super.key});
+  final bool isInMainScaffold;
+
+  const VendorDashboard({
+    this.isInMainScaffold = false,
+    super.key,
+  });
 
   @override
   State<VendorDashboard> createState() => _VendorDashboardState();
@@ -71,12 +76,19 @@ class _VendorDashboardState extends State<VendorDashboard> {
 
         final int heartsCount = (heartsResponse as List).length;
 
+        final result = await supabase
+          .rpc('count_diamonds', params: {'vendor': profileResponse['vendor_id']});
+
+        final int diamondsCount = result as int;
+        print(diamondsCount);
+
         // Combine all the data
         vendorData = {
           ...vendorResponse,
           'clicks_on_card': clicksResponse?['clicks_on_card'] ?? 0,
           'clicks_on_links': clicksResponse?['clicks_on_links'] ?? 0,
           'num_times_hearted': heartsCount,
+          'num_times_diamonded': diamondsCount,
         };
 
       }
@@ -119,6 +131,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
     if (vendorData == null) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
           title: Text(
             'Vendor Dashboard',
             style: GoogleFonts.bodoniModa(
@@ -143,7 +156,8 @@ class _VendorDashboardState extends State<VendorDashboard> {
     }
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: widget.isInMainScaffold ? null : AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Vendor Dashboard',
           style: GoogleFonts.bodoniModa(
@@ -242,6 +256,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
           _buildStatItem('Profile Views', '${vendorData!['clicks_on_card'] ?? 0}'),
           _buildStatItem('Link Clicks', '${vendorData!['clicks_on_links'] ?? 0}'),
           _buildStatItem('Hearts', '${vendorData!['num_times_hearted'] ?? 0}'),
+          _buildStatItem('Diamonds', '${vendorData!['num_times_diamonded'] ?? 0}'),
         ],
       ),
     );
