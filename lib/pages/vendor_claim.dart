@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'vendor_subscription_page.dart';
 import 'vendor_dashboard.dart';
-import 'vendor_create.dart';
 
 class VendorClaimPage extends StatefulWidget {
   final String userId;
@@ -74,10 +74,27 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
       });
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const VendorDashboard()),
-        );
+        final sub = await supabase
+            .from('vendor_subscriptions')
+            .select('status')
+            .eq('user_id', widget.userId)
+            .eq('status', 'active')
+            .maybeSingle();
+
+        if (!mounted) return;
+        if (sub != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const VendorDashboard()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VendorSubscriptionPage(userId: widget.userId),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -133,19 +150,13 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
             const SizedBox(height: 24),
             // Create New Vendor Button
             OutlinedButton.icon(
-              onPressed: () async {
-                final result = await Navigator.push(
+              onPressed: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => VendorCreatePage(userId: widget.userId),
+                    builder: (_) => VendorSubscriptionPage(userId: widget.userId),
                   ),
                 );
-                if (result == true && mounted) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const VendorDashboard()),
-                  );
-                }
               },
               icon: const Icon(Icons.add_business),
               label: Text(
