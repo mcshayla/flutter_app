@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'vendor_dashboard.dart';
 
 class VendorCreatePage extends StatefulWidget {
   final String userId;
@@ -245,7 +246,10 @@ setState(() {
             backgroundColor: const Color(0xFF7B3F61),
           ),
         );
-        Navigator.pop(context, true);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const VendorDashboard()),
+        );
       }
     } catch (e) {
       if (mounted) {

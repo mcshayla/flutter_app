@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'vendor_claim.dart';
+import 'vendor_dashboard.dart';
+import 'vendor_create.dart';
 
 class VendorSuccessPage extends StatefulWidget {
   final String? sessionId;
@@ -23,7 +24,6 @@ class _VendorSuccessPageState extends State<VendorSuccessPage> {
   }
 
   Future<void> _navigateToClaimPage() async {
-    // Wait a moment to show the success message
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
@@ -31,20 +31,35 @@ class _VendorSuccessPageState extends State<VendorSuccessPage> {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
-    if (user != null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => VendorClaimPage(userId: user.id),
-        ),
-      );
-    } else {
-      // If no user, something went wrong - show error
+    if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Error: User not found. Please sign in again.'),
           backgroundColor: Colors.red,
         ),
+      );
+      return;
+    }
+
+    final profile = await supabase
+        .from('vendor_profiles')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    if (!mounted) return;
+
+    if (profile != null) {
+      // Already claimed a vendor — go to dashboard
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const VendorDashboard()),
+      );
+    } else {
+      // No profile yet — go to create vendor form
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => VendorCreatePage(userId: user.id)),
       );
     }
   }
@@ -75,7 +90,7 @@ class _VendorSuccessPageState extends State<VendorSuccessPage> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Your subscription is now active.\nRedirecting you to set up your vendor profile...',
+                'Your subscription is now active.\nRedirecting you...',
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   color: const Color(0xFF6E6E6E),

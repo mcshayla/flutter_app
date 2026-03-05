@@ -20,8 +20,10 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   bool _isLoading = false;
 
   // Replace these with your actual Stripe Price IDs
-  final String monthlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQS';
-  final String yearlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQt';
+  // final String monthlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQS';
+  final String monthlyPriceId = 'price_1SoG3VGpavVyOfbN5M6NvL5k';
+  // final String yearlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQt';
+  final String yearlyPriceId = 'price_1Sq4aNGpavVyOfbN9rpaau8N';
 
   Future<void> _createCheckoutSession(String priceId) async {
     setState(() => _isLoading = true);
@@ -69,6 +71,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Choose Your Plan',
           style: GoogleFonts.bodoniModa(
@@ -109,10 +112,8 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
                 price: '\$20',
                 period: 'per month',
                 features: [
-                  'Manage your vendor profile',
-                  'Upload unlimited photos',
-                  'Track profile views and clicks',
-                  'Respond to inquiries',
+                  'View and edit your vendor profile',
+                  'Track profile views and clicks'
                 ],
                 onTap: () => _createCheckoutSession(monthlyPriceId),
               ),
@@ -127,8 +128,6 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
                 features: [
                   'All monthly features',
                   'Save 17% compared to monthly',
-                  'Priority support',
-                  'Featured vendor badge',
                 ],
                 onTap: () => _createCheckoutSession(yearlyPriceId),
                 isRecommended: true,
