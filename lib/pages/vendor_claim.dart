@@ -99,11 +99,13 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Claim Your Business',
           style: GoogleFonts.bodoniModa(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
+            
           ),
         ),
       ),

@@ -27,11 +27,9 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   // Controllers
   final _businessNameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _categoryController = TextEditingController();
   final _locationController = TextEditingController();
   final _addressController = TextEditingController();
   final _priceController = TextEditingController();
-  final _estimatedPriceController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _websiteController = TextEditingController();
@@ -45,6 +43,10 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final _pinterestController = TextEditingController();
   final _youtubeController = TextEditingController();
   final _tiktokController = TextEditingController();
+
+  // Category dropdown
+  String? _selectedCategory;
+  List<String> _categoryOptions = [];
 
   // State and County
   List<String> selectedStates = [];
@@ -66,14 +68,32 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   List<XFile> _selectedImages = [];
 
   @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final rows = await supabase
+          .from('categories')
+          .select('name')
+          .order('display_order', ascending: true);
+setState(() {
+        _categoryOptions = (rows as List).map((r) => r['name'] as String).toList();
+      });
+    } catch (e) {
+      print('Error loading categories: $e');
+    }
+  }
+
+  @override
   void dispose() {
     _businessNameController.dispose();
     _descriptionController.dispose();
-    _categoryController.dispose();
     _locationController.dispose();
     _addressController.dispose();
     _priceController.dispose();
-    _estimatedPriceController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _websiteController.dispose();
@@ -92,8 +112,15 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
     try {
       final List<XFile> images = await _picker.pickMultiImage();
       if (images.isNotEmpty) {
+        final remaining = 5 - _selectedImages.length;
+        if (remaining <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Maximum of 5 photos allowed')),
+          );
+          return;
+        }
         setState(() {
-          _selectedImages.addAll(images);
+          _selectedImages.addAll(images.take(remaining));
         });
       }
     } catch (e) {
@@ -111,13 +138,20 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
 
   List<String> _collectSocialMediaLinks() {
     List<String> links = [];
-    if (_facebookController.text.trim().isNotEmpty) links.add(_facebookController.text.trim());
-    if (_instagramController.text.trim().isNotEmpty) links.add(_instagramController.text.trim());
-    if (_twitterController.text.trim().isNotEmpty) links.add(_twitterController.text.trim());
-    if (_linkedinController.text.trim().isNotEmpty) links.add(_linkedinController.text.trim());
-    if (_pinterestController.text.trim().isNotEmpty) links.add(_pinterestController.text.trim());
-    if (_youtubeController.text.trim().isNotEmpty) links.add(_youtubeController.text.trim());
-    if (_tiktokController.text.trim().isNotEmpty) links.add(_tiktokController.text.trim());
+
+    void addLinks(String text) {
+      links.addAll(
+        text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty),
+      );
+    }
+
+    addLinks(_facebookController.text);
+    addLinks(_instagramController.text);
+    addLinks(_twitterController.text);
+    addLinks(_linkedinController.text);
+    addLinks(_pinterestController.text);
+    addLinks(_youtubeController.text);
+    addLinks(_tiktokController.text);
     return links;
   }
 
@@ -167,11 +201,10 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
       final vendorResponse = await supabase.from('vendors').insert({
         'vendor_name': businessName,
         'vendor_description': _descriptionController.text.trim(),
-        'vendor_category': _categoryController.text.trim(),
+        'vendor_category': _selectedCategory ?? '',
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
-        'vendor_estimated_price': _estimatedPriceController.text.trim(),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -234,6 +267,7 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         title: Text(
           'Create Vendor Profile',
           style: GoogleFonts.bodoniModa(
@@ -285,11 +319,27 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
               required: true,
             ),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _categoryController,
-              label: 'Category',
-              hint: 'e.g., Photographer, Venue, Florist',
-              required: true,
+DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: InputDecoration(
+                labelText: 'Category *',
+                labelStyle: GoogleFonts.montserrat(fontSize: 12, color: const Color(0xFF7B3F61)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF7B3F61)),
+                ),
+              ),
+              items: _categoryOptions.map((cat) => DropdownMenuItem(
+                value: cat,
+                child: Text(cat, style: GoogleFonts.montserrat(fontSize: 12)),
+              )).toList(),
+              onChanged: (val) => setState(() => _selectedCategory = val),
+              validator: (val) => val == null ? 'Please select a category' : null,
             ),
             const SizedBox(height: 16),
             _buildTextField(
@@ -352,11 +402,6 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
               controller: _priceController,
               label: 'Price',
               hint: 'e.g., \$500 - \$2000',
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _estimatedPriceController,
-              label: 'Estimated Price Range',
             ),
             const SizedBox(height: 24),
 

@@ -206,13 +206,23 @@ class _LoginSignupState extends State<LoginSignup> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      floatingLabelBehavior: FloatingLabelBehavior.never,
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      labelStyle: const TextStyle(color: Colors.white70),
+      floatingLabelStyle: const TextStyle(color: Color(0xFFDCC7AA), fontWeight: FontWeight.w600),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.white.withOpacity(0.15),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: const BorderSide(color: Colors.white54),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.white54),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFDCC7AA), width: 2),
       ),
     );
   }
@@ -332,18 +342,21 @@ class _LoginSignupState extends State<LoginSignup> {
                         controller: _emailController,
                         decoration: _inputDecoration('Email'),
                         keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(height: 16),
                       if (!_isLogin)
                         TextField(
                           controller: _usernameController,
                           decoration: _inputDecoration('Optional Username'),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       if (!_isLogin) const SizedBox(height: 16),
                       TextField(
                         controller: _passwordController,
                         decoration: _inputDecoration('Password'),
                         obscureText: true,
+                        style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(height: 8),
                       if (_isLogin)

@@ -249,7 +249,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           _buildTabNavigator(0, const ExplorePage()),
           _buildTabNavigator(1, const LovedPage()),
           _buildTabNavigator(2, const YesPage()),
-          if (_hasVendor) _buildTabNavigator(3, const VendorDashboard()),
+          if (_hasVendor) _buildTabNavigator(3, const VendorDashboard(isInMainScaffold: true)),
         ],
       ),
       bottomNavigationBar: kIsWeb ? null : BottomNav(
