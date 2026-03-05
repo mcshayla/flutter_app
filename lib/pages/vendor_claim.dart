@@ -30,6 +30,348 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
     super.dispose();
   }
 
+  /// Shows a two-step bottom sheet to verify the user owns the business
+  /// before allowing the claim. Returns true if verification succeeded.
+  Future<bool> _verifyOwnership(Map<String, dynamic> vendor) async {
+    final vendorContactEmail =
+        (vendor['contact_email'] ?? '').toString().toLowerCase().trim();
+
+    if (vendorContactEmail.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'This profile has no contact email on file. Please contact support to claim it.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return false;
+    }
+
+    final emailController = TextEditingController();
+    final codeController = TextEditingController();
+
+    final verified = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        bool codeSent = false;
+        bool isVerifying = false;
+        String sentToEmail = '';
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 32,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCC7AA),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  if (!codeSent) ...[
+                    Text(
+                      'Verify Business Ownership',
+                      style: GoogleFonts.bodoniModa(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF7B3F61),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Enter the contact email listed on this business profile. We\'ll send a verification code to confirm you own it.',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: const Color(0xFF6E6E6E),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Business Contact Email',
+                        labelStyle: GoogleFonts.montserrat(
+                          color: const Color(0xFF7B3F61),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDCC7AA)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF7B3F61)),
+                        ),
+                      ),
+                      style: GoogleFonts.montserrat(fontSize: 14),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: isVerifying
+                          ? null
+                          : () async {
+                              final entered =
+                                  emailController.text.trim().toLowerCase();
+                              if (entered.isEmpty || !entered.contains('@')) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Please enter a valid email.')),
+                                );
+                                return;
+                              }
+                              if (entered != vendorContactEmail) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'That email doesn\'t match our records for this business.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              setModalState(() => isVerifying = true);
+                              try {
+                                await supabase.auth.signInWithOtp(
+                                  email: entered,
+                                  shouldCreateUser: true,
+                                );
+                                sentToEmail = entered;
+                                setModalState(() {
+                                  codeSent = true;
+                                  isVerifying = false;
+                                });
+                              } catch (e) {
+                                setModalState(() => isVerifying = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error sending code: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7B3F61),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: isVerifying
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Send Verification Code',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ] else ...[
+                    Text(
+                      'Enter Verification Code',
+                      style: GoogleFonts.bodoniModa(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF7B3F61),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'We sent a verification code to $sentToEmail. Check your inbox and paste it below.',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 13,
+                        color: const Color(0xFF6E6E6E),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: codeController,
+                      keyboardType: TextInputType.text,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 2,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Verification Code',
+                        hintText: 'Paste the code from your email',
+                        labelStyle: GoogleFonts.montserrat(
+                          color: const Color(0xFF7B3F61),
+                        ),
+                        hintStyle: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          color: const Color(0xFF6E6E6E),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFDCC7AA)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              const BorderSide(color: Color(0xFF7B3F61)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: isVerifying
+                          ? null
+                          : () async {
+                              final code = codeController.text.trim();
+                              if (code.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Please enter the verification code from your email.'),
+                                  ),
+                                );
+                                return;
+                              }
+                              setModalState(() => isVerifying = true);
+
+                              // Save the original user's refresh token before
+                              // OTP verification changes the active session.
+                              final originalRefreshToken = supabase
+                                  .auth.currentSession?.refreshToken;
+
+                              try {
+                                await supabase.auth.verifyOTP(
+                                  email: sentToEmail,
+                                  token: code,
+                                  type: OtpType.email,
+                                );
+
+                                // Restore the original user's session so the
+                                // claim is attributed to the correct account.
+                                if (originalRefreshToken != null) {
+                                  await supabase.auth
+                                      .setSession(originalRefreshToken);
+                                }
+
+                                if (context.mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              } on AuthException catch (e) {
+                                setModalState(() => isVerifying = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'Invalid code: ${e.message}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setModalState(() => isVerifying = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error verifying: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF7B3F61),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: isVerifying
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Verify & Claim',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => setModalState(() {
+                        codeSent = false;
+                        codeController.clear();
+                      }),
+                      child: Text(
+                        'Back',
+                        style: GoogleFonts.montserrat(
+                          color: const Color(0xFF7B3F61),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    emailController.dispose();
+    codeController.dispose();
+    return verified == true;
+  }
+
   Future<void> _searchVendors() async {
     if (_searchController.text.trim().isEmpty) return;
 
@@ -288,7 +630,13 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
                         trailing: ElevatedButton(
                           onPressed: isLoading
                               ? null
-                              : () => _claimVendor(vendor),
+                              : () async {
+                                  final verified =
+                                      await _verifyOwnership(vendor);
+                                  if (verified) {
+                                    await _claimVendor(vendor);
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF7B3F61),
                             foregroundColor: Colors.white,
