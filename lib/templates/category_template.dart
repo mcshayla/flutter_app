@@ -111,7 +111,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
 
   @override
   Widget build(BuildContext context) {
-    String capCategoryName = widget.categoryName.pluralize();
+    String capCategoryName = widget.categoryName;
     return Consumer<AppState>(
       builder:(context, appState, child) {
           final List<Map<String, dynamic>> categoryList = widget.showOnlyLoved

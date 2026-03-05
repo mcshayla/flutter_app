@@ -321,7 +321,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                 itemBuilder: (context, index) {
                   final categoryName = filteredCategoryKeys[index];
                   final items = filteredCategories[categoryName]!;
-                  String capCategoryName = categoryName.pluralize();
+                  String capCategoryName = categoryName;
                   return Padding(
                     padding: const EdgeInsets.all(8),
                     child: Column(
