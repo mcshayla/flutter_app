@@ -416,7 +416,8 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
       });
 
       if (mounted) {
-        final sub = await supabase
+        final isPrePaid = vendor['subscription_status'] == 'active';
+        final sub = isPrePaid ? {'status': 'active'} : await supabase
             .from('vendor_subscriptions')
             .select('status')
             .eq('user_id', widget.userId)
