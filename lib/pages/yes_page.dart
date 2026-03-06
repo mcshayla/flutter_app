@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../templates/collection_page_template.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
-import '../utils/string_extensions.dart';
 import 'package:google_fonts/google_fonts.dart';
 import './individual_card.dart';
 import '../utils/app_styles.dart';
+import 'wedding_profile_setup.dart';
 
 class YesPage extends StatelessWidget {
   const YesPage({super.key});
@@ -15,16 +14,17 @@ class YesPage extends StatelessWidget {
     final appState = Provider.of<AppState>(context);
     final diamondedCategories = appState.diamondedCards;
     final categoriesMap = appState.allCategorizedMap;
-    final categoryKeys = categoriesMap.keys.toList();
     final filteredEntries = diamondedCategories.entries.where((entry) => entry.value.isNotEmpty).toList();
-    
+    final weddingProfile = appState.weddingProfile;
+    final daysLeft = appState.daysUntilWedding;
+
     final vendorMap = <String, dynamic>{};
     for (var entry in filteredEntries) {
       final vendorList = categoriesMap[entry.key] ?? [];
       final vendor = vendorList.firstWhere((v) => v['vendor_id'] == entry.value, orElse: () => {});
       vendorMap[entry.value] = vendor;
     }
-  
+
     return Scaffold(
       body: Column(
         children: [
@@ -32,12 +32,100 @@ class YesPage extends StatelessWidget {
             padding: const EdgeInsets.all(36.0),
             child: Column(
               children: [
-                Text("Mr. & Mrs.",
+                // Partner names or default
+                if (weddingProfile != null &&
+                    (weddingProfile['partner_name_1'] ?? '').toString().isNotEmpty)
+                  Text(
+                    '${weddingProfile['partner_name_1']} & ${weddingProfile['partner_name_2']}',
                     style: GoogleFonts.bodoniModa(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2.0,
+                      color: const Color(0xFF7B3F61),
+                    ),
+                    textAlign: TextAlign.center,
+                  )
+                else
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WeddingProfileSetup(existingProfile: weddingProfile),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      "Your Wedding",
+                      style: GoogleFonts.bodoniModa(
                         fontSize: 48,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 2.0,
-                        color: const Color(0xFF7B3F61))),
+                        color: const Color(0xFF7B3F61),
+                      ),
+                    ),
+                  ),
+
+                // Countdown
+                if (daysLeft != null && daysLeft >= 0) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF7B3F61).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$daysLeft days to go!',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF7B3F61),
+                      ),
+                    ),
+                  ),
+                ] else if (weddingProfile == null) ...[
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WeddingProfileSetup(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7B3F61),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Set up your wedding profile',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                // Wedding location
+                if (weddingProfile != null &&
+                    (weddingProfile['wedding_location'] ?? '').toString().isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    weddingProfile['wedding_location'],
+                    style: GoogleFonts.montserrat(
+                      fontSize: 13,
+                      color: const Color(0xFF6E6E6E),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 20),
                 Container(
                   height: 1,
@@ -46,8 +134,37 @@ class YesPage extends StatelessWidget {
               ],
             ),
           ),
+
+          // Edit profile button
+          if (weddingProfile != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => WeddingProfileSetup(existingProfile: weddingProfile),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Edit Profile',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12,
+                      color: const Color(0xFF7B3F61),
+                      decoration: TextDecoration.underline,
+                      decorationColor: const Color(0xFF7B3F61),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
           Expanded(
-            child: filteredEntries.length == 0
+            child: filteredEntries.isEmpty
                 ? Center(
                     child: Text(
                       "Diamond Vendors to see them here!",
