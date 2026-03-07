@@ -327,29 +327,28 @@ class _GuestListPageState extends State<GuestListPage> {
   }
 
   void _exportToClipboard(BuildContext context, List<Map<String, dynamic>> guests) {
-    String esc(dynamic v) {
-      final s = (v ?? '').toString().replaceAll('"', '""');
-      return '"$s"';
-    }
+    // Tab-separated so pasting into Excel/Sheets splits into columns automatically
+    String clean(dynamic v) =>
+        (v ?? '').toString().replaceAll('\t', ' ').replaceAll('\r', ' ');
 
     final buffer = StringBuffer();
     buffer.writeln(
-      'First Name,Last Name,Email,Phone,Group,RSVP,Meal Preference,Dietary Restrictions,Plus One,Plus One Name,Notes',
+      'First Name\tLast Name\tEmail\tPhone\tGroup\tRSVP\tMeal Preference\tDietary Restrictions\tPlus One\tPlus One Name\tNotes',
     );
     for (final g in guests) {
       buffer.writeln([
-        esc(g['first_name']),
-        esc(g['last_name']),
-        esc(g['email']),
-        esc(g['phone']),
-        esc(g['group_name']),
-        esc(g['rsvp_status']),
-        esc(g['meal_preference']),
-        esc(g['dietary_restrictions']),
-        esc(g['plus_one_allowed'] == true ? 'Yes' : 'No'),
-        esc(g['plus_one_name']),
-        esc(g['notes']),
-      ].join(','));
+        clean(g['first_name']),
+        clean(g['last_name']),
+        clean(g['email']),
+        clean(g['phone']),
+        clean(g['group_name']),
+        clean(g['rsvp_status']),
+        clean(g['meal_preference']),
+        clean(g['dietary_restrictions']),
+        clean(g['plus_one_allowed'] == true ? 'Yes' : 'No'),
+        clean(g['plus_one_name']),
+        clean(g['notes']),
+      ].join('\t'));
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
