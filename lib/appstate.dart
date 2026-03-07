@@ -8,6 +8,7 @@ class AppState extends ChangeNotifier {
   Map<String, List<String>> lovedVendorUUIDsCategorizedMap = {};
   Map<String, String> vendorIdToCategory = {};
   Map<String, String> diamondedCards = {};
+  Map<String, bool> bookedVendorIds = {};
   Map<String, List<Map<String, dynamic>>> _vendorReviews = {};
 
   // Wedding Profile
@@ -63,6 +64,7 @@ class AppState extends ChangeNotifier {
     lovedVendorUUIDsCategorizedMap = {};
     vendorIdToCategory = {};
     diamondedCards = {};
+    bookedVendorIds = {};
     weddingProfile = null;
     checklistItems = [];
     userBudget = null;
@@ -132,12 +134,18 @@ class AppState extends ChangeNotifier {
 
       final diamondedRows = await supabase
           .from('user_diamonds')
-          .select('vendor_id, category')
+          .select('vendor_id, category, is_booked')
           .eq('user_id', user.id);
 
       diamondedCards = {
         for (final row in diamondedRows as List)
           row['category'] as String: row['vendor_id'] as String
+      };
+
+      bookedVendorIds = {
+        for (final row in diamondedRows as List)
+          if (row['is_booked'] == true)
+            row['vendor_id'] as String: true
       };
 
       for (var row in loved) {
@@ -394,9 +402,11 @@ Future<void> initializeChecklist(DateTime weddingDate) async {
         .order('display_order', ascending: true);
 
     final items = <Map<String, dynamic>>[];
+    final now = DateTime.now();
     for (var template in templates as List) {
       final monthsBefore = template['months_before'] as int? ?? 0;
-      final dueDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
+      final rawDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
+      final dueDate = rawDate.isBefore(now) ? now : rawDate;
 
       items.add({
         'user_id': user.id,
@@ -493,6 +503,87 @@ Future<void> deleteChecklistItem(String itemId) async {
         .eq('id', itemId);
   } catch (e) {
     print("Error deleting checklist item: $e");
+  }
+}
+
+Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String> categories) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    // Get existing template_ids to avoid duplicates
+    final existing = await supabase
+        .from('user_checklist_items')
+        .select('template_id')
+        .eq('user_id', user.id);
+
+    final existingTemplateIds = (existing as List)
+        .map((e) => e['template_id'] as String?)
+        .where((id) => id != null)
+        .toSet();
+
+    final templates = await supabase
+        .from('checklist_templates')
+        .select()
+        .inFilter('category', categories)
+        .order('display_order', ascending: true);
+
+    final items = <Map<String, dynamic>>[];
+    final now = DateTime.now();
+    final baseOrder = checklistItems.isNotEmpty
+        ? checklistItems.map((i) => i['display_order'] as int? ?? 0).reduce((a, b) => a > b ? a : b) + 1
+        : 0;
+
+    for (var template in templates as List) {
+      if (existingTemplateIds.contains(template['id'])) continue;
+
+      final monthsBefore = template['months_before'] as int? ?? 0;
+      final rawDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
+      final dueDate = rawDate.isBefore(now) ? now : rawDate;
+
+      items.add({
+        'user_id': user.id,
+        'template_id': template['id'],
+        'title': template['title'],
+        'description': template['description'] ?? '',
+        'category': template['category'] ?? 'Other',
+        'is_completed': false,
+        'due_date': dueDate.toIso8601String().split('T')[0],
+        'display_order': baseOrder + items.length,
+        'notes': '',
+      });
+    }
+
+    if (items.isNotEmpty) {
+      await supabase.from('user_checklist_items').insert(items);
+    }
+    await loadChecklist();
+    notifyListeners();
+  } catch (e) {
+    print("Error initializing checklist with categories: $e");
+  }
+}
+
+Future<void> toggleBookedVendor(String vendorId, bool isBooked) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    bookedVendorIds[vendorId] = isBooked;
+    notifyListeners();
+
+    await supabase
+        .from('user_diamonds')
+        .update({'is_booked': isBooked})
+        .eq('vendor_id', vendorId)
+        .eq('user_id', user.id);
+
+    await supabase.rpc('toggle_vendor_booking', params: {
+      'vendor_uuid': vendorId,
+      'increment': isBooked,
+    });
+  } catch (e) {
+    print('Error toggling booked vendor: $e');
   }
 }
 

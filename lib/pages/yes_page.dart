@@ -180,6 +180,7 @@ class YesPage extends StatelessWidget {
                       final vendor = vendorMap[vendorId] ?? {"vendor_name": "Unknown"};
                       final vendorName = vendor['vendor_name'];
 
+                      final isBooked = appState.bookedVendorIds[vendorId] ?? false;
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -288,6 +289,54 @@ class YesPage extends StatelessWidget {
                                   ],
                                 ),
                               ),
+                            ),
+                            // Booked toggle
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                              child: isBooked
+                                  ? GestureDetector(
+                                      onTap: () => appState.toggleBookedVendor(vendorId, false),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF7B3F61),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              'Booked',
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                  : OutlinedButton.icon(
+                                      onPressed: () => appState.toggleBookedVendor(vendorId, true),
+                                      icon: const Icon(Icons.check_circle_outline,
+                                          color: Color(0xFF7B3F61), size: 16),
+                                      label: Text(
+                                        'Mark as Booked',
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 12,
+                                          color: const Color(0xFF7B3F61),
+                                        ),
+                                      ),
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: Color(0xFF7B3F61)),
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(20)),
+                                      ),
+                                    ),
                             ),
                           ],
                         ),

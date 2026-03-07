@@ -25,6 +25,7 @@ class CategoryPageTemplate extends StatefulWidget {
 class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
   String? selectedState;
   String? selectedCounty;
+  final Set<String> _selectedStyles = {};
 
   List<Map<String, dynamic>> _getFilteredItems(List<Map<String, dynamic>> items) {
     if (selectedState == null && selectedCounty == null) {
@@ -106,7 +107,142 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
     setState(() {
       selectedState = null;
       selectedCounty = null;
+      _selectedStyles.clear();
     });
+  }
+
+  void _showKeywordSheet(BuildContext context, List<String> allKeywords) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (_, setSheetState) => Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.65,
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Search by Keywords',
+                    style: GoogleFonts.bodoniModa(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7B3F61),
+                    ),
+                  ),
+                  if (_selectedStyles.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _selectedStyles.clear());
+                        setSheetState(() {});
+                      },
+                      child: Text(
+                        'Clear',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          color: const Color(0xFF7B3F61),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Select styles to filter vendors',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  color: const Color(0xFF6E6E6E),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: allKeywords.map((k) {
+                      final selected = _selectedStyles.contains(k);
+                      return FilterChip(
+                        label: Text(k, style: GoogleFonts.montserrat(fontSize: 13)),
+                        selected: selected,
+                        onSelected: (v) {
+                          setState(() {
+                            if (v) {
+                              _selectedStyles.add(k);
+                            } else {
+                              _selectedStyles.remove(k);
+                            }
+                          });
+                          setSheetState(() {});
+                        },
+                        selectedColor: const Color(0xFF7B3F61).withOpacity(0.15),
+                        checkmarkColor: const Color(0xFF7B3F61),
+                        labelStyle: TextStyle(
+                          color: selected
+                              ? const Color(0xFF7B3F61)
+                              : const Color(0xFF3E3E3E),
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                        side: BorderSide(
+                          color: selected
+                              ? const Color(0xFF7B3F61)
+                              : const Color(0xFFDCC7AA),
+                        ),
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(sheetCtx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7B3F61),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(
+                    _selectedStyles.isEmpty
+                        ? 'Show All'
+                        : 'Show Results (${_selectedStyles.length} selected)',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -118,9 +254,27 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
             ? (appState.lovedCategorizedMap[widget.categoryName] ?? [])
             : (appState.allCategorizedMap[widget.categoryName]  ?? []);
 
-          final filteredList = _getFilteredItems(categoryList);
+          var filteredList = _getFilteredItems(categoryList);
+          if (_selectedStyles.isNotEmpty) {
+            filteredList = filteredList.where((v) {
+              final keywords = (v['style_keywords'] ?? '').toString()
+                  .split(',')
+                  .map((k) => k.trim())
+                  .where((k) => k.isNotEmpty)
+                  .toSet();
+              return _selectedStyles.any((s) => keywords.contains(s));
+            }).toList();
+          }
           final availableStates = _getAvailableStates(categoryList);
           final availableCounties = _getAvailableCounties(categoryList);
+
+          final allKeywords = categoryList
+              .map((v) => (v['style_keywords'] ?? '').toString().split(','))
+              .expand((e) => e)
+              .map((k) => k.trim())
+              .where((k) => k.isNotEmpty)
+              .toSet()
+              .toList()..sort();
 
         return Scaffold(
           body: Column( 
@@ -148,7 +302,10 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     ),
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  Row(
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
@@ -266,12 +423,49 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     ),
                   ],
                 ),
+                  if (allKeywords.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () => _showKeywordSheet(context, allKeywords),
+                      icon: Icon(
+                        Icons.style_outlined,
+                        size: 16,
+                        color: _selectedStyles.isNotEmpty
+                            ? Colors.white
+                            : const Color(0xFF7B3F61),
+                      ),
+                      label: Text(
+                        _selectedStyles.isEmpty
+                            ? 'Search by Keywords'
+                            : 'Keywords (${_selectedStyles.length})',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: _selectedStyles.isNotEmpty
+                              ? Colors.white
+                              : const Color(0xFF7B3F61),
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: _selectedStyles.isNotEmpty
+                            ? const Color(0xFF7B3F61)
+                            : Colors.transparent,
+                        side: const BorderSide(color: Color(0xFF7B3F61)),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                      ),
+                    ),
+                  ],
+                  ],
+                ),
               ),
               
               (filteredList.isEmpty) ? Expanded(
                 child: Center(
                   child: Text(
-                    selectedState != null || selectedCounty != null
+                    selectedState != null || selectedCounty != null || _selectedStyles.isNotEmpty
                         ? "No vendors found matching your filters"
                         : "No vendors for this category to display",
                     style: AppStyles.backButton,

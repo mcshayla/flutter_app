@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_signup.dart';
 import 'vendor_dashboard.dart';
+import 'vendor_subscription_page.dart';
 
 class VendorLogin extends StatefulWidget {
   const VendorLogin({super.key});
@@ -32,15 +33,58 @@ class _VendorLoginState extends State<VendorLogin> {
     setState(() => _isLoading = true);
 
     try {
-      await supabase.auth.signInWithPassword(
+      final response = await supabase.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (mounted) {
+      final userId = response.user?.id;
+      if (userId == null || !mounted) return;
+
+      // Check if vendor has an active subscription
+      final vendorRecord = await supabase
+          .from('vendors')
+          .select('subscription_status, vendor_id')
+          .eq('vendor_user_id', userId)
+          .maybeSingle();
+
+      bool isActive = vendorRecord != null &&
+          vendorRecord['subscription_status'] == 'active';
+
+      if (!isActive) {
+        // Check vendor_subscriptions table as fallback
+        final sub = await supabase
+            .from('vendor_subscriptions')
+            .select('status')
+            .eq('user_id', userId)
+            .eq('status', 'active')
+            .maybeSingle();
+        isActive = sub != null;
+      }
+
+      if (!mounted) return;
+
+      if (isActive) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const VendorDashboard()),
+        );
+      } else {
+        // Redirect to subscription page to complete payment
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VendorSubscriptionPage(userId: userId),
+          ),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'An active subscription is required to access the vendor portal. Please choose a plan to continue.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
         );
       }
     } on AuthException catch (e) {

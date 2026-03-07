@@ -56,21 +56,22 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.red),
             onPressed: () {
+              final pageContext = context;
               showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (dialogContext) => AlertDialog(
                   title: const Text('Delete Task?'),
                   content: const Text('This action cannot be undone.'),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => Navigator.pop(dialogContext),
                       child: const Text('Cancel'),
                     ),
                     TextButton(
-                      onPressed: () {
-                        appState.deleteChecklistItem(widget.item['id']);
-                        Navigator.pop(context); // close dialog
-                        Navigator.pop(context); // go back
+                      onPressed: () async {
+                        Navigator.pop(dialogContext); // close dialog
+                        await appState.deleteChecklistItem(widget.item['id']);
+                        if (pageContext.mounted) Navigator.pop(pageContext); // back to checklist
                       },
                       child: const Text('Delete', style: TextStyle(color: Colors.red)),
                     ),

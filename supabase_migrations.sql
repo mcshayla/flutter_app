@@ -186,3 +186,18 @@ INSERT INTO checklist_templates (title, description, category, months_before, di
 ('Rehearsal', 'Run through the ceremony with wedding party', 'Planning', 0, 400)
 
 ON CONFLICT DO NOTHING;
+
+-- ==================== BOOKED VENDOR STATUS ====================
+ALTER TABLE user_diamonds ADD COLUMN IF NOT EXISTS is_booked BOOLEAN DEFAULT false;
+ALTER TABLE vendors ADD COLUMN IF NOT EXISTS bookings_count INT DEFAULT 0;
+
+CREATE OR REPLACE FUNCTION toggle_vendor_booking(vendor_uuid UUID, increment BOOLEAN)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF increment THEN
+    UPDATE vendors SET bookings_count = bookings_count + 1 WHERE vendor_id = vendor_uuid;
+  ELSE
+    UPDATE vendors SET bookings_count = GREATEST(0, bookings_count - 1) WHERE vendor_id = vendor_uuid;
+  END IF;
+END;
+$$;

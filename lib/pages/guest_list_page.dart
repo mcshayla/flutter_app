@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../appstate.dart';
@@ -58,6 +59,18 @@ class _GuestListPageState extends State<GuestListPage> {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.restaurant_menu, color: Color(0xFF7B3F61)),
+                tooltip: 'Dietary Summary',
+                onPressed: () => _showDietarySheet(context, allGuests),
+              ),
+              IconButton(
+                icon: const Icon(Icons.download_outlined, color: Color(0xFF7B3F61)),
+                tooltip: 'Copy as CSV',
+                onPressed: () => _exportToClipboard(context, allGuests),
+              ),
+            ],
           ),
           body: Column(
             children: [
@@ -189,6 +202,169 @@ class _GuestListPageState extends State<GuestListPage> {
     );
   }
 
+  void _showDietarySheet(BuildContext context, List<Map<String, dynamic>> guests) {
+    // Guests with any dietary or meal info
+    final withInfo = guests.where((g) {
+      final diet = (g['dietary_restrictions'] ?? '').toString().trim();
+      final meal = (g['meal_preference'] ?? '').toString().trim();
+      return diet.isNotEmpty || meal.isNotEmpty;
+    }).toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.75,
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(
+              'Dietary & Meal Info',
+              style: GoogleFonts.bodoniModa(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B3F61),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${withInfo.length} of ${guests.length} guests have dietary or meal info',
+              style: GoogleFonts.montserrat(fontSize: 13, color: const Color(0xFF6E6E6E)),
+            ),
+            const SizedBox(height: 12),
+            withInfo.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 24),
+                    child: Center(
+                      child: Text(
+                        'No dietary or meal info added yet',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 14,
+                          color: const Color(0xFF6E6E6E),
+                        ),
+                      ),
+                    ),
+                  )
+                : Expanded(
+                    child: ListView.separated(
+                      itemCount: withInfo.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (_, i) {
+                        final g = withInfo[i];
+                        final name =
+                            '${g['first_name'] ?? ''} ${g['last_name'] ?? ''}'.trim();
+                        final diet = (g['dietary_restrictions'] ?? '').toString().trim();
+                        final meal = (g['meal_preference'] ?? '').toString().trim();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor:
+                                    const Color(0xFF7B3F61).withOpacity(0.1),
+                                child: Text(
+                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                  style: GoogleFonts.bodoniModa(
+                                    fontSize: 13,
+                                    color: const Color(0xFF7B3F61),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(name,
+                                        style: GoogleFonts.montserrat(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        )),
+                                    if (meal.isNotEmpty)
+                                      Text('Meal: $meal',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 12,
+                                            color: const Color(0xFF6E6E6E),
+                                          )),
+                                    if (diet.isNotEmpty)
+                                      Text('Dietary: $diet',
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 12,
+                                            color: Colors.red.shade700,
+                                          )),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _exportToClipboard(BuildContext context, List<Map<String, dynamic>> guests) {
+    String esc(dynamic v) {
+      final s = (v ?? '').toString().replaceAll('"', '""');
+      return '"$s"';
+    }
+
+    final buffer = StringBuffer();
+    buffer.writeln(
+      'First Name,Last Name,Email,Phone,Group,RSVP,Meal Preference,Dietary Restrictions,Plus One,Plus One Name,Notes',
+    );
+    for (final g in guests) {
+      buffer.writeln([
+        esc(g['first_name']),
+        esc(g['last_name']),
+        esc(g['email']),
+        esc(g['phone']),
+        esc(g['group_name']),
+        esc(g['rsvp_status']),
+        esc(g['meal_preference']),
+        esc(g['dietary_restrictions']),
+        esc(g['plus_one_allowed'] == true ? 'Yes' : 'No'),
+        esc(g['plus_one_name']),
+        esc(g['notes']),
+      ].join(','));
+    }
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Guest list copied! Paste into Excel or Google Sheets.',
+          style: GoogleFonts.montserrat(fontSize: 13),
+        ),
+        duration: const Duration(seconds: 3),
+        backgroundColor: const Color(0xFF7B3F61),
+      ),
+    );
+  }
+
   Widget _buildCountStat(String label, String value, Color valueColor) {
     return Column(
       children: [
@@ -280,9 +456,21 @@ class _GuestTile extends StatelessWidget {
           ],
         ],
       ),
-      subtitle: group.isNotEmpty
-          ? Text(group, style: GoogleFonts.montserrat(fontSize: 12, color: const Color(0xFF6E6E6E)))
-          : null,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (group.isNotEmpty)
+            Text(group,
+                style: GoogleFonts.montserrat(
+                    fontSize: 12, color: const Color(0xFF6E6E6E))),
+          if ((guest['dietary_restrictions'] ?? '').toString().trim().isNotEmpty)
+            Text(
+              'Dietary: ${guest['dietary_restrictions']}',
+              style: GoogleFonts.montserrat(
+                  fontSize: 11, color: Colors.red.shade700),
+            ),
+        ],
+      ),
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(

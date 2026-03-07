@@ -182,36 +182,37 @@ class BudgetPage extends StatelessWidget {
                             ),
                           ],
                           const SizedBox(height: 8),
-                          ...entry.value.map((item) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      item['is_paid'] == true
-                                          ? Icons.check_circle
-                                          : Icons.circle_outlined,
-                                      size: 16,
-                                      color: item['is_paid'] == true
-                                          ? const Color(0xFF7B3F61)
-                                          : const Color(0xFFDCC7AA),
+                          ...entry.value.map((item) => InkWell(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => BudgetItemForm(existingItem: item),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        item['item_name'] ?? '',
-                                        style: GoogleFonts.montserrat(fontSize: 13),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        item['is_paid'] == true
+                                            ? Icons.check_circle
+                                            : Icons.circle_outlined,
+                                        size: 16,
+                                        color: item['is_paid'] == true
+                                            ? const Color(0xFF7B3F61)
+                                            : const Color(0xFFDCC7AA),
                                       ),
-                                    ),
-                                    GestureDetector(
-                                      onTap: () async {
-                                        await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => BudgetItemForm(existingItem: item),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          item['item_name'] ?? '',
+                                          style: GoogleFonts.montserrat(fontSize: 13),
+                                        ),
+                                      ),
+                                      Text(
                                         '\$${((item['actual_cost'] as num?)?.toDouble() ?? (item['estimated_cost'] as num?)?.toDouble() ?? 0).toStringAsFixed(0)}',
                                         style: GoogleFonts.montserrat(
                                           fontSize: 13,
@@ -219,8 +220,11 @@ class BudgetPage extends StatelessWidget {
                                           color: const Color(0xFF7B3F61),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 6),
+                                      const Icon(Icons.edit_outlined,
+                                          size: 14, color: Color(0xFF6E6E6E)),
+                                    ],
+                                  ),
                                 ),
                               )),
                         ],
