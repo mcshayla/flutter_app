@@ -16,12 +16,14 @@ class ChecklistItemDetail extends StatefulWidget {
 class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
   late TextEditingController _notesController;
   late bool _isCompleted;
+  late String? _dueDate;
 
   @override
   void initState() {
     super.initState();
     _notesController = TextEditingController(text: widget.item['notes'] ?? '');
     _isCompleted = widget.item['is_completed'] == true;
+    _dueDate = widget.item['due_date'] as String?;
   }
 
   @override
@@ -34,7 +36,6 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context, listen: false);
     final category = widget.item['category'] as String? ?? 'Other';
-    final dueDate = widget.item['due_date'] as String?;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F5F0),
@@ -122,12 +123,47 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
                   label: Text(category, style: GoogleFonts.montserrat(fontSize: 12, color: Colors.white)),
                   backgroundColor: const Color(0xFF7B3F61),
                 ),
-                if (dueDate != null)
-                  Chip(
-                    label: Text('Due: $dueDate',
-                        style: GoogleFonts.montserrat(fontSize: 12)),
-                    backgroundColor: const Color(0xFFDCC7AA).withOpacity(0.3),
+                ActionChip(
+                  avatar: Icon(
+                    Icons.edit_calendar,
+                    size: 16,
+                    color: _dueDate != null ? const Color(0xFF3E3E3E) : const Color(0xFF6E6E6E),
                   ),
+                  label: Text(
+                    _dueDate != null ? 'Due: $_dueDate' : 'Set due date',
+                    style: GoogleFonts.montserrat(fontSize: 12),
+                  ),
+                  backgroundColor: const Color(0xFFDCC7AA).withOpacity(0.3),
+                  onPressed: () async {
+                    final weddingDateStr = appState.weddingProfile?['wedding_date'] as String?;
+                    final lastDate = weddingDateStr != null
+                        ? DateTime.tryParse(weddingDateStr) ?? DateTime.now().add(const Duration(days: 365 * 5))
+                        : DateTime.now().add(const Duration(days: 365 * 5));
+
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _dueDate != null
+                          ? (DateTime.tryParse(_dueDate!) ?? DateTime.now())
+                          : DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: lastDate,
+                      builder: (context, child) => Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: Color(0xFF7B3F61),
+                            onPrimary: Colors.white,
+                          ),
+                        ),
+                        child: child!,
+                      ),
+                    );
+                    if (picked != null) {
+                      final newDate = picked.toIso8601String().split('T')[0];
+                      setState(() => _dueDate = newDate);
+                      appState.updateChecklistItemDueDate(widget.item['id'], newDate);
+                    }
+                  },
+                ),
               ],
             ),
             const SizedBox(height: 16),

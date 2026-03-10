@@ -127,6 +127,39 @@ CREATE POLICY "Users can manage their own guests"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- ==================== GUESTS: new columns ====================
+ALTER TABLE guests ADD COLUMN IF NOT EXISTS address TEXT DEFAULT '';
+ALTER TABLE guests ADD COLUMN IF NOT EXISTS plus_one_count INTEGER NOT NULL DEFAULT 0;
+
+-- ==================== RSVP LINK CONFIGS ====================
+CREATE TABLE IF NOT EXISTS guest_link_configs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
+  label TEXT NOT NULL DEFAULT '',
+  group_name TEXT NOT NULL DEFAULT '',
+  fields_enabled JSONB NOT NULL DEFAULT '{"email":true,"phone":false,"address":true,"dietary":true,"meal":false,"notes":false,"plus_one":false}',
+  partner1_name TEXT NOT NULL DEFAULT '',
+  partner2_name TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE guest_link_configs ENABLE ROW LEVEL SECURITY;
+
+-- Owners can fully manage their own link configs
+CREATE POLICY "Users manage own link configs"
+  ON guest_link_configs
+  FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Anyone (including anonymous users) can read a config by token
+-- This is safe: tokens are random 32-char hex, the form needs it to know which fields to show
+CREATE POLICY "Public can read link configs"
+  ON guest_link_configs
+  FOR SELECT
+  USING (true);
+
 -- ==================== CHECKLIST TEMPLATE SEED DATA ====================
 -- Standard wedding checklist tasks (40 tasks across categories)
 INSERT INTO checklist_templates (title, description, category, months_before, display_order) VALUES

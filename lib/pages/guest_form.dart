@@ -18,12 +18,11 @@ class _GuestFormState extends State<GuestForm> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _groupController = TextEditingController();
-  final _plusOneNameController = TextEditingController();
+  final _plusOneCountController = TextEditingController(text: '0');
   final _mealController = TextEditingController();
   final _dietaryController = TextEditingController();
   final _notesController = TextEditingController();
   String _rsvpStatus = 'not_sent';
-  bool _plusOneAllowed = false;
 
   bool get _isEditing => widget.existingGuest != null;
 
@@ -37,12 +36,11 @@ class _GuestFormState extends State<GuestForm> {
       _emailController.text = g['email'] ?? '';
       _phoneController.text = g['phone'] ?? '';
       _groupController.text = g['group_name'] ?? '';
-      _plusOneNameController.text = g['plus_one_name'] ?? '';
+      _plusOneCountController.text = ((g['plus_one_count'] as num?)?.toInt() ?? 0).toString();
       _mealController.text = g['meal_preference'] ?? '';
       _dietaryController.text = g['dietary_restrictions'] ?? '';
       _notesController.text = g['notes'] ?? '';
       _rsvpStatus = g['rsvp_status'] ?? 'not_sent';
-      _plusOneAllowed = g['plus_one_allowed'] == true;
     }
   }
 
@@ -53,7 +51,7 @@ class _GuestFormState extends State<GuestForm> {
     _emailController.dispose();
     _phoneController.dispose();
     _groupController.dispose();
-    _plusOneNameController.dispose();
+    _plusOneCountController.dispose();
     _mealController.dispose();
     _dietaryController.dispose();
     _notesController.dispose();
@@ -192,22 +190,13 @@ class _GuestFormState extends State<GuestForm> {
                 ),
                 const SizedBox(height: 16),
 
-                SwitchListTile(
-                  title: Text('Plus One', style: GoogleFonts.montserrat(fontSize: 14)),
-                  value: _plusOneAllowed,
-                  onChanged: (v) => setState(() => _plusOneAllowed = v),
-                  activeColor: const Color(0xFF7B3F61),
-                  contentPadding: EdgeInsets.zero,
+                TextField(
+                  controller: _plusOneCountController,
+                  decoration: _inputDecoration('Additional Guests'),
+                  keyboardType: TextInputType.number,
+                  style: GoogleFonts.montserrat(fontSize: 14),
                 ),
-
-                if (_plusOneAllowed) ...[
-                  TextField(
-                    controller: _plusOneNameController,
-                    decoration: _inputDecoration('Plus One Name'),
-                    style: GoogleFonts.montserrat(fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                const SizedBox(height: 16),
 
                 TextField(
                   controller: _notesController,
@@ -256,8 +245,8 @@ class _GuestFormState extends State<GuestForm> {
       'rsvp_status': _rsvpStatus,
       'meal_preference': _mealController.text.trim(),
       'dietary_restrictions': _dietaryController.text.trim(),
-      'plus_one_allowed': _plusOneAllowed,
-      'plus_one_name': _plusOneNameController.text.trim(),
+      'plus_one_count': int.tryParse(_plusOneCountController.text.trim()) ?? 0,
+      'plus_one_allowed': (int.tryParse(_plusOneCountController.text.trim()) ?? 0) > 0,
       'notes': _notesController.text.trim(),
     };
 

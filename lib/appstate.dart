@@ -21,8 +21,12 @@ class AppState extends ChangeNotifier {
   Map<String, dynamic>? userBudget;
   List<Map<String, dynamic>> budgetItems = [];
 
+  // Categories (from DB)
+  List<String> categoryNames = [];
+
   // Guest List
   List<Map<String, dynamic>> guests = [];
+  List<Map<String, dynamic>> guestLinkConfigs = [];
 
   final supabase = Supabase.instance.client;
 
@@ -67,9 +71,11 @@ class AppState extends ChangeNotifier {
     bookedVendorIds = {};
     weddingProfile = null;
     checklistItems = [];
+    categoryNames = [];
     userBudget = null;
     budgetItems = [];
     guests = [];
+    guestLinkConfigs = [];
     isLoaded = true;
   }
 
@@ -100,6 +106,7 @@ class AppState extends ChangeNotifier {
           .select('name')
           .order('display_order', ascending: true);
       final orderedNames = (categoryRows as List).map((r) => r['name'] as String).toList();
+      categoryNames = orderedNames;
 
       allCategorizedMap = {
         for (final name in orderedNames)
@@ -156,12 +163,13 @@ class AppState extends ChangeNotifier {
 
       lovedVendorUUIDsCategorizedMap = lovedVendorsByCategory;
 
-      // Load wedding profile, checklist, budget, and guests
+      // Load wedding profile, checklist, budget, guests, and RSVP links
       await Future.wait([
         loadWeddingProfile(),
         loadChecklist(),
         loadBudget(),
         loadGuests(),
+        loadGuestLinkConfigs(),
       ]);
 
       isLoaded = true;
@@ -506,21 +514,45 @@ Future<void> deleteChecklistItem(String itemId) async {
   }
 }
 
-Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String> categories) async {
+Future<void> deleteAllChecklistItems() async {
   try {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
-    // Get existing template_ids to avoid duplicates
-    final existing = await supabase
-        .from('user_checklist_items')
-        .select('template_id')
-        .eq('user_id', user.id);
+    checklistItems.clear();
+    notifyListeners();
 
-    final existingTemplateIds = (existing as List)
-        .map((e) => e['template_id'] as String?)
-        .where((id) => id != null)
-        .toSet();
+    await supabase
+        .from('user_checklist_items')
+        .delete()
+        .eq('user_id', user.id);
+  } catch (e) {
+    print("Error deleting all checklist items: $e");
+  }
+}
+
+Future<void> updateChecklistItemDueDate(String itemId, String? dueDate) async {
+  try {
+    // Optimistic update
+    final index = checklistItems.indexWhere((item) => item['id'] == itemId);
+    if (index != -1) {
+      checklistItems[index]['due_date'] = dueDate;
+      notifyListeners();
+    }
+
+    await supabase
+        .from('user_checklist_items')
+        .update({'due_date': dueDate})
+        .eq('id', itemId);
+  } catch (e) {
+    print("Error updating checklist item due date: $e");
+  }
+}
+
+Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String> categories) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
 
     final templates = await supabase
         .from('checklist_templates')
@@ -530,13 +562,8 @@ Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String
 
     final items = <Map<String, dynamic>>[];
     final now = DateTime.now();
-    final baseOrder = checklistItems.isNotEmpty
-        ? checklistItems.map((i) => i['display_order'] as int? ?? 0).reduce((a, b) => a > b ? a : b) + 1
-        : 0;
 
     for (var template in templates as List) {
-      if (existingTemplateIds.contains(template['id'])) continue;
-
       final monthsBefore = template['months_before'] as int? ?? 0;
       final rawDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
       final dueDate = rawDate.isBefore(now) ? now : rawDate;
@@ -549,7 +576,7 @@ Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String
         'category': template['category'] ?? 'Other',
         'is_completed': false,
         'due_date': dueDate.toIso8601String().split('T')[0],
-        'display_order': baseOrder + items.length,
+        'display_order': items.length,
         'notes': '',
       });
     }
@@ -757,6 +784,64 @@ Future<void> deleteGuest(String guestId) async {
   }
 }
 
+// ===================== RSVP LINK CONFIGS =====================
+
+Future<void> loadGuestLinkConfigs() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    final response = await supabase
+        .from('guest_link_configs')
+        .select()
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false);
+    guestLinkConfigs = (response as List).map((e) => e as Map<String, dynamic>).toList();
+    notifyListeners();
+  } catch (e) {
+    print("Error loading guest link configs: $e");
+  }
+}
+
+Future<Map<String, dynamic>?> createGuestLinkConfig({
+  required String label,
+  required String groupName,
+  required Map<String, bool> fieldsEnabled,
+}) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+    final response = await supabase
+        .from('guest_link_configs')
+        .insert({
+          'user_id': user.id,
+          'label': label,
+          'group_name': groupName,
+          'fields_enabled': fieldsEnabled,
+          'partner1_name': weddingProfile?['partner_name_1'] ?? '',
+          'partner2_name': weddingProfile?['partner_name_2'] ?? '',
+        })
+        .select()
+        .single();
+    await loadGuestLinkConfigs();
+    return response;
+  } catch (e) {
+    print("Error creating guest link config: $e");
+    return null;
+  }
+}
+
+Future<void> deleteGuestLinkConfig(String id) async {
+  try {
+    guestLinkConfigs.removeWhere((c) => c['id'] == id);
+    notifyListeners();
+    await supabase.from('guest_link_configs').delete().eq('id', id);
+  } catch (e) {
+    print("Error deleting guest link config: $e");
+  }
+}
+
+// ===================== GUEST COUNT / STATS =====================
+
 int get guestCountByStatus {
   return guests.length;
 }
@@ -771,9 +856,13 @@ Map<String, int> get guestStatusCounts {
   };
   for (var guest in guests) {
     final status = guest['rsvp_status'] as String? ?? 'not_sent';
-    counts[status] = (counts[status] ?? 0) + 1;
+    final partySize = 1 + ((guest['plus_one_count'] as num?)?.toInt() ?? 0);
+    counts[status] = (counts[status] ?? 0) + partySize;
   }
   return counts;
 }
+
+int get totalGuestHeadcount =>
+    guests.fold(0, (sum, g) => sum + 1 + ((g['plus_one_count'] as num?)?.toInt() ?? 0));
 
 }

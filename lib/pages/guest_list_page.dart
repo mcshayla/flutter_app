@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../appstate.dart';
+import '../widgets/rsvp_link_sheet.dart';
 import 'guest_form.dart';
 
 class GuestListPage extends StatefulWidget {
@@ -61,6 +62,11 @@ class _GuestListPageState extends State<GuestListPage> {
             ),
             actions: [
               IconButton(
+                icon: const Icon(Icons.link, color: Color(0xFF7B3F61)),
+                tooltip: 'RSVP Links',
+                onPressed: () => showRsvpLinkSheet(context),
+              ),
+              IconButton(
                 icon: const Icon(Icons.restaurant_menu, color: Color(0xFF7B3F61)),
                 tooltip: 'Dietary Summary',
                 onPressed: () => _showDietarySheet(context, allGuests),
@@ -85,7 +91,7 @@ class _GuestListPageState extends State<GuestListPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildCountStat('Total', '${allGuests.length}', Colors.white),
+                    _buildCountStat('Total', '${appState.totalGuestHeadcount}', Colors.white),
                     _buildCountStat('Accepted', '${statusCounts['accepted'] ?? 0}',
                         const Color(0xFFDCC7AA)),
                     _buildCountStat('Declined', '${statusCounts['declined'] ?? 0}',
@@ -150,22 +156,32 @@ class _GuestListPageState extends State<GuestListPage> {
 
               // Guest list
               Expanded(
-                child: filteredGuests.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.people_outline, size: 64, color: const Color(0xFFDCC7AA)),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Add guests to your list',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 14,
-                                color: const Color(0xFF6E6E6E),
+                child: RefreshIndicator(
+                  color: const Color(0xFF7B3F61),
+                  onRefresh: () => appState.loadGuests(),
+                  child: filteredGuests.isEmpty
+                    ? ListView(
+                        children: [
+                          SizedBox(
+                            height: 200,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.people_outline, size: 64, color: const Color(0xFFDCC7AA)),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Add guests to your list',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 14,
+                                      color: const Color(0xFF6E6E6E),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       )
                     : ListView.builder(
                         itemCount: filteredGuests.length,
@@ -184,6 +200,7 @@ class _GuestListPageState extends State<GuestListPage> {
                           );
                         },
                       ),
+                ),
               ),
             ],
           ),
@@ -427,7 +444,7 @@ class _GuestTile extends StatelessWidget {
     final name = '${guest['first_name'] ?? ''} ${guest['last_name'] ?? ''}'.trim();
     final group = guest['group_name'] as String? ?? '';
     final status = guest['rsvp_status'] as String? ?? 'not_sent';
-    final plusOne = guest['plus_one_allowed'] == true;
+    final plusCount = (guest['plus_one_count'] as num?)?.toInt() ?? 0;
 
     return ListTile(
       onTap: onTap,
@@ -449,9 +466,9 @@ class _GuestTile extends StatelessWidget {
               style: GoogleFonts.montserrat(fontSize: 14, fontWeight: FontWeight.w500),
             ),
           ),
-          if (plusOne) ...[
+          if (plusCount > 0) ...[
             const SizedBox(width: 4),
-            Text('+1', style: GoogleFonts.montserrat(fontSize: 11, color: const Color(0xFF6E6E6E))),
+            Text('+$plusCount', style: GoogleFonts.montserrat(fontSize: 11, color: const Color(0xFF6E6E6E))),
           ],
         ],
       ),

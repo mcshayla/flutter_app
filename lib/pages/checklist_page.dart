@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../appstate.dart';
+import '../widgets/category_selection_sheet.dart' show showCategorySelectionSheet;
 import 'checklist_item_detail.dart';
 import 'budget_page.dart';
 import 'guest_list_page.dart';
@@ -20,10 +21,7 @@ class _ChecklistPageState extends State<ChecklistPage> {
   // Only groups in this set are expanded (default all collapsed)
   final Set<String> _expandedCategories = {};
 
-  static const _knownCategories = [
-    'Planning', 'Venue', 'Catering', 'Photography', 'Flowers',
-    'Attire', 'Music', 'Invitations', 'Decor', 'Transportation',
-  ];
+  // Categories come from appState.categoryNames (loaded from DB)
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +357,6 @@ class _ChecklistPageState extends State<ChecklistPage> {
     final now = DateTime.now();
     final diff = date.difference(now).inDays;
 
-    if (diff < 0) return 'Overdue';
     if (diff <= 30) return 'This Month';
     if (diff <= 60) return 'Next Month';
     if (diff <= 90) return '2-3 Months';
@@ -383,155 +380,56 @@ class _ChecklistPageState extends State<ChecklistPage> {
       return;
     }
 
-    final Set<String> selectedCategories = Set.from(_knownCategories);
+    final hasExisting = appState.checklistItems.isNotEmpty;
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetCtx) => StatefulBuilder(
-        builder: (_, setSheetState) {
-          final allSelected = selectedCategories.length == _knownCategories.length;
-          return Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.75,
+    // If items exist, show confirmation dialog first
+    if (hasExisting) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Regenerate Checklist?',
+              style: GoogleFonts.bodoniModa(color: const Color(0xFF7B3F61))),
+          content: Text(
+            'Regenerating will replace all existing tasks. Custom tasks and notes will be lost.',
+            style: GoogleFonts.montserrat(fontSize: 14, color: const Color(0xFF3E3E3E)),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                Text(
-                  'Build Your Checklist',
-                  style: GoogleFonts.bodoniModa(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF7B3F61),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Choose the categories to include',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    color: const Color(0xFF6E6E6E),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Select All',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF3E3E3E),
-                      ),
-                    ),
-                    Switch(
-                      value: allSelected,
-                      activeColor: const Color(0xFF7B3F61),
-                      onChanged: (v) {
-                        setSheetState(() {
-                          if (v) {
-                            selectedCategories.addAll(_knownCategories);
-                          } else {
-                            selectedCategories.clear();
-                          }
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                const Divider(),
-                Flexible(
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: _knownCategories
-                        .map((cat) => CheckboxListTile(
-                              title: Text(
-                                cat,
-                                style: GoogleFonts.montserrat(fontSize: 14),
-                              ),
-                              value: selectedCategories.contains(cat),
-                              activeColor: const Color(0xFF7B3F61),
-                              dense: true,
-                              onChanged: (v) {
-                                setSheetState(() {
-                                  if (v == true) {
-                                    selectedCategories.add(cat);
-                                  } else {
-                                    selectedCategories.remove(cat);
-                                  }
-                                });
-                              },
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: selectedCategories.isEmpty
-                        ? null
-                        : () async {
-                            Navigator.pop(sheetCtx);
-                            final date = DateTime.parse(weddingDateStr);
-                            await appState.initializeChecklistWithCategories(
-                              date,
-                              selectedCategories.toList(),
-                            );
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7B3F61),
-                      disabledBackgroundColor: const Color(0xFFDCC7AA),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text(
-                      'Generate',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF7B3F61)),
+              child: const Text('Continue', style: TextStyle(color: Colors.white)),
             ),
-          );
-        },
-      ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    if (!context.mounted) return;
+    final categories = await showCategorySelectionSheet(
+      context,
+      categories: appState.categoryNames,
+      isRegenerate: hasExisting,
     );
+
+    if (categories == null || categories.isEmpty) return;
+
+    final date = DateTime.parse(weddingDateStr);
+    if (hasExisting) {
+      await appState.deleteAllChecklistItems();
+    }
+    await appState.initializeChecklistWithCategories(date, categories);
   }
 
   void _showAddTaskDialog(BuildContext context, AppState appState) {
     final titleController = TextEditingController();
     String selectedCategory = 'Other';
     DateTime? selectedDate;
-    final categories = [
-      'Venue', 'Catering', 'Photography', 'Flowers', 'Attire',
-      'Music', 'Invitations', 'Decor', 'Transportation', 'Other'
-    ];
+    final categories = [...appState.categoryNames, 'Other'];
 
     showDialog(
       context: context,
@@ -659,9 +557,6 @@ class _ChecklistItemTile extends StatelessWidget {
     final isCompleted = item['is_completed'] == true;
     final title = item['title'] as String? ?? '';
     final dueDate = item['due_date'] as String?;
-    final isOverdue = dueDate != null &&
-        DateTime.tryParse(dueDate)?.isBefore(DateTime.now()) == true &&
-        !isCompleted;
 
     return InkWell(
       onTap: onTap,
@@ -698,24 +593,12 @@ class _ChecklistItemTile extends StatelessWidget {
                       dueDate,
                       style: GoogleFonts.montserrat(
                         fontSize: 11,
-                        color: isOverdue ? Colors.red : const Color(0xFF6E6E6E),
+                        color: const Color(0xFF6E6E6E),
                       ),
                     ),
                 ],
               ),
             ),
-            if (isOverdue)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'Overdue',
-                  style: GoogleFonts.montserrat(fontSize: 10, color: Colors.red),
-                ),
-              ),
             const SizedBox(width: 4),
             const Icon(Icons.chevron_right, color: Color(0xFFDCC7AA), size: 20),
           ],
