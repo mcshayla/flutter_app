@@ -1,14 +1,12 @@
 import 'explore_page.dart';
 import 'loved_page.dart';
-import 'ai_search_page.dart';
 import 'yes_page.dart';
+import 'checklist_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:provider/provider.dart';
-import '../appstate.dart';
 import 'login.dart';
 import 'profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +24,13 @@ class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
   bool _hasVendor = false;
   late List<GlobalKey<NavigatorState>> _navigatorKeys;
+
+  // Tab indices
+  static const int _exploreIdx = 0;
+  static const int _lovedIdx = 1;
+  static const int _planIdx = 2;
+  static const int _yesIdx = 3;
+  static const int _vendorIdx = 4;
 
   @override
   void initState() {
@@ -52,7 +57,7 @@ class _MainScaffoldState extends State<MainScaffold> {
           .select()
           .eq('user_id', user.id)
           .maybeSingle();
-      
+
       return result != null;
     } catch (e) {
       print('Error checking vendor claim status: $e');
@@ -62,10 +67,11 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   void _initializeNavigatorKeys() {
     _navigatorKeys = [
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(),
-      GlobalKey<NavigatorState>(), // Vendor tab key (always create it)
+      GlobalKey<NavigatorState>(), // Explore
+      GlobalKey<NavigatorState>(), // Loved
+      GlobalKey<NavigatorState>(), // Plan
+      GlobalKey<NavigatorState>(), // YES
+      GlobalKey<NavigatorState>(), // Vendor
     ];
   }
 
@@ -109,10 +115,6 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
     );
   }
- 
- 
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -130,83 +132,34 @@ class _MainScaffoldState extends State<MainScaffold> {
         actions: [
           if (kIsWeb) ...[
             if (MediaQuery.of(context).size.width > 800)
-              // Wide screen: Show tabs directly
               ...[
-                _buildWebTabButton(0, 'Explore'),
-                _buildWebTabButton(1, 'Loved'),
-                _buildWebTabButton(2, 'YES'),
-                if (_hasVendor) _buildWebTabButton(3, 'Vendor'),
+                _buildWebTabButton(_exploreIdx, 'Explore'),
+                _buildWebTabButton(_lovedIdx, 'Loved'),
+                _buildWebTabButton(_planIdx, 'Plan'),
+                _buildWebTabButton(_yesIdx, 'YES'),
+                if (_hasVendor) _buildWebTabButton(_vendorIdx, 'Vendor'),
                 const SizedBox(width: 16),
               ]
             else
-              // Narrow screen: Show hamburger menu
               PopupMenuButton<int>(
                 icon: const Icon(Icons.menu, color: Colors.white),
                 onSelected: (index) => _onTabTapped(index),
                 itemBuilder: (BuildContext context) => [
-                  PopupMenuItem(
-                    value: 0,
-                    child: Text(
-                      'Explore',
-                      style: TextStyle(
-                        color: _selectedIndex == 0 ? const Color(0xFF7B3F61) : Colors.black,
-                        fontWeight: _selectedIndex == 0 ? FontWeight.bold : FontWeight.normal,
-                        decoration: _selectedIndex == 0 ? TextDecoration.underline : TextDecoration.none,
-                        decorationColor: const Color(0xFF7B3F61),
-                        decorationThickness: 2,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 1,
-                    child: Text(
-                      'Loved',
-                      style: TextStyle(
-                        color: _selectedIndex == 1 ? const Color(0xFF7B3F61) : Colors.black,
-                        fontWeight: _selectedIndex == 1 ? FontWeight.bold : FontWeight.normal,
-                        decoration: _selectedIndex == 1 ? TextDecoration.underline : TextDecoration.none,
-                        decorationColor: const Color(0xFF7B3F61),
-                        decorationThickness: 2,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 2,
-                    child: Text(
-                      'YES',
-                      style: TextStyle(
-                        color: _selectedIndex == 2 ? const Color(0xFF7B3F61) : Colors.black,
-                        fontWeight: _selectedIndex == 2 ? FontWeight.bold : FontWeight.normal,
-                        decoration: _selectedIndex == 2 ? TextDecoration.underline : TextDecoration.none,
-                        decorationColor: const Color(0xFF7B3F61),
-                        decorationThickness: 2,
-                      ),
-                    ),
-                  ),
-                  if (_hasVendor)
-                    PopupMenuItem(
-                      value: 3,
-                      child: Text(
-                        'Vendor',
-                        style: TextStyle(
-                          color: _selectedIndex == 3 ? const Color(0xFF7B3F61) : Colors.black,
-                          fontWeight: _selectedIndex == 3 ? FontWeight.bold : FontWeight.normal,
-                          decoration: _selectedIndex == 3 ? TextDecoration.underline : TextDecoration.none,
-                          decorationColor: const Color(0xFF7B3F61),
-                          decorationThickness: 2,
-                        ),
-                      ),
-                    ),
+                  _buildPopupMenuItem(0, 'Explore'),
+                  _buildPopupMenuItem(1, 'Loved'),
+                  _buildPopupMenuItem(2, 'Plan'),
+                  _buildPopupMenuItem(3, 'YES'),
+                  if (_hasVendor) _buildPopupMenuItem(4, 'Vendor'),
                 ],
               ),
           ],
+
           IconButton(
             key: _profileTabKey,
             icon: const Icon(Icons.person_outline, color: Colors.white),
             onPressed: () {
-              // Use the current selected index, but make sure it's valid
-              final navigatorIndex = _selectedIndex < _navigatorKeys.length 
-                  ? _selectedIndex 
+              final navigatorIndex = _selectedIndex < _navigatorKeys.length
+                  ? _selectedIndex
                   : 0;
               _navigatorKeys[navigatorIndex].currentState?.push(
                 MaterialPageRoute(builder: (_) => const ProfilePage()),
@@ -218,11 +171,6 @@ class _MainScaffoldState extends State<MainScaffold> {
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () async {
               final supabase = Supabase.instance.client;
-              
-              // When commented out, this is making the flags basically appear for device. They logout and then login, won't see tutorial again. But not connected to user.
-              // final prefs = await SharedPreferences.getInstance();
-              // await prefs.remove('seen_main_tutorial');
-              
               await supabase.auth.signOut();
 
               if (mounted) {
@@ -246,26 +194,46 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildTabNavigator(0, const ExplorePage()),
-          _buildTabNavigator(1, const LovedPage()),
-          _buildTabNavigator(2, const YesPage()),
-          if (_hasVendor) _buildTabNavigator(3, const VendorDashboard(isInMainScaffold: true)),
+          _buildTabNavigator(_exploreIdx, const ExplorePage()),
+          _buildTabNavigator(_lovedIdx, const LovedPage()),
+          _buildTabNavigator(_planIdx, const ChecklistPage()),
+          _buildTabNavigator(_yesIdx, const YesPage()),
+          if (_hasVendor)
+            _buildTabNavigator(_vendorIdx, const VendorDashboard(isInMainScaffold: true)),
         ],
       ),
-      bottomNavigationBar: kIsWeb ? null : BottomNav(
-        currentIndex: _selectedIndex,
-        onTap: _onTabTapped,
-        lovedTabKey: _lovedTabKey,
-        diamondTabKey: _diamondKey,
-        profileTabKey: _profileTabKey,
-        hasVendor: _hasVendor,
+      bottomNavigationBar: kIsWeb
+          ? null
+          : BottomNav(
+              currentIndex: _selectedIndex,
+              onTap: _onTabTapped,
+              lovedTabKey: _lovedTabKey,
+              diamondTabKey: _diamondKey,
+              profileTabKey: _profileTabKey,
+              hasVendor: _hasVendor,
+            ),
+    );
+  }
+
+  PopupMenuItem<int> _buildPopupMenuItem(int value, String label) {
+    return PopupMenuItem(
+      value: value,
+      child: Text(
+        label,
+        style: TextStyle(
+          color: _selectedIndex == value ? const Color(0xFF7B3F61) : Colors.black,
+          fontWeight: _selectedIndex == value ? FontWeight.bold : FontWeight.normal,
+          decoration: _selectedIndex == value ? TextDecoration.underline : TextDecoration.none,
+          decorationColor: const Color(0xFF7B3F61),
+          decorationThickness: 2,
+        ),
       ),
     );
   }
 
   Widget _buildWebTabButton(int index, String label) {
     final isSelected = _selectedIndex == index;
-    
+
     return TextButton(
       onPressed: () => _onTabTapped(index),
       style: TextButton.styleFrom(

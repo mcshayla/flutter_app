@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'vendor_dashboard.dart';
+import 'location_picker_page.dart';
 
 class VendorCreatePage extends StatefulWidget {
   final String userId;
@@ -35,6 +36,7 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final _phoneController = TextEditingController();
   final _websiteController = TextEditingController();
   final _styleKeywordsController = TextEditingController();
+  final _guestCapacityController = TextEditingController();
 
   // Social media controllers
   final _facebookController = TextEditingController();
@@ -64,6 +66,11 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
     'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
     'West Virginia', 'Wisconsin', 'Wyoming', 'Any'
   ];
+
+  // Location picker
+  double? _pickedLat;
+  double? _pickedLng;
+  String _pickedAddress = '';
 
   // Photo management
   List<XFile> _selectedImages = [];
@@ -99,6 +106,7 @@ setState(() {
     _phoneController.dispose();
     _websiteController.dispose();
     _styleKeywordsController.dispose();
+    _guestCapacityController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     _twitterController.dispose();
@@ -158,22 +166,23 @@ setState(() {
 
   Future<List<String>> _uploadImages(String vendorName) async {
     List<String> uploadedUrls = [];
-    
+
     for (int i = 0; i < _selectedImages.length; i++) {
       final image = _selectedImages[i];
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.${image.path.split('.').last}';
+      final ext = image.name.split('.').last.toLowerCase();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.$ext';
       final filePath = '$vendorName/$fileName';
 
       try {
         final bytes = await image.readAsBytes();
-        
+
         await supabase.storage
             .from('vendor-photos')
             .uploadBinary(
               filePath,
               bytes,
               fileOptions: FileOptions(
-                contentType: 'image/${image.path.split('.').last}',
+                contentType: 'image/$ext',
               ),
             );
 
@@ -199,13 +208,14 @@ setState(() {
       final businessName = _businessNameController.text.trim();
       
       // Create vendor record FIRST (without images)
-      final vendorResponse = await supabase.from('vendors').insert({
+      final payload = <String, dynamic>{
         'vendor_name': businessName,
         'vendor_description': _descriptionController.text.trim(),
         'vendor_category': _selectedCategory ?? '',
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
+        'guest_capacity': _guestCapacityController.text.trim(),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -216,7 +226,15 @@ setState(() {
         'vendor_user_id': widget.userId,
         'is_claimed': true,
         'claimed_at': DateTime.now().toIso8601String(),
-      }).select().single();
+      };
+      if (_pickedLat != null) payload['latitude'] = _pickedLat;
+      if (_pickedLng != null) payload['longitude'] = _pickedLng;
+
+      final vendorResponse = await supabase
+          .from('vendors')
+          .insert(payload)
+          .select()
+          .single();
 
       // Now upload images (vendor record exists, so policy will pass)
       List<String> imageUrls = [];
@@ -367,6 +385,8 @@ DropdownButtonFormField<String>(
               controller: _addressController,
               label: 'Full Address',
             ),
+            const SizedBox(height: 12),
+            _buildLocationPickerTile(),
             const SizedBox(height: 16),
 
             // State Selection
@@ -406,6 +426,13 @@ DropdownButtonFormField<String>(
               controller: _priceController,
               label: 'Price',
               hint: 'e.g., \$500 - \$2000',
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _guestCapacityController,
+              label: 'Guest Capacity',
+              hint: 'e.g., 50 - 300',
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 24),
 
@@ -583,6 +610,82 @@ DropdownButtonFormField<String>(
                     ),
             ),
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationPickerTile() {
+    final hasLocation = _pickedLat != null && _pickedLng != null;
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push<LocationResult>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LocationPickerPage(
+              initialLat: _pickedLat,
+              initialLng: _pickedLng,
+            ),
+          ),
+        );
+        if (result != null && mounted) {
+          setState(() {
+            _pickedLat = result.latitude;
+            _pickedLng = result.longitude;
+            _pickedAddress = result.address;
+            if (_addressController.text.trim().isEmpty) {
+              _addressController.text = result.address;
+            }
+          });
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: hasLocation
+                ? const Color(0xFF7B3F61)
+                : const Color(0xFFDCC7AA),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.location_on,
+              color: hasLocation
+                  ? const Color(0xFF7B3F61)
+                  : const Color(0xFF6E6E6E),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                hasLocation
+                    ? _pickedAddress.isNotEmpty
+                        ? _pickedAddress
+                        : '${_pickedLat!.toStringAsFixed(5)}, ${_pickedLng!.toStringAsFixed(5)}'
+                    : 'Set exact location on map',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: hasLocation
+                      ? const Color(0xFF3E3E3E)
+                      : const Color(0xFF6E6E6E),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              hasLocation ? 'Change' : 'Pick',
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                color: const Color(0xFF7B3F61),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

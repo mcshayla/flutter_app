@@ -4,33 +4,29 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppState extends ChangeNotifier {
-  Map<String, List<Map<String, dynamic>>> allCategorizedMap = {}; 
-  //"Venue": [
-  //   {
-  //     "vendor_id": "v001",
-  //     "vendor_name": "Wadley Farms",
-  //     ...ALL THE THINGS 
-  // "Caterer": [
-  //   {
-  //     "vendor_id": "c001",
-  //     "vendor_name": "Gourmet Catering",
+  Map<String, List<Map<String, dynamic>>> allCategorizedMap = {};
   Map<String, List<String>> lovedVendorUUIDsCategorizedMap = {};
-// lovedVendorUUIDsCategorizedMap = {
-//   "Venue": {"v001"}, // user hearted Wadley Farms
-//   "Caterer": {}
-// };
   Map<String, String> vendorIdToCategory = {};
-//   vendorIdToCategory = {
-//   "v001": "Venue",
-//   "v002": "Venue",
-//   "c001": "Caterer"
-// };
-
   Map<String, String> diamondedCards = {};
-  // diamondedCards = {
-  // "venue": "pretty mountain venue"
-  // "florist": "becca's floral"}
+  Map<String, bool> bookedVendorIds = {};
   Map<String, List<Map<String, dynamic>>> _vendorReviews = {};
+
+  // Wedding Profile
+  Map<String, dynamic>? weddingProfile;
+
+  // Checklist
+  List<Map<String, dynamic>> checklistItems = [];
+
+  // Budget
+  Map<String, dynamic>? userBudget;
+  List<Map<String, dynamic>> budgetItems = [];
+
+  // Categories (from DB)
+  List<String> categoryNames = [];
+
+  // Guest List
+  List<Map<String, dynamic>> guests = [];
+  List<Map<String, dynamic>> guestLinkConfigs = [];
 
   final supabase = Supabase.instance.client;
 
@@ -72,6 +68,14 @@ class AppState extends ChangeNotifier {
     lovedVendorUUIDsCategorizedMap = {};
     vendorIdToCategory = {};
     diamondedCards = {};
+    bookedVendorIds = {};
+    weddingProfile = null;
+    checklistItems = [];
+    categoryNames = [];
+    userBudget = null;
+    budgetItems = [];
+    guests = [];
+    guestLinkConfigs = [];
     isLoaded = true;
   }
 
@@ -102,6 +106,7 @@ class AppState extends ChangeNotifier {
           .select('name')
           .order('display_order', ascending: true);
       final orderedNames = (categoryRows as List).map((r) => r['name'] as String).toList();
+      categoryNames = orderedNames;
 
       allCategorizedMap = {
         for (final name in orderedNames)
@@ -136,12 +141,18 @@ class AppState extends ChangeNotifier {
 
       final diamondedRows = await supabase
           .from('user_diamonds')
-          .select('vendor_id, category')
+          .select('vendor_id, category, is_booked')
           .eq('user_id', user.id);
 
       diamondedCards = {
         for (final row in diamondedRows as List)
           row['category'] as String: row['vendor_id'] as String
+      };
+
+      bookedVendorIds = {
+        for (final row in diamondedRows as List)
+          if (row['is_booked'] == true)
+            row['vendor_id'] as String: true
       };
 
       for (var row in loved) {
@@ -151,12 +162,22 @@ class AppState extends ChangeNotifier {
       }
 
       lovedVendorUUIDsCategorizedMap = lovedVendorsByCategory;
+
+      // Load wedding profile, checklist, budget, guests, and RSVP links
+      await Future.wait([
+        loadWeddingProfile(),
+        loadChecklist(),
+        loadBudget(),
+        loadGuests(),
+        loadGuestLinkConfigs(),
+      ]);
+
       isLoaded = true;
       notifyListeners();
     } catch (e) {
       print("error in appstate.dart $e");
     }
-  
+
   }
 
 
@@ -311,16 +332,538 @@ Future<void> submitReview(String vendorId, int rating, String comment) async {
 // Optional: Get average rating without fetching all reviews
 Future<double> getAverageRating(String vendorId) async {
   final supabase = Supabase.instance.client;
-  
+
   try {
     final response = await supabase
         .rpc('get_average_rating', params: {'vendor_uuid': vendorId});
-    
+
     return (response ?? 0.0).toDouble();
   } catch (e) {
     print("Error getting average rating: $e");
     return 0.0;
   }
 }
+
+// ==================== WEDDING PROFILE ====================
+
+Future<void> loadWeddingProfile() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await supabase
+        .from('wedding_profiles')
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    weddingProfile = response;
+    notifyListeners();
+  } catch (e) {
+    print("Error loading wedding profile: $e");
+  }
+}
+
+int? get daysUntilWedding {
+  if (weddingProfile == null || weddingProfile!['wedding_date'] == null) return null;
+  final weddingDate = DateTime.tryParse(weddingProfile!['wedding_date']);
+  if (weddingDate == null) return null;
+  return weddingDate.difference(DateTime.now()).inDays;
+}
+
+// ==================== CHECKLIST ====================
+
+Future<void> loadChecklist() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await supabase
+        .from('user_checklist_items')
+        .select()
+        .eq('user_id', user.id)
+        .order('display_order', ascending: true);
+
+    checklistItems = (response as List).map((e) => e as Map<String, dynamic>).toList();
+  } catch (e) {
+    print("Error loading checklist: $e");
+  }
+}
+
+Future<void> initializeChecklist(DateTime weddingDate) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    // Check if user already has checklist items
+    final existing = await supabase
+        .from('user_checklist_items')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+    if ((existing as List).isNotEmpty) return;
+
+    // Fetch templates
+    final templates = await supabase
+        .from('checklist_templates')
+        .select()
+        .order('display_order', ascending: true);
+
+    final items = <Map<String, dynamic>>[];
+    final now = DateTime.now();
+    for (var template in templates as List) {
+      final monthsBefore = template['months_before'] as int? ?? 0;
+      final rawDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
+      final dueDate = rawDate.isBefore(now) ? now : rawDate;
+
+      items.add({
+        'user_id': user.id,
+        'template_id': template['id'],
+        'title': template['title'],
+        'description': template['description'] ?? '',
+        'category': template['category'] ?? 'Other',
+        'is_completed': false,
+        'due_date': dueDate.toIso8601String().split('T')[0],
+        'display_order': template['display_order'] ?? 0,
+        'notes': '',
+      });
+    }
+
+    if (items.isNotEmpty) {
+      await supabase.from('user_checklist_items').insert(items);
+      await loadChecklist();
+      notifyListeners();
+    }
+  } catch (e) {
+    print("Error initializing checklist: $e");
+  }
+}
+
+Future<void> toggleChecklistItem(String itemId, bool completed) async {
+  try {
+    // Optimistic update
+    final index = checklistItems.indexWhere((item) => item['id'] == itemId);
+    if (index != -1) {
+      checklistItems[index]['is_completed'] = completed;
+      notifyListeners();
+    }
+
+    await supabase
+        .from('user_checklist_items')
+        .update({'is_completed': completed})
+        .eq('id', itemId);
+  } catch (e) {
+    print("Error toggling checklist item: $e");
+  }
+}
+
+Future<void> addChecklistItem(String title, String category, {String? description, String? dueDate}) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final maxOrder = checklistItems.isNotEmpty
+        ? checklistItems.map((i) => i['display_order'] as int? ?? 0).reduce((a, b) => a > b ? a : b) + 1
+        : 0;
+
+    await supabase.from('user_checklist_items').insert({
+      'user_id': user.id,
+      'title': title,
+      'description': description ?? '',
+      'category': category,
+      'is_completed': false,
+      'due_date': dueDate,
+      'display_order': maxOrder,
+      'notes': '',
+    });
+
+    await loadChecklist();
+    notifyListeners();
+  } catch (e) {
+    print("Error adding checklist item: $e");
+  }
+}
+
+Future<void> updateChecklistItemNotes(String itemId, String notes) async {
+  try {
+    final index = checklistItems.indexWhere((item) => item['id'] == itemId);
+    if (index != -1) {
+      checklistItems[index]['notes'] = notes;
+    }
+
+    await supabase
+        .from('user_checklist_items')
+        .update({'notes': notes})
+        .eq('id', itemId);
+  } catch (e) {
+    print("Error updating checklist notes: $e");
+  }
+}
+
+Future<void> deleteChecklistItem(String itemId) async {
+  try {
+    checklistItems.removeWhere((item) => item['id'] == itemId);
+    notifyListeners();
+
+    await supabase
+        .from('user_checklist_items')
+        .delete()
+        .eq('id', itemId);
+  } catch (e) {
+    print("Error deleting checklist item: $e");
+  }
+}
+
+Future<void> deleteAllChecklistItems() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    checklistItems.clear();
+    notifyListeners();
+
+    await supabase
+        .from('user_checklist_items')
+        .delete()
+        .eq('user_id', user.id);
+  } catch (e) {
+    print("Error deleting all checklist items: $e");
+  }
+}
+
+Future<void> updateChecklistItemDueDate(String itemId, String? dueDate) async {
+  try {
+    // Optimistic update
+    final index = checklistItems.indexWhere((item) => item['id'] == itemId);
+    if (index != -1) {
+      checklistItems[index]['due_date'] = dueDate;
+      notifyListeners();
+    }
+
+    await supabase
+        .from('user_checklist_items')
+        .update({'due_date': dueDate})
+        .eq('id', itemId);
+  } catch (e) {
+    print("Error updating checklist item due date: $e");
+  }
+}
+
+Future<void> initializeChecklistWithCategories(DateTime weddingDate, List<String> categories) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final templates = await supabase
+        .from('checklist_templates')
+        .select()
+        .inFilter('category', categories)
+        .order('display_order', ascending: true);
+
+    final items = <Map<String, dynamic>>[];
+    final now = DateTime.now();
+
+    for (var template in templates as List) {
+      final monthsBefore = template['months_before'] as int? ?? 0;
+      final rawDate = weddingDate.subtract(Duration(days: monthsBefore * 30));
+      final dueDate = rawDate.isBefore(now) ? now : rawDate;
+
+      items.add({
+        'user_id': user.id,
+        'template_id': template['id'],
+        'title': template['title'],
+        'description': template['description'] ?? '',
+        'category': template['category'] ?? 'Other',
+        'is_completed': false,
+        'due_date': dueDate.toIso8601String().split('T')[0],
+        'display_order': items.length,
+        'notes': '',
+      });
+    }
+
+    if (items.isNotEmpty) {
+      await supabase.from('user_checklist_items').insert(items);
+    }
+    await loadChecklist();
+    notifyListeners();
+  } catch (e) {
+    print("Error initializing checklist with categories: $e");
+  }
+}
+
+Future<void> toggleBookedVendor(String vendorId, bool isBooked) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    bookedVendorIds[vendorId] = isBooked;
+    notifyListeners();
+
+    await supabase
+        .from('user_diamonds')
+        .update({'is_booked': isBooked})
+        .eq('vendor_id', vendorId)
+        .eq('user_id', user.id);
+
+    await supabase.rpc('toggle_vendor_booking', params: {
+      'vendor_uuid': vendorId,
+      'increment': isBooked,
+    });
+  } catch (e) {
+    print('Error toggling booked vendor: $e');
+  }
+}
+
+double get checklistProgress {
+  if (checklistItems.isEmpty) return 0;
+  final completed = checklistItems.where((i) => i['is_completed'] == true).length;
+  return completed / checklistItems.length;
+}
+
+// ==================== BUDGET ====================
+
+Future<void> loadBudget() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final budgetResponse = await supabase
+        .from('user_budgets')
+        .select()
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    userBudget = budgetResponse;
+
+    final itemsResponse = await supabase
+        .from('budget_items')
+        .select()
+        .eq('user_id', user.id)
+        .order('created_at', ascending: true);
+
+    budgetItems = (itemsResponse as List).map((e) => e as Map<String, dynamic>).toList();
+  } catch (e) {
+    print("Error loading budget: $e");
+  }
+}
+
+Future<void> setTotalBudget(double amount) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    await supabase.from('user_budgets').upsert({
+      'user_id': user.id,
+      'total_budget': amount,
+    }, onConflict: 'user_id');
+
+    userBudget = {'user_id': user.id, 'total_budget': amount};
+    notifyListeners();
+  } catch (e) {
+    print("Error setting budget: $e");
+  }
+}
+
+Future<void> addBudgetItem({
+  required String category,
+  required String itemName,
+  required double estimatedCost,
+  double? actualCost,
+  String? vendorId,
+  String? notes,
+}) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    await supabase.from('budget_items').insert({
+      'user_id': user.id,
+      'category': category,
+      'item_name': itemName,
+      'estimated_cost': estimatedCost,
+      'actual_cost': actualCost,
+      'vendor_id': vendorId,
+      'is_paid': false,
+      'notes': notes ?? '',
+    });
+
+    await loadBudget();
+    notifyListeners();
+  } catch (e) {
+    print("Error adding budget item: $e");
+  }
+}
+
+Future<void> updateBudgetItem(String itemId, Map<String, dynamic> updates) async {
+  try {
+    await supabase.from('budget_items').update(updates).eq('id', itemId);
+    await loadBudget();
+    notifyListeners();
+  } catch (e) {
+    print("Error updating budget item: $e");
+  }
+}
+
+Future<void> deleteBudgetItem(String itemId) async {
+  try {
+    budgetItems.removeWhere((item) => item['id'] == itemId);
+    notifyListeners();
+
+    await supabase.from('budget_items').delete().eq('id', itemId);
+  } catch (e) {
+    print("Error deleting budget item: $e");
+  }
+}
+
+double get totalEstimated {
+  return budgetItems.fold(0, (sum, item) => sum + ((item['estimated_cost'] as num?)?.toDouble() ?? 0));
+}
+
+double get totalActual {
+  return budgetItems.fold(0, (sum, item) => sum + ((item['actual_cost'] as num?)?.toDouble() ?? 0));
+}
+
+double get totalBudgetAmount {
+  return (userBudget?['total_budget'] as num?)?.toDouble() ?? 0;
+}
+
+// ==================== GUEST LIST ====================
+
+Future<void> loadGuests() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final response = await supabase
+        .from('guests')
+        .select()
+        .eq('user_id', user.id)
+        .order('created_at', ascending: true);
+
+    guests = (response as List).map((e) => e as Map<String, dynamic>).toList();
+  } catch (e) {
+    print("Error loading guests: $e");
+  }
+}
+
+Future<void> addGuest(Map<String, dynamic> guestData) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    await supabase.from('guests').insert({
+      'user_id': user.id,
+      ...guestData,
+    });
+
+    await loadGuests();
+    notifyListeners();
+  } catch (e) {
+    print("Error adding guest: $e");
+  }
+}
+
+Future<void> updateGuest(String guestId, Map<String, dynamic> updates) async {
+  try {
+    await supabase.from('guests').update(updates).eq('id', guestId);
+    await loadGuests();
+    notifyListeners();
+  } catch (e) {
+    print("Error updating guest: $e");
+  }
+}
+
+Future<void> deleteGuest(String guestId) async {
+  try {
+    guests.removeWhere((g) => g['id'] == guestId);
+    notifyListeners();
+
+    await supabase.from('guests').delete().eq('id', guestId);
+  } catch (e) {
+    print("Error deleting guest: $e");
+  }
+}
+
+// ===================== RSVP LINK CONFIGS =====================
+
+Future<void> loadGuestLinkConfigs() async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    final response = await supabase
+        .from('guest_link_configs')
+        .select()
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false);
+    guestLinkConfigs = (response as List).map((e) => e as Map<String, dynamic>).toList();
+    notifyListeners();
+  } catch (e) {
+    print("Error loading guest link configs: $e");
+  }
+}
+
+Future<Map<String, dynamic>?> createGuestLinkConfig({
+  required String label,
+  required String groupName,
+  required Map<String, bool> fieldsEnabled,
+}) async {
+  try {
+    final user = supabase.auth.currentUser;
+    if (user == null) return null;
+    final response = await supabase
+        .from('guest_link_configs')
+        .insert({
+          'user_id': user.id,
+          'label': label,
+          'group_name': groupName,
+          'fields_enabled': fieldsEnabled,
+          'partner1_name': weddingProfile?['partner_name_1'] ?? '',
+          'partner2_name': weddingProfile?['partner_name_2'] ?? '',
+        })
+        .select()
+        .single();
+    await loadGuestLinkConfigs();
+    return response;
+  } catch (e) {
+    print("Error creating guest link config: $e");
+    return null;
+  }
+}
+
+Future<void> deleteGuestLinkConfig(String id) async {
+  try {
+    guestLinkConfigs.removeWhere((c) => c['id'] == id);
+    notifyListeners();
+    await supabase.from('guest_link_configs').delete().eq('id', id);
+  } catch (e) {
+    print("Error deleting guest link config: $e");
+  }
+}
+
+// ===================== GUEST COUNT / STATS =====================
+
+int get guestCountByStatus {
+  return guests.length;
+}
+
+Map<String, int> get guestStatusCounts {
+  final counts = <String, int>{
+    'not_sent': 0,
+    'invited': 0,
+    'accepted': 0,
+    'declined': 0,
+    'maybe': 0,
+  };
+  for (var guest in guests) {
+    final status = guest['rsvp_status'] as String? ?? 'not_sent';
+    final partySize = 1 + ((guest['plus_one_count'] as num?)?.toInt() ?? 0);
+    counts[status] = (counts[status] ?? 0) + partySize;
+  }
+  return counts;
+}
+
+int get totalGuestHeadcount =>
+    guests.fold(0, (sum, g) => sum + 1 + ((g['plus_one_count'] as num?)?.toInt() ?? 0));
 
 }

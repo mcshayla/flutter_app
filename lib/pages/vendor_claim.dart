@@ -416,8 +416,19 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
       });
 
       if (mounted) {
-        final isPrePaid = vendor['subscription_status'] == 'active';
-        final sub = isPrePaid ? {'status': 'active'} : await supabase
+        // If the vendor record itself is already active, skip subscription
+        final vendorIsActive = vendor['subscription_status'] == 'active';
+
+        if (vendorIsActive) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const VendorDashboard()),
+          );
+          return;
+        }
+
+        // Otherwise check vendor_subscriptions table
+        final sub = await supabase
             .from('vendor_subscriptions')
             .select('status')
             .eq('user_id', widget.userId)

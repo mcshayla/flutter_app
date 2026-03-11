@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class BottomNav extends StatelessWidget {
   final int currentIndex;
@@ -10,7 +9,7 @@ class BottomNav extends StatelessWidget {
   final bool hasVendor;
 
   const BottomNav({
-    super.key,  
+    super.key,
     required this.currentIndex,
     required this.onTap,
     this.lovedTabKey,
@@ -21,38 +20,45 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Build items list dynamically so indices stay consistent
+    final items = <BottomNavigationBarItem>[
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        label: 'Explore',
+      ),
+      BottomNavigationBarItem(
+        icon: Container(
+          key: lovedTabKey,
+          child: const Icon(Icons.favorite_border),
+        ),
+        label: 'Loved',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.checklist),
+        label: 'Plan',
+      ),
+      BottomNavigationBarItem(
+        icon: Container(
+          key: diamondTabKey,
+          child: const Icon(Icons.diamond_outlined),
+        ),
+        label: 'YES',
+      ),
+      if (hasVendor)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.business_outlined),
+          label: 'Vendor',
+        ),
+    ];
+
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
       currentIndex: currentIndex,
       onTap: onTap,
-      backgroundColor: Color(0xFF7B3F61),
+      backgroundColor: const Color(0xFF7B3F61),
       unselectedItemColor: Colors.white,
-      selectedItemColor: Color(0xFFDCC7AA),
-      items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          label: 'Explore'
-        ),
-        BottomNavigationBarItem(
-          icon: Container(
-            key: lovedTabKey,
-            child: Icon(Icons.favorite_border),
-          ),
-          label: 'Loved'
-        ),
-        BottomNavigationBarItem(
-          icon: Container(
-            key: diamondTabKey,
-            child: Icon(Icons.diamond_outlined),
-          ),
-          label: 'YES'
-        ),
-        if (hasVendor)
-          BottomNavigationBarItem(
-            icon: Icon(Icons.business_outlined),
-            label: 'Vendor'
-          ),
-      ],
+      selectedItemColor: const Color(0xFFDCC7AA),
+      items: items,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../utils/app_styles.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'budget_item_form.dart';
 
 class IndividualCard extends StatefulWidget {
   final String title;
@@ -973,6 +974,48 @@ class _CustomCardState extends State<IndividualCard> {
             ),
           ),
         
+        // Add to Budget button (only if vendor is diamonded)
+        if (isDiamonded && (widget.vendor_price.isNotEmpty || widget.vendor_estimated_price.isNotEmpty))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 8.0),
+            child: OutlinedButton.icon(
+              onPressed: () {
+                final price = double.tryParse(
+                  widget.vendor_price.replaceAll(RegExp(r'[^\d.]'), ''),
+                ) ?? double.tryParse(
+                  widget.vendor_estimated_price.replaceAll(RegExp(r'[^\d.]'), ''),
+                );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BudgetItemForm(
+                      prefillData: {
+                        'item_name': widget.title,
+                        'category': widget.category,
+                        'estimated_cost': price,
+                      },
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.account_balance_wallet_outlined,
+                  color: Color(0xFF7B3F61)),
+              label: Text(
+                'Add to Budget',
+                style: GoogleFonts.montserrat(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF7B3F61),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF7B3F61)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+
         // Reviews Section
         _buildReviewsSection(context, appState),
       ],

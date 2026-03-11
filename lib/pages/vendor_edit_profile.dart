@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'location_picker_page.dart';
 
 class VendorEditProfile extends StatefulWidget {
   final Map<String, dynamic> vendorData;
@@ -35,6 +36,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   late TextEditingController _phoneController;
   late TextEditingController _websiteController;
   late TextEditingController _styleKeywordsController;
+  late TextEditingController _guestCapacityController;
 
   // Social media controllers
   late TextEditingController _facebookController;
@@ -61,6 +63,11 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     'West Virginia', 'Wisconsin', 'Wyoming', 'Any'
   ];
 
+  // Location picker
+  double? _pickedLat;
+  double? _pickedLng;
+  String _pickedAddress = '';
+
   // Photo management
   List<String> existingImageUrls = [];
   List<XFile> newImages = [];
@@ -75,6 +82,13 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   }
 
   void _initializeControllers() {
+    // Load stored coordinates
+    _pickedLat = (widget.vendorData['latitude'] as num?)?.toDouble();
+    _pickedLng = (widget.vendorData['longitude'] as num?)?.toDouble();
+    if (_pickedLat != null && _pickedLng != null) {
+      _pickedAddress = (widget.vendorData['address'] as String?) ?? '';
+    }
+
     _nameController = TextEditingController(text: widget.vendorData['vendor_name']);
     _descriptionController = TextEditingController(text: widget.vendorData['vendor_description']);
     _locationController = TextEditingController(text: widget.vendorData['vendor_location']);
@@ -85,6 +99,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _phoneController = TextEditingController(text: widget.vendorData['contact_phone']);
     _websiteController = TextEditingController(text: widget.vendorData['website_url']);
     _styleKeywordsController = TextEditingController(text: widget.vendorData['style_keywords']);
+    _guestCapacityController = TextEditingController(text: widget.vendorData['guest_capacity']);
 
     _facebookController = TextEditingController();
     _instagramController = TextEditingController();
@@ -176,6 +191,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _phoneController.dispose();
     _websiteController.dispose();
     _styleKeywordsController.dispose();
+    _guestCapacityController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     _twitterController.dispose();
@@ -279,22 +295,23 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
 
   Future<List<String>> _uploadNewImages(String vendorName) async {
     List<String> uploadedUrls = [];
-    
+
     for (int i = 0; i < newImages.length; i++) {
       final image = newImages[i];
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.${image.path.split('.').last}';
+      final ext = image.name.split('.').last.toLowerCase();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.$ext';
       final filePath = '$vendorName/$fileName';
 
       try {
         final bytes = await image.readAsBytes();
-        
+
         await supabase.storage
             .from('vendor-photos')
             .uploadBinary(
               filePath,
               bytes,
               fileOptions: FileOptions(
-                contentType: 'image/${image.path.split('.').last}',
+                contentType: 'image/$ext',
               ),
             );
 
@@ -328,13 +345,14 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
       // Combine existing and new image URLs
       final allImageUrls = [...existingImageUrls, ...newImageUrls];
 
-      final updates = {
+      final updates = <String, dynamic>{
         'vendor_name': vendorName,
         'vendor_description': _descriptionController.text.trim(),
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
         'vendor_estimated_price': _estimatedPriceController.text.trim(),
+        'guest_capacity': _guestCapacityController.text.trim(),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -344,6 +362,8 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'vendor_county': selectedCounties,
         'image_url': allImageUrls,
       };
+      if (_pickedLat != null) updates['latitude'] = _pickedLat;
+      if (_pickedLng != null) updates['longitude'] = _pickedLng;
 
       await supabase
           .from('vendors')
@@ -437,6 +457,8 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
               controller: _addressController,
               label: 'Full Address',
             ),
+            const SizedBox(height: 12),
+            _buildLocationPickerTile(),
             const SizedBox(height: 16),
 
             // State Selection
@@ -480,6 +502,13 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _estimatedPriceController,
               label: 'Estimated Price Range',
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _guestCapacityController,
+              label: 'Guest Capacity',
+              hint: 'e.g., 50 - 300',
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 24),
 
@@ -741,6 +770,82 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
                     ),
             ),
             const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationPickerTile() {
+    final hasLocation = _pickedLat != null && _pickedLng != null;
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push<LocationResult>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => LocationPickerPage(
+              initialLat: _pickedLat,
+              initialLng: _pickedLng,
+            ),
+          ),
+        );
+        if (result != null && mounted) {
+          setState(() {
+            _pickedLat = result.latitude;
+            _pickedLng = result.longitude;
+            _pickedAddress = result.address;
+            if (_addressController.text.trim().isEmpty) {
+              _addressController.text = result.address;
+            }
+          });
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: hasLocation
+                ? const Color(0xFF7B3F61)
+                : const Color(0xFFDCC7AA),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.location_on,
+              color: hasLocation
+                  ? const Color(0xFF7B3F61)
+                  : const Color(0xFF6E6E6E),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                hasLocation
+                    ? _pickedAddress.isNotEmpty
+                        ? _pickedAddress
+                        : '${_pickedLat!.toStringAsFixed(5)}, ${_pickedLng!.toStringAsFixed(5)}'
+                    : 'Set exact location on map',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: hasLocation
+                      ? const Color(0xFF3E3E3E)
+                      : const Color(0xFF6E6E6E),
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              hasLocation ? 'Change' : 'Pick',
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                color: const Color(0xFF7B3F61),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
