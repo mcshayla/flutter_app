@@ -158,22 +158,23 @@ setState(() {
 
   Future<List<String>> _uploadImages(String vendorName) async {
     List<String> uploadedUrls = [];
-    
+
     for (int i = 0; i < _selectedImages.length; i++) {
       final image = _selectedImages[i];
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.${image.path.split('.').last}';
+      final ext = image.name.split('.').last.toLowerCase();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.$ext';
       final filePath = '$vendorName/$fileName';
 
       try {
         final bytes = await image.readAsBytes();
-        
+
         await supabase.storage
             .from('vendor-photos')
             .uploadBinary(
               filePath,
               bytes,
               fileOptions: FileOptions(
-                contentType: 'image/${image.path.split('.').last}',
+                contentType: 'image/$ext',
               ),
             );
 

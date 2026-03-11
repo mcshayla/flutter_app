@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../appstate.dart';
-import '../widgets/category_selection_sheet.dart';
 
 class WeddingProfileSetup extends StatefulWidget {
   final Map<String, dynamic>? existingProfile;
@@ -96,15 +95,6 @@ class _WeddingProfileSetupState extends State<WeddingProfileSetup> {
       if (!mounted) return;
       final appState = Provider.of<AppState>(context, listen: false);
       await appState.loadWeddingProfile();
-
-      // If we have a wedding date and no existing checklist, show category selection
-      if (_weddingDate != null && appState.checklistItems.isEmpty) {
-        if (!mounted) return;
-        final categories = await showCategorySelectionSheet(context, categories: appState.categoryNames);
-        if (categories != null && categories.isNotEmpty) {
-          await appState.initializeChecklistWithCategories(_weddingDate!, categories);
-        }
-      }
 
       if (!mounted) return;
       Navigator.pop(context, true);

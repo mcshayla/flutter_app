@@ -4,6 +4,7 @@ import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
+import '../pages/vendor_map_page.dart';
 import '../utils/app_styles.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -423,41 +424,75 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     ),
                   ],
                 ),
-                  if (allKeywords.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    OutlinedButton.icon(
-                      onPressed: () => _showKeywordSheet(context, allKeywords),
-                      icon: Icon(
-                        Icons.style_outlined,
-                        size: 16,
-                        color: _selectedStyles.isNotEmpty
-                            ? Colors.white
-                            : const Color(0xFF7B3F61),
-                      ),
-                      label: Text(
-                        _selectedStyles.isEmpty
-                            ? 'Search by Keywords'
-                            : 'Keywords (${_selectedStyles.length})',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _selectedStyles.isNotEmpty
-                              ? Colors.white
-                              : const Color(0xFF7B3F61),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (allKeywords.isNotEmpty)
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              _showKeywordSheet(context, allKeywords),
+                          icon: Icon(
+                            Icons.style_outlined,
+                            size: 16,
+                            color: _selectedStyles.isNotEmpty
+                                ? Colors.white
+                                : const Color(0xFF7B3F61),
+                          ),
+                          label: Text(
+                            _selectedStyles.isEmpty
+                                ? 'Search by Keywords'
+                                : 'Keywords (${_selectedStyles.length})',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: _selectedStyles.isNotEmpty
+                                  ? Colors.white
+                                  : const Color(0xFF7B3F61),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: _selectedStyles.isNotEmpty
+                                ? const Color(0xFF7B3F61)
+                                : Colors.transparent,
+                            side: const BorderSide(color: Color(0xFF7B3F61)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VendorMapPage(
+                              vendors: filteredList,
+                              categoryName: widget.categoryName,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.map_outlined,
+                            size: 16, color: Color(0xFF7B3F61)),
+                        label: Text(
+                          'Search by Map',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF7B3F61),
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF7B3F61)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20)),
                         ),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: _selectedStyles.isNotEmpty
-                            ? const Color(0xFF7B3F61)
-                            : Colors.transparent,
-                        side: const BorderSide(color: Color(0xFF7B3F61)),
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                   ],
                 ),
               ),
