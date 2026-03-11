@@ -15,79 +15,15 @@ class VendorSubscriptionPage extends StatefulWidget {
   State<VendorSubscriptionPage> createState() => _VendorSubscriptionPageState();
 }
 
-class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
-    with WidgetsBindingObserver {
+class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   final supabase = Supabase.instance.client;
   bool _isLoading = false;
-  bool _awaitingReturn = false;
-  bool _subscriptionActivated = false;
 
-  // Stripe Price IDs
+  // Replace these with your actual Stripe Price IDs
+  // final String monthlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQS';
   final String monthlyPriceId = 'price_1SoG3VGpavVyOfbN5M6NvL5k';
+  // final String yearlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQt';
   final String yearlyPriceId = 'price_1Sq4aNGpavVyOfbN9rpaau8N';
-  // Premium & Elite tiers - set these once Stripe products are created
-  final String premiumMonthlyPriceId = 'price_PREMIUM_MONTHLY';
-  final String eliteMonthlyPriceId = 'price_ELITE_MONTHLY';
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _awaitingReturn) {
-      _awaitingReturn = false;
-      _checkSubscriptionStatus();
-    }
-  }
-
-  Future<void> _checkSubscriptionStatus() async {
-    setState(() => _isLoading = true);
-    try {
-      // Poll up to 10 times with 2s delay to allow webhook to process
-      for (int i = 0; i < 10; i++) {
-        final data = await supabase
-            .from('vendor_subscriptions')
-            .select('status')
-            .eq('user_id', widget.userId)
-            .eq('status', 'active')
-            .maybeSingle();
-
-        if (data != null) {
-          if (mounted) {
-            setState(() {
-              _subscriptionActivated = true;
-              _isLoading = false;
-            });
-          }
-          return;
-        }
-        await Future.delayed(const Duration(seconds: 2));
-      }
-      // Timed out — webhook may still be processing
-      if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Payment received! Your subscription may take a moment to activate.',
-            ),
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _createCheckoutSession(String priceId) async {
     setState(() => _isLoading = true);
@@ -115,7 +51,6 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
       if (!launched) {
         throw Exception('Could not open Stripe Checkout');
       }
-      _awaitingReturn = true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -145,16 +80,14 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
           ),
         ),
       ),
-      body: _subscriptionActivated
-          ? _buildSuccessView()
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Choose Your Plan',
+                'Select a subscription plan',
                 style: GoogleFonts.bodoniModa(
                   fontSize: 28,
                   fontWeight: FontWeight.w600,
@@ -164,7 +97,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
               ),
               const SizedBox(height: 8),
               Text(
-                'Get your vendor profile in front of couples actively planning their wedding',
+                'Get access to manage your vendor profile and reach more couples',
                 style: GoogleFonts.montserrat(
                   fontSize: 14,
                   color: const Color(0xFF6E6E6E),
@@ -173,79 +106,31 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
               ),
               const SizedBox(height: 40),
 
-              // Basic Plan (Monthly)
+              // Monthly Plan
               _buildPlanCard(
-                title: 'Basic',
+                title: 'Monthly',
                 price: '\$20',
                 period: 'per month',
                 features: [
-                  'Vendor listing on easiYESt',
-                  'Edit your profile & photos',
-                  'Track profile views and link clicks',
-                  'Hearts & diamond counts',
+                  'View and edit your vendor profile',
+                  'Track profile views and clicks'
                 ],
                 onTap: () => _createCheckoutSession(monthlyPriceId),
               ),
               const SizedBox(height: 20),
 
-              // Premium Plan
+              // Yearly Plan
               _buildPlanCard(
-                title: 'Premium',
-                price: '\$50',
-                period: 'per month',
-                badge: 'POPULAR',
+                title: 'Yearly',
+                price: '\$200',
+                period: 'per year',
+                savings: 'Save \$40',
                 features: [
-                  'Everything in Basic',
-                  'Featured badge on your listing',
-                  'Priority placement in category',
-                  'Respond to couple reviews',
-                  'Enhanced analytics dashboard',
+                  'All monthly features',
+                  'Save 17% compared to monthly',
                 ],
-                onTap: () => _createCheckoutSession(premiumMonthlyPriceId),
+                onTap: () => _createCheckoutSession(yearlyPriceId),
                 isRecommended: true,
-              ),
-              const SizedBox(height: 20),
-
-              // Elite Plan
-              _buildPlanCard(
-                title: 'Elite',
-                price: '\$100',
-                period: 'per month',
-                badge: 'BEST VISIBILITY',
-                features: [
-                  'Everything in Premium',
-                  'Homepage featured placement',
-                  'Top of category results',
-                  'Promoted listing badge',
-                  'Priority support',
-                ],
-                onTap: () => _createCheckoutSession(eliteMonthlyPriceId),
-              ),
-              const SizedBox(height: 12),
-
-              // Annual savings note
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFDCC7AA).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFDCC7AA)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: Color(0xFF7B3F61), size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Pay annually and save up to 17%. Annual plans available at checkout.',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          color: const Color(0xFF7B3F61),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
 
               const SizedBox(height: 40),
@@ -265,74 +150,15 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
     );
   }
 
-  Widget _buildSuccessView() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle, color: Color(0xFF7B3F61), size: 80),
-            const SizedBox(height: 24),
-            Text(
-              'Subscription Activated!',
-              style: GoogleFonts.bodoniModa(
-                fontSize: 26,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF7B3F61),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Your vendor profile is now live. Couples can discover you on easiYESt.',
-              style: GoogleFonts.montserrat(
-                fontSize: 14,
-                color: const Color(0xFF6E6E6E),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7B3F61),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Go to My Profile',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildPlanCard({
     required String title,
     required String price,
     required String period,
     String? savings,
-    String? badge,
     required List<String> features,
     required VoidCallback onTap,
     bool isRecommended = false,
   }) {
-    final showBadge = badge != null || isRecommended;
-    final badgeLabel = badge ?? (isRecommended ? 'RECOMMENDED' : '');
-
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -348,7 +174,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
       ),
       child: Column(
         children: [
-          if (showBadge)
+          if (isRecommended)
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
@@ -360,7 +186,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
               ),
               child: Center(
                 child: Text(
-                  badgeLabel,
+                  'RECOMMENDED',
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
