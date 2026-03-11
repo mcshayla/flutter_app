@@ -220,6 +220,15 @@ INSERT INTO checklist_templates (title, description, category, months_before, di
 
 ON CONFLICT DO NOTHING;
 
+-- ==================== VENDOR COORDINATES ====================
+ALTER TABLE vendors
+  ADD COLUMN IF NOT EXISTS latitude  DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+
+CREATE INDEX IF NOT EXISTS vendors_lat_lng_idx
+  ON vendors (latitude, longitude)
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
+
 -- ==================== BOOKED VENDOR STATUS ====================
 ALTER TABLE user_diamonds ADD COLUMN IF NOT EXISTS is_booked BOOLEAN DEFAULT false;
 ALTER TABLE vendors ADD COLUMN IF NOT EXISTS bookings_count INT DEFAULT 0;

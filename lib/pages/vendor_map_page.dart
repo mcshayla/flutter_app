@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
@@ -27,28 +28,52 @@ class VendorMapPage extends StatefulWidget {
 class _VendorMapPageState extends State<VendorMapPage> {
   final MapController _mapController = MapController();
 
-  // vendorId → geocoded LatLng for vendors in this session
+  // vendorId → resolved LatLng
   final Map<String, LatLng> _positions = {};
 
-  // Static cache: location string → LatLng (or null if failed). Persists
-  // for the app session so re-opening the map doesn't re-geocode.
+  // vendorId → vendor data (for quick lookup in marker tap)
+  final Map<String, Map<String, dynamic>> _vendorById = {};
+
+  // Static geocoding cache — persists for the app session
   static final Map<String, LatLng?> _cache = {};
 
   bool _isGeocoding = false;
   int _locatedCount = 0;
+  bool _mapIsReady = false;
+  bool _positionsLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _geocodeAll();
-  }
-
-  Future<void> _geocodeAll() async {
-    setState(() => _isGeocoding = true);
-
     for (final v in widget.vendors) {
       final id = (v['vendor_id'] as String?) ?? '';
-      // Use full address for geocoding; fall back to vendor_location.
+      if (id.isNotEmpty) _vendorById[id] = v;
+    }
+    _loadPositions();
+  }
+
+  Future<void> _loadPositions() async {
+    setState(() => _isGeocoding = true);
+
+    // ── Fast path: vendors with stored coordinates ──────────────────────────
+    final needsGeocoding = <Map<String, dynamic>>[];
+    for (final v in widget.vendors) {
+      final id = (v['vendor_id'] as String?) ?? '';
+      final lat = (v['latitude'] as num?)?.toDouble();
+      final lng = (v['longitude'] as num?)?.toDouble();
+      if (lat != null && lng != null) {
+        _positions[id] = LatLng(lat, lng);
+        _locatedCount++;
+      } else {
+        needsGeocoding.add(v);
+      }
+    }
+
+    if (mounted) setState(() {});
+
+    // ── Fallback: Nominatim geocoding for legacy vendors ────────────────────
+    for (final v in needsGeocoding) {
+      final id = (v['vendor_id'] as String?) ?? '';
       final query = ((v['address'] as String?)?.isNotEmpty == true
               ? v['address'] as String
               : v['vendor_location'] as String?) ??
@@ -56,7 +81,6 @@ class _VendorMapPageState extends State<VendorMapPage> {
 
       if (query.isEmpty) continue;
 
-      // Use cached result if available.
       if (_cache.containsKey(query)) {
         final cached = _cache[query];
         if (cached != null && mounted) {
@@ -68,7 +92,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
         continue;
       }
 
-      // Nominatim rate limit: max 1 request/second.
+      // Nominatim rate limit: 1 req/sec
       await Future.delayed(const Duration(milliseconds: 1100));
       if (!mounted) return;
 
@@ -102,11 +126,33 @@ class _VendorMapPageState extends State<VendorMapPage> {
           }
         }
       } catch (_) {
-        // Skip vendors that fail to geocode.
+        // Skip vendors that fail to geocode
       }
     }
 
-    if (mounted) setState(() => _isGeocoding = false);
+    if (mounted) {
+      setState(() {
+        _isGeocoding = false;
+        _positionsLoaded = true;
+      });
+      if (_mapIsReady && _positions.isNotEmpty) _fitBounds();
+    }
+  }
+
+  void _fitBounds() {
+    if (_positions.isEmpty) return;
+    final points = _positions.values.toList();
+    if (points.length == 1) {
+      _mapController.move(points.first, 13.0);
+      return;
+    }
+    final bounds = LatLngBounds.fromPoints(points);
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(64),
+      ),
+    );
   }
 
   void _openVendorSheet(Map<String, dynamic> vendor) {
@@ -275,7 +321,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Build markers from all successfully geocoded vendors.
+    // Build markers list for clustering
     final markers = <Marker>[];
     for (final v in widget.vendors) {
       final id = (v['vendor_id'] as String?) ?? '';
@@ -307,8 +353,6 @@ class _VendorMapPageState extends State<VendorMapPage> {
       ));
     }
 
-    // Center on US by default; zoom in if we already have markers.
-    // Default to Utah (Salt Lake City area).
     const defaultCenter = LatLng(40.7608, -111.8910);
     final initialZoom = markers.isNotEmpty ? 8.0 : 7.0;
 
@@ -336,6 +380,10 @@ class _VendorMapPageState extends State<VendorMapPage> {
             options: MapOptions(
               initialCenter: defaultCenter,
               initialZoom: initialZoom,
+              onMapReady: () {
+                _mapIsReady = true;
+                if (_positionsLoaded && _positions.isNotEmpty) _fitBounds();
+              },
             ),
             children: [
               TileLayer(
@@ -343,11 +391,76 @@ class _VendorMapPageState extends State<VendorMapPage> {
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.easiyest.say_yes',
               ),
-              MarkerLayer(markers: markers),
+              MarkerClusterLayerWidget(
+                options: MarkerClusterLayerOptions(
+                  maxClusterRadius: 45,
+                  size: const Size(40, 40),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(50),
+                  maxZoom: 15,
+                  markers: markers,
+                  builder: (context, clusterMarkers) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: const Color(0xFF7B3F61),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${clusterMarkers.length}',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
 
-          // Progress pill shown while geocoding is in progress.
+          // Zoom + fit FABs (right side)
+          Positioned(
+            right: 12,
+            bottom: 90,
+            child: Column(
+              children: [
+                _mapFab(
+                  icon: Icons.add,
+                  onTap: () => _mapController.move(
+                    _mapController.camera.center,
+                    _mapController.camera.zoom + 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _mapFab(
+                  icon: Icons.remove,
+                  onTap: () => _mapController.move(
+                    _mapController.camera.center,
+                    _mapController.camera.zoom - 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _mapFab(
+                  icon: Icons.fit_screen,
+                  onTap: _fitBounds,
+                ),
+              ],
+            ),
+          ),
+
+          // Progress pill while geocoding
           if (_isGeocoding)
             Positioned(
               bottom: 24,
@@ -391,7 +504,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
               ),
             ),
 
-          // Message shown when geocoding finishes with no results.
+          // Empty state
           if (!_isGeocoding && markers.isEmpty)
             Center(
               child: Container(
@@ -410,6 +523,28 @@ class _VendorMapPageState extends State<VendorMapPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _mapFab({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 20, color: const Color(0xFF7B3F61)),
       ),
     );
   }
