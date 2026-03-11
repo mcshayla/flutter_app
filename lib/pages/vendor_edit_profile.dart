@@ -36,6 +36,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   late TextEditingController _phoneController;
   late TextEditingController _websiteController;
   late TextEditingController _styleKeywordsController;
+  late TextEditingController _guestCapacityController;
 
   // Social media controllers
   late TextEditingController _facebookController;
@@ -98,6 +99,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _phoneController = TextEditingController(text: widget.vendorData['contact_phone']);
     _websiteController = TextEditingController(text: widget.vendorData['website_url']);
     _styleKeywordsController = TextEditingController(text: widget.vendorData['style_keywords']);
+    _guestCapacityController = TextEditingController(text: widget.vendorData['guest_capacity']);
 
     _facebookController = TextEditingController();
     _instagramController = TextEditingController();
@@ -189,6 +191,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _phoneController.dispose();
     _websiteController.dispose();
     _styleKeywordsController.dispose();
+    _guestCapacityController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     _twitterController.dispose();
@@ -349,6 +352,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
         'vendor_estimated_price': _estimatedPriceController.text.trim(),
+        'guest_capacity': _guestCapacityController.text.trim(),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -498,6 +502,13 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _buildTextField(
               controller: _estimatedPriceController,
               label: 'Estimated Price Range',
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _guestCapacityController,
+              label: 'Guest Capacity',
+              hint: 'e.g., 50 - 300',
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 24),
 

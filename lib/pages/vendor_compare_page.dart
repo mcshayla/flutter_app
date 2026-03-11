@@ -49,6 +49,7 @@ class VendorComparePage extends StatelessWidget {
                           headingRowColor: WidgetStateProperty.all(
                             const Color(0xFF7B3F61).withOpacity(0.1),
                           ),
+                          headingRowHeight: 76,
                           columnSpacing: 8,
                           columns: [
                             DataColumn(
@@ -62,35 +63,35 @@ class VendorComparePage extends StatelessWidget {
                                   label: SizedBox(
                                     width: vendorColWidth,
                                     child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
+                                        ClipOval(
                                           child: Image.network(
                                             ((v['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                                                 ? (v['image_url'] as List<dynamic>)[0].toString()
                                                 : 'https://picsum.photos/100/100',
-                                            width: 60,
-                                            height: 60,
+                                            width: 44,
+                                            height: 44,
                                             fit: BoxFit.cover,
                                             errorBuilder: (_, __, ___) => Container(
-                                              width: 60,
-                                              height: 60,
+                                              width: 44,
+                                              height: 44,
                                               color: const Color(0xFFDCC7AA),
-                                              child: const Icon(Icons.business),
+                                              child: const Icon(Icons.business, size: 20),
                                             ),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           v['vendor_name'] ?? '',
-                                          style: GoogleFonts.bodoniModa(
-                                            fontSize: 12,
+                                          style: GoogleFonts.montserrat(
+                                            fontSize: 11,
                                             fontWeight: FontWeight.w600,
                                             color: const Color(0xFF7B3F61),
                                           ),
                                           textAlign: TextAlign.center,
-                                          maxLines: 2,
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ],

@@ -36,6 +36,7 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final _phoneController = TextEditingController();
   final _websiteController = TextEditingController();
   final _styleKeywordsController = TextEditingController();
+  final _guestCapacityController = TextEditingController();
 
   // Social media controllers
   final _facebookController = TextEditingController();
@@ -105,6 +106,7 @@ setState(() {
     _phoneController.dispose();
     _websiteController.dispose();
     _styleKeywordsController.dispose();
+    _guestCapacityController.dispose();
     _facebookController.dispose();
     _instagramController.dispose();
     _twitterController.dispose();
@@ -213,6 +215,7 @@ setState(() {
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
+        'guest_capacity': _guestCapacityController.text.trim(),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -423,6 +426,13 @@ DropdownButtonFormField<String>(
               controller: _priceController,
               label: 'Price',
               hint: 'e.g., \$500 - \$2000',
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              controller: _guestCapacityController,
+              label: 'Guest Capacity',
+              hint: 'e.g., 50 - 300',
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 24),
 

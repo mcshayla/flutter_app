@@ -19,14 +19,12 @@ class CollectionPageTemplate extends StatefulWidget {
   final Map<String, List<Map<String, dynamic>>> categories;
   final Function(String vendorId, bool isHearted)? onHeartToggled;
   final bool isLovedPage;
-  final VoidCallback? onCompareToggle;
 
   const CollectionPageTemplate({
     required this.pageTitle,
     required this.categories,
     this.onHeartToggled,
     required this.isLovedPage,
-    this.onCompareToggle,
     super.key,
   });
 
@@ -185,24 +183,6 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
             ),
             child: Row(
               children: [
-                if (widget.isLovedPage && widget.onCompareToggle != null) ...[
-                  TextButton.icon(
-                    onPressed: widget.onCompareToggle,
-                    icon: const Icon(Icons.compare_arrows, size: 18, color: Color(0xFF7B3F61)),
-                    label: Text(
-                      'Compare',
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: const Color(0xFF7B3F61),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: selectedState,

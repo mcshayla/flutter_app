@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
 import '../pages/vendor_map_page.dart';
+import '../pages/vendor_compare_page.dart';
 import '../utils/app_styles.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -27,6 +28,10 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
   String? selectedState;
   String? selectedCounty;
   final Set<String> _selectedStyles = {};
+
+  // Compare mode (loved pages only)
+  bool _compareMode = false;
+  final Set<String> _selectedForCompare = {};
 
   List<Map<String, dynamic>> _getFilteredItems(List<Map<String, dynamic>> items) {
     if (selectedState == null && selectedCounty == null) {
@@ -429,6 +434,30 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
+                      if (widget.showOnlyLoved)
+                        OutlinedButton.icon(
+                          onPressed: () => setState(() {
+                            _compareMode = true;
+                            _selectedForCompare.clear();
+                          }),
+                          icon: const Icon(Icons.compare_arrows,
+                              size: 16, color: Color(0xFF7B3F61)),
+                          label: Text(
+                            'Compare',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF7B3F61),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF7B3F61)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                          ),
+                        ),
                       if (allKeywords.isNotEmpty)
                         OutlinedButton.icon(
                           onPressed: () =>
@@ -497,6 +526,64 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                 ),
               ),
               
+              // Compare toolbar
+              if (_compareMode)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  color: const Color(0xFF7B3F61).withOpacity(0.08),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${_selectedForCompare.length} selected (max 3)',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          color: const Color(0xFF7B3F61),
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _compareMode = false;
+                          _selectedForCompare.clear();
+                        }),
+                        child: Text('Cancel',
+                            style: GoogleFonts.montserrat(fontSize: 13)),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: _selectedForCompare.length >= 2
+                            ? () {
+                                final vendors = _selectedForCompare
+                                    .map((id) => filteredList.firstWhere(
+                                          (v) => v['vendor_id'] == id,
+                                          orElse: () => {},
+                                        ))
+                                    .where((v) => v.isNotEmpty)
+                                    .toList();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        VendorComparePage(vendors: vendors),
+                                  ),
+                                );
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF7B3F61),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text('Compare',
+                            style: GoogleFonts.montserrat(fontSize: 13)),
+                      ),
+                    ],
+                  ),
+                ),
+
               (filteredList.isEmpty) ? Expanded(
                 child: Center(
                   child: Text(
@@ -523,13 +610,15 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                 ),
                 itemBuilder:(context, index) {
                   final item = filteredList[index];
+                  final vendorId = item['vendor_id'] as String? ?? '';
+                  final isSelectedForCompare = _selectedForCompare.contains(vendorId);
                   return Selector<AppState, bool>(
                               selector: (_, appState) =>
                                   appState.lovedVendorUUIDsCategorizedMap[widget.categoryName]
                                       ?.contains(item['vendor_id']) ??
                                   false,
                               builder: (_, isHearted, __) {
-                  return CustomCard(
+                  final card = CustomCard(
                     title: item['vendor_name'] ?? "",
                     description: item['vendor_description'] ?? "",
                     imageUrl: ((item['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
@@ -543,7 +632,22 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     onDiamondToggled: (diamonded) {
                       appState.toggleDiamond(item['vendor_id'], diamonded);
                     },
-                    onTap: () {
+                    onTap: _compareMode
+                        ? () {
+                            setState(() {
+                              if (isSelectedForCompare) {
+                                _selectedForCompare.remove(vendorId);
+                              } else if (_selectedForCompare.length < 3) {
+                                _selectedForCompare.add(vendorId);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Maximum 3 vendors')),
+                                );
+                              }
+                            });
+                          }
+                        : () {
                       appState.trackCardClick(item['vendor_id']);
                       Navigator.push(
                         context,
@@ -579,6 +683,49 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                         )
                       );
                     },
+                  );
+                  if (!_compareMode) return card;
+                  return Stack(
+                    children: [
+                      card,
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              if (isSelectedForCompare) {
+                                _selectedForCompare.remove(vendorId);
+                              } else if (_selectedForCompare.length < 3) {
+                                _selectedForCompare.add(vendorId);
+                              }
+                            });
+                          },
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            decoration: BoxDecoration(
+                              color: isSelectedForCompare
+                                  ? const Color(0xFF7B3F61)
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: const Color(0xFF7B3F61), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.15),
+                                  blurRadius: 4,
+                                )
+                              ],
+                            ),
+                            child: isSelectedForCompare
+                                ? const Icon(Icons.check,
+                                    color: Colors.white, size: 16)
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 });
                 },
