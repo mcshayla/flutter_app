@@ -358,6 +358,7 @@ Future<void> loadWeddingProfile() async {
         .maybeSingle();
 
     weddingProfile = response;
+    notifyListeners();
   } catch (e) {
     print("Error loading wedding profile: $e");
   }

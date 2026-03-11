@@ -5,6 +5,25 @@ import 'package:google_fonts/google_fonts.dart';
 import './individual_card.dart';
 import '../utils/app_styles.dart';
 import 'wedding_profile_setup.dart';
+import 'budget_item_form.dart';
+
+String _vendorCategoryToBudgetCategory(String vendorCategory) {
+  final lower = vendorCategory.toLowerCase();
+  if (lower.contains('venue')) return 'Venue';
+  if (lower.contains('cater')) return 'Catering';
+  if (lower.contains('photo')) return 'Photography';
+  if (lower.contains('video')) return 'Videography';
+  if (lower.contains('floral') || lower.contains('flower')) return 'Flowers';
+  if (lower.contains('music') || lower.contains('dj') || lower.contains('band')) return 'Music';
+  if (lower.contains('attire') || lower.contains('dress') || lower.contains('suit')) return 'Attire';
+  if (lower.contains('invit') || lower.contains('stationery')) return 'Invitations';
+  if (lower.contains('decor')) return 'Decor';
+  if (lower.contains('transport') || lower.contains('limo')) return 'Transportation';
+  if (lower.contains('cake') || lower.contains('baker')) return 'Cake';
+  if (lower.contains('hair') || lower.contains('makeup') || lower.contains('beauty')) return 'Hair & Makeup';
+  if (lower.contains('officiant') || lower.contains('celebrant')) return 'Officiant';
+  return 'Other';
+}
 
 class YesPage extends StatelessWidget {
   const YesPage({super.key});
@@ -320,7 +339,68 @@ class YesPage extends StatelessWidget {
                                       ),
                                     )
                                   : OutlinedButton.icon(
-                                      onPressed: () => appState.toggleBookedVendor(vendorId, true),
+                                      onPressed: () async {
+                                        appState.toggleBookedVendor(vendorId, true);
+                                        if (!context.mounted) return;
+                                        final shouldAddToBudget = await showDialog<bool>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            backgroundColor: const Color(0xFFF8F5F0),
+                                            title: Text(
+                                              'Add to Budget?',
+                                              style: GoogleFonts.bodoniModa(
+                                                color: const Color(0xFF7B3F61),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            content: Text(
+                                              'Would you like to add ${vendor['vendor_name']} to your budget?',
+                                              style: GoogleFonts.montserrat(
+                                                fontSize: 14,
+                                                color: const Color(0xFF3E3E3E),
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(ctx, false),
+                                                child: Text(
+                                                  'Skip',
+                                                  style: GoogleFonts.montserrat(
+                                                    color: const Color(0xFF6E6E6E),
+                                                  ),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () => Navigator.pop(ctx, true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(0xFF7B3F61),
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Add to Budget',
+                                                  style: GoogleFonts.montserrat(fontSize: 13),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                        if (shouldAddToBudget == true && context.mounted) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => BudgetItemForm(
+                                                prefillData: {
+                                                  'item_name': vendor['vendor_name'] ?? '',
+                                                  'category': _vendorCategoryToBudgetCategory(category),
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
                                       icon: const Icon(Icons.check_circle_outline,
                                           color: Color(0xFF7B3F61), size: 16),
                                       label: Text(

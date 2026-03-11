@@ -215,21 +215,10 @@ class _ChecklistPageState extends State<ChecklistPage> {
                             ),
                             const SizedBox(height: 20),
                             ElevatedButton.icon(
-                              onPressed: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => WeddingProfileSetup(
-                                      existingProfile: appState.weddingProfile,
-                                    ),
-                                  ),
-                                );
-                                await appState.loadWeddingProfile();
-                                await appState.loadChecklist();
-                              },
-                              icon: const Icon(Icons.calendar_today, color: Colors.white, size: 18),
+                              onPressed: () => _showGenerateSheet(context, appState),
+                              icon: const Icon(Icons.auto_fix_high, color: Colors.white, size: 18),
                               label: Text(
-                                'Set Wedding Date',
+                                'Generate Checklist',
                                 style: GoogleFonts.montserrat(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
@@ -366,18 +355,15 @@ class _ChecklistPageState extends State<ChecklistPage> {
   }
 
   void _showGenerateSheet(BuildContext context, AppState appState) async {
-    final weddingDateStr = appState.weddingProfile?['wedding_date'] as String?;
+    var weddingDateStr = appState.weddingProfile?['wedding_date'] as String?;
     if (weddingDateStr == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Set your wedding date first')),
-      );
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const WeddingProfileSetup()),
+        MaterialPageRoute(builder: (_) => WeddingProfileSetup(existingProfile: appState.weddingProfile)),
       );
       await appState.loadWeddingProfile();
-      await appState.loadChecklist();
-      return;
+      weddingDateStr = appState.weddingProfile?['wedding_date'] as String?;
+      if (weddingDateStr == null) return; // user didn't set a date
     }
 
     final hasExisting = appState.checklistItems.isNotEmpty;

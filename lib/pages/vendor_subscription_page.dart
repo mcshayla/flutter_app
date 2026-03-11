@@ -15,9 +15,12 @@ class VendorSubscriptionPage extends StatefulWidget {
   State<VendorSubscriptionPage> createState() => _VendorSubscriptionPageState();
 }
 
-class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
+class _VendorSubscriptionPageState extends State<VendorSubscriptionPage>
+    with WidgetsBindingObserver {
   final supabase = Supabase.instance.client;
   bool _isLoading = false;
+  bool _awaitingReturn = false;
+  bool _subscriptionActivated = false;
 
   // Stripe Price IDs
   final String monthlyPriceId = 'price_1SoG3VGpavVyOfbN5M6NvL5k';
@@ -25,6 +28,66 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   // Premium & Elite tiers - set these once Stripe products are created
   final String premiumMonthlyPriceId = 'price_PREMIUM_MONTHLY';
   final String eliteMonthlyPriceId = 'price_ELITE_MONTHLY';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _awaitingReturn) {
+      _awaitingReturn = false;
+      _checkSubscriptionStatus();
+    }
+  }
+
+  Future<void> _checkSubscriptionStatus() async {
+    setState(() => _isLoading = true);
+    try {
+      // Poll up to 10 times with 2s delay to allow webhook to process
+      for (int i = 0; i < 10; i++) {
+        final data = await supabase
+            .from('vendor_subscriptions')
+            .select('status')
+            .eq('user_id', widget.userId)
+            .eq('status', 'active')
+            .maybeSingle();
+
+        if (data != null) {
+          if (mounted) {
+            setState(() {
+              _subscriptionActivated = true;
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+        await Future.delayed(const Duration(seconds: 2));
+      }
+      // Timed out — webhook may still be processing
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Payment received! Your subscription may take a moment to activate.',
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _createCheckoutSession(String priceId) async {
     setState(() => _isLoading = true);
@@ -52,6 +115,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
       if (!launched) {
         throw Exception('Could not open Stripe Checkout');
       }
+      _awaitingReturn = true;
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +145,9 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _subscriptionActivated
+          ? _buildSuccessView()
+          : SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -194,6 +260,61 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
               const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuccessView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle, color: Color(0xFF7B3F61), size: 80),
+            const SizedBox(height: 24),
+            Text(
+              'Subscription Activated!',
+              style: GoogleFonts.bodoniModa(
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B3F61),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your vendor profile is now live. Couples can discover you on easiYESt.',
+              style: GoogleFonts.montserrat(
+                fontSize: 14,
+                color: const Color(0xFF6E6E6E),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7B3F61),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Go to My Profile',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

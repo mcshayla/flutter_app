@@ -74,6 +74,13 @@ class _WeddingProfileSetupState extends State<WeddingProfileSetup> {
       return;
     }
 
+    if (_weddingDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your wedding date')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
