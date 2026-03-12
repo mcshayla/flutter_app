@@ -1,4 +1,4 @@
-package com.example.say_yes
+package com.easiyest.easiyest
 
 import io.flutter.embedding.android.FlutterActivity
 
