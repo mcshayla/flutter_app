@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../appstate.dart';
 
 // TODO: Set this to your Amplify site URL (no trailing slash)
-const String _rsvpBaseUrl = 'https://YOUR_AMPLIFY_SITE/rsvp.html';
+const String _rsvpBaseUrl = 'https://easiyest.com/rsvp.html';
 
 void showRsvpLinkSheet(BuildContext context) {
   showModalBottomSheet(
