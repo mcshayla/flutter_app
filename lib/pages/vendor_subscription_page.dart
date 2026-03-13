@@ -24,6 +24,27 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   final String monthlyPriceId = 'price_1SoG3VGpavVyOfbN5M6NvL5k';
   // final String yearlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQt';
   final String yearlyPriceId = 'price_1Sq4aNGpavVyOfbN9rpaau8N';
+  final String discountedMonthlyPriceId = 'price_1TAMjFGpavVyOfbN0XDE9MtD';
+
+  final _promoController = TextEditingController();
+  String? _promoError;
+  static const _validCode = 'SAYYES10';
+
+  @override
+  void dispose() {
+    _promoController.dispose();
+    super.dispose();
+  }
+
+  void _applyPromoCode() {
+    final code = _promoController.text.trim().toUpperCase();
+    if (code == _validCode) {
+      setState(() => _promoError = null);
+      _createCheckoutSession(discountedMonthlyPriceId);
+    } else {
+      setState(() => _promoError = 'Invalid promo code. Please try again.');
+    }
+  }
 
   Future<void> _createCheckoutSession(String priceId) async {
     setState(() => _isLoading = true);
@@ -141,7 +162,78 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
                     color: Color(0xFF7B3F61),
                   ),
                 ),
-              
+
+              const SizedBox(height: 32),
+              const Divider(color: Color(0xFFDCC7AA)),
+              const SizedBox(height: 24),
+
+              // Promo code section
+              Text(
+                'Have a promo code?',
+                style: GoogleFonts.bodoniModa(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF7B3F61),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _promoController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        hintText: 'Enter code',
+                        hintStyle: GoogleFonts.montserrat(
+                          color: const Color(0xFF6E6E6E),
+                          fontSize: 13,
+                        ),
+                        errorText: _promoError,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF7B3F61),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _applyPromoCode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7B3F61),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Apply',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 24),
             ],
           ),
