@@ -490,28 +490,28 @@ class _LandingPageState extends State<WebLandingPage> {
           LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth > 900) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildTestimonialCard(
-                        'This platform has generated so many leads for our small business! Being featured has helped us book more clients and grow our business.',
-                        'Sarah Williams',
-                        'Enchanted Gardens Venue',
-                        'SW',
-                      ),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      child: _buildTestimonialCard(
-                        'As a wedding photographer, this platform has transformed my business. The quality of inquiries is exceptional, and the couples I meet are genuinely excited to work with me. It\'s the best investment I\'ve made for my business.',
-                        'Michael Chen',
-                        'Moments Photography Studio',
-                        'MC',
-                      ),
-                    ),
-                  ],
-                );
-              } else {
+              //   return Row(
+              //     children: [
+              //       Expanded(
+              //         child: _buildTestimonialCard(
+              //           'This platform has generated so many leads for our small business! Being featured has helped us book more clients and grow our business.',
+              //           'Sarah Williams',
+              //           'Enchanted Gardens Venue',
+              //           'SW',
+              //         ),
+              //       ),
+              //       const SizedBox(width: 24),
+              //       Expanded(
+              //         child: _buildTestimonialCard(
+              //           'As a wedding photographer, this platform has transformed my business. The quality of inquiries is exceptional, and the couples I meet are genuinely excited to work with me. It\'s the best investment I\'ve made for my business.',
+              //           'Michael Chen',
+              //           'Moments Photography Studio',
+              //           'MC',
+              //         ),
+              //       ),
+              //     ],
+              //   );
+              // } else {
                 return Column(
                   children: [
                     _buildTestimonialCard(
