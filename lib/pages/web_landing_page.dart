@@ -489,7 +489,7 @@ class _LandingPageState extends State<WebLandingPage> {
           const SizedBox(height: 60),
           LayoutBuilder(
             builder: (context, constraints) {
-              if (constraints.maxWidth > 900) {
+              // if (constraints.maxWidth > 900) {
               //   return Row(
               //     children: [
               //       Expanded(
@@ -529,7 +529,7 @@ class _LandingPageState extends State<WebLandingPage> {
                     // ),
                   ],
                 );
-              }
+              // }
             },
           ),
         ],
