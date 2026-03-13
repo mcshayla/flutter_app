@@ -65,36 +65,41 @@ class _ChecklistPageState extends State<ChecklistPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              'Wedding Checklist',
-                              style: GoogleFonts.bodoniModa(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF7B3F61),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.calendar_today, size: 18, color: Color(0xFF7B3F61)),
-                              onPressed: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => WeddingProfileSetup(
-                                      existingProfile: appState.weddingProfile,
-                                    ),
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Wedding Checklist',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.bodoniModa(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF7B3F61),
                                   ),
-                                );
-                                await appState.loadWeddingProfile();
-                                await appState.loadChecklist();
-                              },
-                              tooltip: 'Edit Wedding Date',
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                          ],
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              IconButton(
+                                icon: const Icon(Icons.calendar_today, size: 18, color: Color(0xFF7B3F61)),
+                                onPressed: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => WeddingProfileSetup(
+                                        existingProfile: appState.weddingProfile,
+                                      ),
+                                    ),
+                                  );
+                                  await appState.loadWeddingProfile();
+                                  await appState.loadChecklist();
+                                },
+                                tooltip: 'Edit Wedding Date',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
                         ),
                         Row(
                           children: [

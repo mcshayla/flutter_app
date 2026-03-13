@@ -12,7 +12,7 @@ val keyProperties = Properties()
 keyProperties.load(keyPropertiesFile.inputStream())
 
 android {
-    namespace = "com.example.say_yes"
+    namespace = "com.easiyest.easiyest"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
