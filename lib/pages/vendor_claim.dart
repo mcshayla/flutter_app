@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_subscription_page.dart';
 import 'vendor_dashboard.dart';
+import 'vendor_login.dart';
 
 class VendorClaimPage extends StatefulWidget {
   final String userId;
@@ -23,6 +24,79 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
   List<Map<String, dynamic>> searchResults = [];
   bool isSearching = false;
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAlreadyVendor();
+  }
+
+  /// If this user already has a vendor profile, block them and tell them to log in.
+  Future<void> _checkAlreadyVendor() async {
+    try {
+      final existing = await supabase
+          .from('vendor_profiles')
+          .select('vendor_id')
+          .eq('user_id', widget.userId)
+          .maybeSingle();
+
+      if (existing != null && mounted) {
+        await supabase.auth.signOut();
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (dialogContext) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: Text(
+              'Account Already Exists',
+              style: GoogleFonts.bodoniModa(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B3F61),
+              ),
+            ),
+            content: Text(
+              'A vendor account already exists for this email. Please log in instead.',
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                color: const Color(0xFF6E6E6E),
+              ),
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const VendorLogin()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7B3F61),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  'Go to Login',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (_) {
+      // If the check fails just let them proceed normally.
+    }
+  }
 
   @override
   void dispose() {
@@ -408,7 +482,6 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
         'claimed_at': DateTime.now().toIso8601String(),
       }).eq('vendor_id', vendor['vendor_id']);
 
-      // Create vendor profile
       await supabase.from('vendor_profiles').insert({
         'user_id': widget.userId,
         'vendor_id': vendor['vendor_id'],

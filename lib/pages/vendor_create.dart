@@ -247,7 +247,6 @@ setState(() {
         }).eq('vendor_id', vendorResponse['vendor_id']);
       }
 
-      // Create vendor profile
       await supabase.from('vendor_profiles').insert({
         'user_id': widget.userId,
         'vendor_id': vendorResponse['vendor_id'],

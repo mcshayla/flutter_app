@@ -61,6 +61,14 @@ class _VendorSignupState extends State<VendorSignup> {
         );
       }
     } on AuthException catch (e) {
+      // Supabase throws this when email confirmations are disabled and the
+      // email is already registered. Route to the connect-account flow.
+      if (e.message.toLowerCase().contains('already registered') ||
+          e.message.toLowerCase().contains('already exists') ||
+          e.statusCode == '422') {
+        await _connectExistingAccount();
+        return;
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
