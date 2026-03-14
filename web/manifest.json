@@ -1,11 +1,11 @@
 {
-    "name": "say_yes",
-    "short_name": "say_yes",
+    "name": "easiYESt",
+    "short_name": "easiYESt",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#7B3F61",
+    "theme_color": "#7B3F61",
+    "description": "Find and connect with the best wedding vendors for your perfect day.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
