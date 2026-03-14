@@ -176,6 +176,8 @@ class AppState extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print("error in appstate.dart $e");
+      isLoaded = true;
+      notifyListeners();
     }
 
   }
