@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../utils/launch_url_helper.dart';
 
 class VendorSubscriptionPage extends StatefulWidget {
   final String userId;
@@ -64,14 +64,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
         checkoutUrl = 'https://$checkoutUrl';
       }
 
-      final uri = Uri.parse(checkoutUrl);
-      final launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-      if (!launched) {
-        throw Exception('Could not open Stripe Checkout');
-      }
+      await launchCheckoutUrl(checkoutUrl);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
