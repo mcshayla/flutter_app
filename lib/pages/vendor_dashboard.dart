@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_login.dart';
 import 'vendor_edit_profile.dart';
+import 'vendor_subscription_page.dart';
 import 'login.dart';
 
 class VendorDashboard extends StatefulWidget {
@@ -32,13 +33,57 @@ class _VendorDashboardState extends State<VendorDashboard> {
 
   Future<void> _loadVendorData() async {
     setState(() => isLoading = true);
-    
+
     try {
       final user = supabase.auth.currentUser;
       if (user == null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const VendorLogin()),
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const VendorLogin()),
+          );
+        }
+        return;
+      }
+
+      // Guard: require an active subscription before showing the dashboard.
+      bool isActive = false;
+      final vendorRecord = await supabase
+          .from('vendors')
+          .select('subscription_status')
+          .eq('vendor_user_id', user.id)
+          .maybeSingle();
+      if (vendorRecord != null &&
+          vendorRecord['subscription_status'] == 'active') {
+        isActive = true;
+      }
+      if (!isActive) {
+        final sub = await supabase
+            .from('vendor_subscriptions')
+            .select('status')
+            .eq('user_id', user.id)
+            .inFilter('status', ['active', 'trialing'])
+            .maybeSingle();
+        isActive = sub != null;
+      }
+
+      if (!isActive && mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        final navigator = Navigator.of(context);
+        final userId = user.id;
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'An active subscription is required. Please choose a plan to continue.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+        navigator.pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => VendorSubscriptionPage(userId: userId),
+          ),
         );
         return;
       }

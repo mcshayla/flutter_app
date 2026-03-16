@@ -57,7 +57,7 @@ class _VendorLoginState extends State<VendorLogin> {
             .from('vendor_subscriptions')
             .select('status')
             .eq('user_id', userId)
-            .eq('status', 'active')
+            .inFilter('status', ['active', 'trialing'])
             .maybeSingle();
         isActive = sub != null;
       }

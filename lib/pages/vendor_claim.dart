@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_subscription_page.dart';
 import 'vendor_dashboard.dart';
-import 'vendor_login.dart';
 
 class VendorClaimPage extends StatefulWidget {
   final String userId;
@@ -31,7 +30,8 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
     _checkAlreadyVendor();
   }
 
-  /// If this user already has a vendor profile, block them and tell them to log in.
+  /// If this user already has a vendor profile, route them to the right place
+  /// instead of making them log in again from scratch.
   Future<void> _checkAlreadyVendor() async {
     try {
       final existing = await supabase
@@ -40,56 +40,41 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
           .eq('user_id', widget.userId)
           .maybeSingle();
 
-      if (existing != null && mounted) {
-        await supabase.auth.signOut();
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            title: Text(
-              'Account Already Exists',
-              style: GoogleFonts.bodoniModa(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF7B3F61),
-              ),
-            ),
-            content: Text(
-              'A vendor account already exists for this email. Please log in instead.',
-              style: GoogleFonts.montserrat(
-                fontSize: 13,
-                color: const Color(0xFF6E6E6E),
-              ),
-            ),
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const VendorLogin()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7B3F61),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Go to Login',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+      if (existing == null || !mounted) return;
+
+      // They have a vendor profile — check if they have an active subscription.
+      bool isActive = false;
+      final vendorRecord = await supabase
+          .from('vendors')
+          .select('subscription_status')
+          .eq('vendor_user_id', widget.userId)
+          .maybeSingle();
+      if (vendorRecord?['subscription_status'] == 'active') isActive = true;
+
+      if (!isActive) {
+        final sub = await supabase
+            .from('vendor_subscriptions')
+            .select('status')
+            .eq('user_id', widget.userId)
+            .inFilter('status', ['active', 'trialing'])
+            .maybeSingle();
+        isActive = sub != null;
+      }
+
+      if (!mounted) return;
+
+      if (isActive) {
+        // Already paid — go straight to the dashboard.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const VendorDashboard()),
+        );
+      } else {
+        // Claimed but never paid — resume at the subscription page.
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VendorSubscriptionPage(userId: widget.userId),
           ),
         );
       }

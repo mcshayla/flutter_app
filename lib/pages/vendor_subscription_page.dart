@@ -83,9 +83,14 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      // Block the back gesture/button — vendors must choose a plan.
+      canPop: false,
+      child: Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
+        // Remove the default back arrow so there is no way to skip payment.
+        automaticallyImplyLeading: false,
         title: Text(
           'Choose Your Plan',
           style: GoogleFonts.bodoniModa(
@@ -232,6 +237,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
           ),
         ),
       ),
+      ), // PopScope
     );
   }
 
