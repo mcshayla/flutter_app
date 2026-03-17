@@ -3,4 +3,4 @@ Allow: /
 Disallow: /resetPassword.html
 
 # Sitemap location — update with your actual domain
-Sitemap: https://easiyest.com/sitemap.xml
+Sitemap: https://www.easiyest.com/sitemap.xml
