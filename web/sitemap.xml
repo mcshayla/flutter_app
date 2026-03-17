@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace https://easiyest.com with your actual domain -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <!-- Main app / homepage -->
   <url>
-    <loc>https://easiyest.com/</loc>
+    <loc>https://www.easiyest.com/</loc>
     <lastmod>2026-03-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -13,7 +12,7 @@
 
   <!-- Static landing page (alternative to The Knot / WeddingWire) -->
   <url>
-    <loc>https://easiyest.com/landing.html</loc>
+    <loc>https://www.easiyest.com/landing.html</loc>
     <lastmod>2026-03-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
@@ -21,7 +20,7 @@
 
   <!-- Vendor registration page -->
   <url>
-    <loc>https://easiyest.com/vendorRegistration</loc>
+    <loc>https://www.easiyest.com/vendorRegistration</loc>
     <lastmod>2026-03-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
