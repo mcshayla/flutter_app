@@ -12,6 +12,7 @@ import 'profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'tutorial.dart';
 import 'vendor_dashboard.dart';
+import 'vendor_create.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -42,9 +43,34 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   Future<void> _checkVendorStatus() async {
     final hasVendor = await _hasClaimedVendor();
-    setState(() {
-      _hasVendor = hasVendor;
-    });
+    if (hasVendor) {
+      setState(() => _hasVendor = true);
+      return;
+    }
+
+    // Check if they paid but never finished creating their vendor profile
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final sub = await Supabase.instance.client
+          .from('vendor_subscriptions')
+          .select('status')
+          .eq('user_id', user.id)
+          .inFilter('status', ['active', 'trialing'])
+          .maybeSingle();
+
+      if (sub != null && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VendorCreatePage(userId: user.id),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error checking vendor subscription: $e');
+    }
   }
 
   Future<bool> _hasClaimedVendor() async {
