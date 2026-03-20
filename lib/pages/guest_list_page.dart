@@ -7,7 +7,9 @@ import '../widgets/rsvp_link_sheet.dart';
 import 'guest_form.dart';
 
 class GuestListPage extends StatefulWidget {
-  const GuestListPage({super.key});
+  final bool embedded;
+
+  const GuestListPage({super.key, this.embedded = false});
 
   @override
   State<GuestListPage> createState() => _GuestListPageState();
@@ -44,41 +46,7 @@ class _GuestListPageState extends State<GuestListPage> {
           return true;
         }).toList();
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF8F5F0),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF7B3F61)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              'Guest List',
-              style: GoogleFonts.bodoniModa(
-                color: const Color(0xFF7B3F61),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.link, color: Color(0xFF7B3F61)),
-                tooltip: 'RSVP Links',
-                onPressed: () => showRsvpLinkSheet(context),
-              ),
-              IconButton(
-                icon: const Icon(Icons.restaurant_menu, color: Color(0xFF7B3F61)),
-                tooltip: 'Dietary Summary',
-                onPressed: () => _showDietarySheet(context, allGuests),
-              ),
-              IconButton(
-                icon: const Icon(Icons.download_outlined, color: Color(0xFF7B3F61)),
-                tooltip: 'Copy as CSV',
-                onPressed: () => _exportToClipboard(context, allGuests),
-              ),
-            ],
-          ),
-          body: Column(
+        final body = Column(
             children: [
               // Summary counts
               Container(
@@ -203,7 +171,83 @@ class _GuestListPageState extends State<GuestListPage> {
                 ),
               ),
             ],
+          );
+
+        if (widget.embedded) {
+          return ColoredBox(
+            color: const Color(0xFFF8F5F0),
+            child: Column(
+              children: [
+                // Action buttons toolbar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.link, color: Color(0xFF7B3F61)),
+                        tooltip: 'RSVP Links',
+                        onPressed: () => showRsvpLinkSheet(context),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.restaurant_menu,
+                            color: Color(0xFF7B3F61)),
+                        tooltip: 'Dietary Summary',
+                        onPressed: () => _showDietarySheet(context, allGuests),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.download_outlined,
+                            color: Color(0xFF7B3F61)),
+                        tooltip: 'Copy as CSV',
+                        onPressed: () =>
+                            _exportToClipboard(context, allGuests),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(child: body),
+              ],
+            ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8F5F0),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF7B3F61)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              'Guest List',
+              style: GoogleFonts.bodoniModa(
+                color: const Color(0xFF7B3F61),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.link, color: Color(0xFF7B3F61)),
+                tooltip: 'RSVP Links',
+                onPressed: () => showRsvpLinkSheet(context),
+              ),
+              IconButton(
+                icon: const Icon(Icons.restaurant_menu,
+                    color: Color(0xFF7B3F61)),
+                tooltip: 'Dietary Summary',
+                onPressed: () => _showDietarySheet(context, allGuests),
+              ),
+              IconButton(
+                icon: const Icon(Icons.download_outlined,
+                    color: Color(0xFF7B3F61)),
+                tooltip: 'Copy as CSV',
+                onPressed: () => _exportToClipboard(context, allGuests),
+              ),
+            ],
           ),
+          body: body,
           floatingActionButton: FloatingActionButton(
             backgroundColor: const Color(0xFF7B3F61),
             onPressed: () async {
