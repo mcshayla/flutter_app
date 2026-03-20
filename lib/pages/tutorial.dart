@@ -19,9 +19,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
   final List<TutorialStep> _steps = [
     TutorialStep(
       icon: Icons.favorite_border,
-      title: "Support Our Vendors",
+      title: "Mention EasiYESt",
       description:
-          "If you find a vendor on here, we'd forever be grateful if you mentioned easiYESt to them.",
+          "If you find a vendor you love, feel free to mention EasiYest when you reach out.",
     ),
     TutorialStep(
       icon: Icons.favorite,
@@ -39,7 +39,7 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
       icon: Icons.person_outline,
       title: "Create a Profile",
       description:
-          "Create a profile to save your favorites and access them from any device.",
+          "Create a profile to save favorites and plan your wedding with a budget-tracker, guest list, and checklist."
     ),
   ];
 

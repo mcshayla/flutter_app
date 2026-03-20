@@ -1,0 +1,16 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - flutter pub get
+    build:
+      commands:
+        - flutter build web --base-href /app/
+  artifacts:
+    baseDirectory: build/web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - ~/.pub-cache/**/*

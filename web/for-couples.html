@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Couples Choose easiYESt | Free Wedding Planning App</title>
+  <meta name="description" content="See how easiYESt compares to The Knot, Zola, and WeddingWire. 100% free for couples — no ads, no paid placements, no paywalls.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.easiyest.com/for-couples">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Montserrat', sans-serif; color: #3E3E3E; background: #F8F5F0; }
+    a { color: #7B3F61; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    nav { background: #7B3F61; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; }
+    nav .logo { color: #DCC7AA; font-family: 'Bodoni Moda', serif; font-size: 1.5rem; font-weight: 600; }
+    nav .nav-links { display: flex; gap: 24px; align-items: center; }
+    nav .nav-links a { color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 500; }
+    nav .nav-links a:hover { color: #DCC7AA; text-decoration: none; }
+    nav .cta-btn { background: #DCC7AA; color: #7B3F61; padding: 10px 24px; border-radius: 24px; font-size: 0.85rem; font-weight: 700; }
+    nav .cta-btn:hover { text-decoration: none; background: #e8d8bf; }
+
+    .page-hero { background: #7B3F61; color: #fff; padding: 64px 24px; text-align: center; }
+    .page-hero h1 { font-family: 'Bodoni Moda', serif; font-size: 2.4rem; font-weight: 600; line-height: 1.2; margin-bottom: 16px; }
+    .page-hero p { font-size: 1rem; opacity: 0.88; max-width: 560px; margin: 0 auto; line-height: 1.8; }
+
+    section { padding: 64px 24px; max-width: 900px; margin: 0 auto; }
+    section h2 { font-family: 'Bodoni Moda', serif; font-size: 1.8rem; font-weight: 600; color: #7B3F61; margin-bottom: 16px; }
+    section p { font-size: 0.97rem; line-height: 1.85; color: #3E3E3E; margin-bottom: 16px; }
+
+    .alt-bg { background: #fff; }
+    .alt-bg section { max-width: 900px; }
+
+    /* Comparison table */
+    .comparison { padding: 64px 24px; background: #fff; }
+    .comparison-inner { max-width: 900px; margin: 0 auto; }
+    .comparison-inner h2 { font-family: 'Bodoni Moda', serif; font-size: 1.8rem; font-weight: 600; color: #7B3F61; margin-bottom: 8px; }
+    .comp-sub { color: #6E6E6E; margin-bottom: 32px; font-size: 0.97rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: #7B3F61; color: #fff; padding: 14px 16px; text-align: left; font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 0.85rem; letter-spacing: 0.3px; }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child { border-radius: 0 8px 0 0; }
+    td { padding: 12px 16px; border-bottom: 1px solid #ede8e2; vertical-align: top; }
+    tr:nth-child(even) td { background: #F8F5F0; }
+    .check { color: #2a7a2a; font-weight: 700; }
+    .cross { color: #b03030; font-weight: 700; }
+    .partial { color: #b07020; font-weight: 700; }
+
+    /* Free banner */
+    .free-banner { background: #DCC7AA; padding: 56px 24px; text-align: center; }
+    .free-banner-inner { max-width: 680px; margin: 0 auto; }
+    .free-banner h2 { font-family: 'Bodoni Moda', serif; font-size: 2rem; font-weight: 600; color: #7B3F61; margin-bottom: 14px; }
+    .free-banner p { font-size: 0.97rem; color: #3E3E3E; line-height: 1.8; margin-bottom: 24px; }
+    .free-banner .btn { background: #7B3F61; color: #fff; padding: 14px 38px; border-radius: 32px; font-size: 0.9rem; font-weight: 700; display: inline-block; }
+    .free-banner .btn:hover { text-decoration: none; background: #6a3454; }
+
+    /* FAQ */
+    .faq { background: #F8F5F0; padding: 64px 24px; }
+    .faq-inner { max-width: 800px; margin: 0 auto; }
+    .faq-inner h2 { font-family: 'Bodoni Moda', serif; font-size: 1.8rem; font-weight: 600; color: #7B3F61; margin-bottom: 36px; }
+    .faq-item { margin-bottom: 28px; border-bottom: 1px solid #e2d9ce; padding-bottom: 24px; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-item h3 { font-size: 0.97rem; font-weight: 600; color: #3E3E3E; margin-bottom: 8px; }
+    .faq-item p { font-size: 0.92rem; color: #6E6E6E; line-height: 1.75; }
+
+    footer { background: #2e2e2e; color: #999; text-align: center; padding: 28px 24px; font-size: 0.82rem; }
+    footer a { color: #DCC7AA; }
+    .footer-links { margin-top: 10px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+    @media (max-width: 600px) {
+      .page-hero h1 { font-size: 1.7rem; }
+      table { font-size: 0.78rem; }
+      th, td { padding: 10px 8px; }
+      nav .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="logo" href="/landing">easiYESt</a>
+    <div class="nav-links">
+      <a href="/for-couples" style="color:#DCC7AA;">For Couples</a>
+      <a href="/utah-weddings">Utah Guide</a>
+      <a href="/for-vendors">For Vendors</a>
+    </div>
+    <a class="cta-btn" href="/app">Start Planning Free</a>
+  </nav>
+
+  <div class="page-hero">
+    <h1>The wedding planning app<br>you actually want to use.</h1>
+    <p>No ads. No paid placements. No paywalls. Just clean, honest wedding planning tools — completely free for couples.</p>
+  </div>
+
+  <!-- Why easiYESt -->
+  <section>
+    <h2>Built for Real Couples, Not Advertisers</h2>
+    <p>The Knot, Zola, and WeddingWire have dominated wedding planning for years — but couples are tired of navigating endless ads, paid vendor placements, and cluttered dashboards. easiYESt was built to fix all of that.</p>
+    <p>With easiYESt, you get a clean vendor directory, a budget tracker that keeps every expense in check, a digital guest list with built-in RSVP collection, and a step-by-step checklist — all wrapped up in one intuitive app that is completely free for couples.</p>
+    <p>Whether you're just engaged or counting down the final weeks, easiYESt keeps everything organized so you can actually enjoy the journey.</p>
+  </section>
+
+  <!-- vs The Knot -->
+  <div class="alt-bg">
+    <section>
+      <h2>easiYESt vs. The Knot</h2>
+      <p>The Knot is one of the most recognized wedding websites, but couples frequently complain about the experience: ads everywhere, vendor listings ranked by who paid the most, and tools spread across multiple disconnected sections.</p>
+      <p>easiYESt has no ads, no premium placements, and no upsells for couples. Just clean, honest wedding planning tools that are completely free to use.</p>
+    </section>
+  </div>
+
+  <!-- vs Zola -->
+  <section>
+    <h2>easiYESt vs. Zola</h2>
+    <p>Zola built its reputation on wedding registries and websites, and it does those things well. But when it comes to finding and comparing vendors, Zola's marketplace still surfaces vendors based on advertising spend — not what's actually best for your wedding.</p>
+    <p>easiYESt isn't a registry platform. It's a full planning app — built around finding the right vendors, staying on budget, and keeping all your wedding details in one place. And it's 100% free for couples.</p>
+  </section>
+
+  <!-- vs WeddingWire -->
+  <div class="alt-bg">
+    <section>
+      <h2>easiYESt vs. WeddingWire</h2>
+      <p>WeddingWire connects couples with local wedding professionals, but the platform has grown cluttered over the years. Reviews are hard to trust when vendor rankings depend on advertising budgets, and the planning tools feel secondary to the marketplace.</p>
+      <p>easiYESt puts the planning tools front and center. You get a real planning experience — not just a directory — and it's completely free for couples.</p>
+    </section>
+  </div>
+
+  <!-- Comparison table -->
+  <div class="comparison">
+    <div class="comparison-inner">
+      <h2>Side-by-Side Comparison</h2>
+      <p class="comp-sub">See how easiYESt stacks up against the big names.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>easiYESt</th>
+            <th>The Knot</th>
+            <th>Zola</th>
+            <th>WeddingWire</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Free for couples</td>
+            <td><span class="check">✓ 100% Free</span></td>
+            <td><span class="partial">~ Limited free tier</span></td>
+            <td><span class="partial">~ Limited free tier</span></td>
+            <td><span class="partial">~ Limited free tier</span></td>
+          </tr>
+          <tr>
+            <td>Unbiased vendor rankings</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="cross">✗ Paid placements</span></td>
+            <td><span class="cross">✗ Paid placements</span></td>
+            <td><span class="cross">✗ Paid placements</span></td>
+          </tr>
+          <tr>
+            <td>Vendor comparison tool</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="partial">~ Partial</span></td>
+            <td><span class="partial">~ Partial</span></td>
+            <td><span class="partial">~ Partial</span></td>
+          </tr>
+          <tr>
+            <td>Budget tracker</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+          </tr>
+          <tr>
+            <td>Guest list management</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+          </tr>
+          <tr>
+            <td>Digital RSVP collection</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="partial">~ With website plan</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="partial">~ With website plan</span></td>
+          </tr>
+          <tr>
+            <td>Wedding checklist</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes</span></td>
+          </tr>
+          <tr>
+            <td>Ad-free experience</td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="cross">✗ No</span></td>
+            <td><span class="partial">~ Limited ads</span></td>
+            <td><span class="cross">✗ No</span></td>
+          </tr>
+          <tr>
+            <td>Wedding registry</td>
+            <td><span class="cross">✗ No</span></td>
+            <td><span class="check">✓ Yes</span></td>
+            <td><span class="check">✓ Yes (strength)</span></td>
+            <td><span class="cross">✗ No</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Free banner -->
+  <div class="free-banner">
+    <div class="free-banner-inner">
+      <h2>Free for Couples. Forever.</h2>
+      <p>We believe every couple deserves great planning tools regardless of their budget. easiYESt is and will always be 100% free for couples — no credit card, no trial period, no upgrade required.</p>
+      <a class="btn" href="/app">Start Planning Your Wedding</a>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq">
+    <div class="faq-inner">
+      <h2>Frequently Asked Questions</h2>
+
+      <div class="faq-item">
+        <h3>What is easiYESt?</h3>
+        <p>easiYESt is a free wedding planning app that brings together everything you need: a vendor directory, vendor comparison, budget tracking, guest list management, digital RSVPs, and a full wedding checklist — all in one place.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Is easiYESt really free?</h3>
+        <p>Yes. Completely free for couples. No credit card required, no hidden fees, and no paywalled planning tools.</p>
+      </div>
+      <div class="faq-item">
+        <h3>How is easiYESt different from The Knot?</h3>
+        <p>The Knot displays vendors based on who pays for premium placement. easiYESt lists vendors without paid rankings, is ad-free, and combines all your planning tools into a single clean interface.</p>
+      </div>
+      <div class="faq-item">
+        <h3>How is easiYESt different from Zola?</h3>
+        <p>Zola is excellent for registries and wedding websites, but its vendor marketplace still relies on paid placements. easiYESt is focused entirely on vendor discovery and planning tools, fully free with no upgrade required.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Can I collect RSVPs with easiYESt?</h3>
+        <p>Yes. easiYESt generates a unique RSVP link you can share via text, email, or social. Guests respond online and it syncs directly to your guest list — no paper RSVPs needed.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Does easiYESt work on mobile?</h3>
+        <p>Yes. easiYESt works on all devices — desktop, tablet, and mobile. It's available as a web app and on iOS, so you can plan your wedding anywhere.</p>
+      </div>
+      <div class="faq-item">
+        <h3>What types of vendors can I find?</h3>
+        <p>Photographers, videographers, venues, caterers, florists, DJs, bands, officiants, hair and makeup artists, cake designers, and more. Save your favorites, compare them side by side, and add them to your budget with one tap.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 easiYESt. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="/app">App</a>
+      <a href="/landing">Home</a>
+      <a href="/for-couples">For Couples</a>
+      <a href="/utah-weddings">Utah Guide</a>
+      <a href="/for-vendors">For Vendors</a>
+      <a href="/vendorRegistration">Vendor Registration</a>
+    </div>
+  </footer>
+
+</body>
+</html>

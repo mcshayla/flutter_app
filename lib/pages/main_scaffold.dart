@@ -39,6 +39,15 @@ class _MainScaffoldState extends State<MainScaffold> {
     _initializeNavigatorKeys();
     _showTutorialIfFirstTime();
     _checkVendorStatus();
+    if (kIsWeb) {
+      final tabParam = Uri.base.queryParameters['tab'];
+      if (tabParam != null) {
+        final idx = int.tryParse(tabParam);
+        if (idx != null && idx >= 0 && idx <= 3) {
+          _selectedIndex = idx;
+        }
+      }
+    }
   }
 
   Future<void> _checkVendorStatus() async {
