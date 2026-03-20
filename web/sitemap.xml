@@ -1,27 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Main app / homepage -->
+  <!-- Homepage → redirects to landing page -->
   <url>
     <loc>https://www.easiyest.com/</loc>
-    <lastmod>2026-03-12</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- Static landing page (alternative to The Knot / WeddingWire) -->
+  <!-- Main landing page -->
   <url>
-    <loc>https://www.easiyest.com/landing.html</loc>
-    <lastmod>2026-03-16</lastmod>
+    <loc>https://www.easiyest.com/landing</loc>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Flutter app -->
+  <url>
+    <loc>https://www.easiyest.com/app</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Vendor registration page -->
+  <!-- For Couples -->
+  <url>
+    <loc>https://www.easiyest.com/for-couples</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- For Vendors -->
+  <url>
+    <loc>https://www.easiyest.com/for-vendors</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Vendor Registration -->
   <url>
     <loc>https://www.easiyest.com/vendorRegistration</loc>
-    <lastmod>2026-03-16</lastmod>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Utah Wedding Guide -->
+  <url>
+    <loc>https://www.easiyest.com/utah-weddings</loc>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
