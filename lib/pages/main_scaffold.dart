@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'tutorial.dart';
 import 'vendor_dashboard.dart';
 import 'vendor_create.dart';
+import 'vendor_signup.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -38,7 +39,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     super.initState();
     _initializeNavigatorKeys();
     _showTutorialIfFirstTime();
-    _checkVendorStatus();
+
     if (kIsWeb) {
       final tabParam = Uri.base.queryParameters['tab'];
       if (tabParam != null) {
@@ -48,16 +49,19 @@ class _MainScaffoldState extends State<MainScaffold> {
         }
       }
     }
+
+    final showVendorSignup =
+        kIsWeb && Uri.base.queryParameters['action'] == 'vendorSignup';
+    _checkVendorStatus(showSignupIfNone: showVendorSignup);
   }
 
-  Future<void> _checkVendorStatus() async {
+  Future<void> _checkVendorStatus({bool showSignupIfNone = false}) async {
     final hasVendor = await _hasClaimedVendor();
     if (hasVendor) {
       setState(() => _hasVendor = true);
       return;
     }
 
-    // Check if they paid but never finished creating their vendor profile
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
@@ -69,12 +73,19 @@ class _MainScaffoldState extends State<MainScaffold> {
           .inFilter('status', ['active', 'trialing'])
           .maybeSingle();
 
-      if (sub != null && mounted) {
+      if (!mounted) return;
+
+      if (sub != null) {
+        // Paid but never finished profile — take them straight to create
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => VendorCreatePage(userId: user.id),
-          ),
+          MaterialPageRoute(builder: (_) => VendorCreatePage(userId: user.id)),
+        );
+      } else if (showSignupIfNone) {
+        // Coming from vendorRegistration.html CTA — start vendor signup flow
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const VendorSignup()),
         );
       }
     } catch (e) {
