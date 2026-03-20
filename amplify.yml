@@ -3,18 +3,12 @@ frontend:
   phases:
     preBuild:
       commands:
-        - git clone https://github.com/flutter/flutter.git --branch stable --depth 1 $HOME/flutter
-        - export PATH="$PATH:$HOME/flutter/bin"
-        - flutter precache --web
         - flutter pub get
     build:
       commands:
-        - export PATH="$PATH:$HOME/flutter/bin"
         - flutter build web --base-href /app/
-        # Create output structure: Flutter app goes in /app/, static pages stay at root
         - mkdir -p public/app
         - cp -r build/web/* public/app/
-        # Hoist static HTML pages and shared assets to root
         - cp public/app/landing.html public/
         - cp public/app/for-couples.html public/
         - cp public/app/for-vendors.html public/
@@ -32,4 +26,3 @@ frontend:
   cache:
     paths:
       - ~/.pub-cache/**/*
-      - ~/flutter/**/*
