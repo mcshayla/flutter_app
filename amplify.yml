@@ -3,9 +3,13 @@ frontend:
   phases:
     preBuild:
       commands:
+        - git clone https://github.com/flutter/flutter.git --branch stable --depth 1 $HOME/flutter
+        - export PATH="$PATH:$HOME/flutter/bin"
+        - flutter precache --web
         - flutter pub get
     build:
       commands:
+        - export PATH="$PATH:$HOME/flutter/bin"
         - flutter build web --base-href /app/
   artifacts:
     baseDirectory: build/web
@@ -14,3 +18,4 @@ frontend:
   cache:
     paths:
       - ~/.pub-cache/**/*
+      - ~/flutter/**/*
