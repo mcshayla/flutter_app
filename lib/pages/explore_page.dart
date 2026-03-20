@@ -204,22 +204,25 @@ class _CategoryCardState extends State<_CategoryCard> {
                 // Category name
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      widget.categoryName,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.bodoniModa(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.5,
-                        shadows: [
-                          const Shadow(
-                            blurRadius: 8,
-                            color: Colors.black54,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                    padding: const EdgeInsets.all(12.0),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        widget.categoryName,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.bodoniModa(
+                          fontSize: 28,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.5,
+                          shadows: [
+                            const Shadow(
+                              blurRadius: 8,
+                              color: Colors.black54,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
