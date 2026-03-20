@@ -57,9 +57,23 @@
     footer a { color: #DCC7AA; }
     .footer-links { margin-top: 10px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
 
+    /* Hamburger + mobile menu */
+    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
+    .hamburger span { display: block; width: 24px; height: 2px; background: #DCC7AA; margin: 5px 0; border-radius: 2px; transition: all 0.25s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .mobile-menu { display: none; flex-direction: column; background: #6a3554; padding: 16px 24px 24px; }
+    .mobile-menu a { color: rgba(255,255,255,0.9); font-size: 1rem; font-weight: 500; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-decoration: none; display: block; }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu .mobile-cta { background: #DCC7AA; color: #7B3F61 !important; padding: 12px 24px; border-radius: 24px; font-weight: 700; text-align: center; margin-top: 12px; border-bottom: none !important; }
+    .mobile-menu.open { display: flex; }
+
     @media (max-width: 600px) {
       .page-hero h1 { font-size: 1.7rem; }
       nav .nav-links { display: none; }
+      nav .cta-btn { display: none; }
+      .hamburger { display: block; }
     }
   </style>
 </head>
@@ -73,7 +87,16 @@
       <a href="/for-vendors" style="color:#DCC7AA;">For Vendors</a>
     </div>
     <a class="cta-btn" href="/vendorRegistration">List My Business</a>
+    <button class="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+  <div class="mobile-menu">
+    <a href="/for-couples">For Couples</a>
+    <a href="/utah-weddings">Utah Guide</a>
+    <a href="/for-vendors">For Vendors</a>
+    <a class="mobile-cta" href="/vendorRegistration">List My Business</a>
+  </div>
 
   <div class="page-hero">
     <h1>Get in front of couples<br>planning their big day.</h1>
@@ -143,5 +166,12 @@
     </div>
   </footer>
 
+  <script>
+    (function(){
+      var btn = document.querySelector('.hamburger');
+      var menu = document.querySelector('.mobile-menu');
+      btn.addEventListener('click', function(){ btn.classList.toggle('open'); menu.classList.toggle('open'); });
+    })();
+  </script>
 </body>
 </html>
