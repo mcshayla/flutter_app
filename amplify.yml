@@ -11,8 +11,22 @@ frontend:
       commands:
         - export PATH="$PATH:$HOME/flutter/bin"
         - flutter build web --base-href /app/
+        # Create output structure: Flutter app goes in /app/, static pages stay at root
+        - mkdir -p public/app
+        - cp -r build/web/* public/app/
+        # Hoist static HTML pages and shared assets to root
+        - cp public/app/landing.html public/
+        - cp public/app/for-couples.html public/
+        - cp public/app/for-vendors.html public/
+        - cp public/app/utah-weddings.html public/
+        - cp public/app/rsvp.html public/
+        - cp public/app/vendorRegistration.html public/
+        - cp public/app/favicon.png public/
+        - cp -r public/app/icons public/
+        - cp public/app/robots.txt public/
+        - cp public/app/sitemap.xml public/
   artifacts:
-    baseDirectory: build/web
+    baseDirectory: public
     files:
       - '**/*'
   cache:
