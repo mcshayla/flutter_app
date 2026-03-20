@@ -5,7 +5,9 @@ import '../appstate.dart';
 import 'budget_item_form.dart';
 
 class BudgetPage extends StatelessWidget {
-  const BudgetPage({super.key});
+  final bool embedded;
+
+  const BudgetPage({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -23,24 +25,7 @@ class BudgetPage extends StatelessWidget {
           grouped.putIfAbsent(cat, () => []).add(item);
         }
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF8F5F0),
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF7B3F61)),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              'Budget',
-              style: GoogleFonts.bodoniModa(
-                color: const Color(0xFF7B3F61),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          body: SingleChildScrollView(
+        final bodyContent = SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +218,33 @@ class BudgetPage extends StatelessWidget {
                   }),
               ],
             ),
+          );
+
+        if (embedded) {
+          return ColoredBox(
+            color: const Color(0xFFF8F5F0),
+            child: bodyContent,
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8F5F0),
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF7B3F61)),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: Text(
+              'Budget',
+              style: GoogleFonts.bodoniModa(
+                color: const Color(0xFF7B3F61),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
+          body: bodyContent,
           floatingActionButton: FloatingActionButton(
             backgroundColor: const Color(0xFF7B3F61),
             onPressed: () async {
