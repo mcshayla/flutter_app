@@ -135,6 +135,7 @@ class AppState extends ChangeNotifier {
       .from('users_loved')
       .select('loved_vendor_id, created_at')
       .eq('loved_user_id', user.id)
+      .eq('hearted', true)
       .order('created_at', ascending: false);
 
       Map<String, List<String>> lovedVendorsByCategory = {};

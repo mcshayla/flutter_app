@@ -1,8 +1,8 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../templates/collection_page_template.dart';
 import '../templates/category_template.dart';
 import '../appstate.dart';
 import '../utils/image_utils.dart';
@@ -20,20 +20,7 @@ class ExplorePage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final categoriesMap = appState.allCategorizedMap;
-
-        if (kIsWeb) {
-          return _WebCategoryLanding(categories: categoriesMap);
-        }
-
-        return CollectionPageTemplate(
-          pageTitle: "Explore",
-          categories: categoriesMap,
-          onHeartToggled: (vendorId, hearted) {
-            appState.toggleHeart(vendorId, hearted);
-          },
-          isLovedPage: false,
-        );
+        return CategoryLanding(categories: appState.allCategorizedMap);
       },
     );
   }
@@ -53,10 +40,11 @@ String? _extractImageUrl(List<Map<String, dynamic>> vendors) {
 }
 
 
-class _WebCategoryLanding extends StatelessWidget {
+class CategoryLanding extends StatelessWidget {
   final Map<String, List<Map<String, dynamic>>> categories;
+  final bool isLovedPage;
 
-  const _WebCategoryLanding({required this.categories});
+  const CategoryLanding({required this.categories, this.isLovedPage = false, super.key});
 
   int _columnCount(double width) {
     if (width >= 1200) return 4;
@@ -73,62 +61,67 @@ class _WebCategoryLanding extends StatelessWidget {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final colCount = _columnCount(constraints.maxWidth);
+          final isMobile = constraints.maxWidth < 600;
+          final hPad = isMobile ? 16.0 : 32.0;
+
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1400),
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 32, 32, 8),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Plan your wedding the easiest way!',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.bodoniModa(
-                            fontSize: 28,
-                            color: const Color(0xFF7B3F61),
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 1.2,
-                            height: 1.3,
+                  if (kIsWeb && !isLovedPage)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(hPad, 32, hPad, 8),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Plan your wedding the easiest way!',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.bodoniModa(
+                              fontSize: 28,
+                              color: const Color(0xFF7B3F61),
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 1.2,
+                              height: 1.3,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Find, save, and organize hand-picked local vendors',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            color: const Color(0xFF6E6E6E),
-                            fontWeight: FontWeight.w400,
-                            fontStyle: FontStyle.italic,
+                          const SizedBox(height: 6),
+                          Text(
+                            'Find, save, and organize hand-picked local vendors',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              color: const Color(0xFF6E6E6E),
+                              fontWeight: FontWeight.w400,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(32, 16, 32, 32),
+                      padding: EdgeInsets.fromLTRB(hPad, isMobile ? 20 : 12, hPad, isMobile ? 16 : 32),
                       child: GridView.builder(
-                  itemCount: categoryNames.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: colCount,
-                    childAspectRatio: 1.2,
-                    crossAxisSpacing: 20.0,
-                    mainAxisSpacing: 20.0,
+                        itemCount: categoryNames.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: colCount,
+                          childAspectRatio: isMobile ? 1.0 : 1.2,
+                          crossAxisSpacing: isMobile ? 12.0 : 20.0,
+                          mainAxisSpacing: isMobile ? 12.0 : 20.0,
+                        ),
+                        itemBuilder: (context, index) {
+                          final name = categoryNames[index];
+                          final vendors = categories[name] ?? [];
+                          return _CategoryCard(
+                            categoryName: name,
+                            imageUrl: _extractImageUrl(vendors),
+                            showOnlyLoved: isLovedPage,
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                  itemBuilder: (context, index) {
-                    final name = categoryNames[index];
-                    final vendors = categories[name] ?? [];
-                    return _CategoryCard(
-                      categoryName: name,
-                      imageUrl: _extractImageUrl(vendors),
-                    );
-                  },
-                ),
-              ),
-            ),
                 ],
               ),
             ),
@@ -143,8 +136,9 @@ class _WebCategoryLanding extends StatelessWidget {
 class _CategoryCard extends StatefulWidget {
   final String categoryName;
   final String? imageUrl;
+  final bool showOnlyLoved;
 
-  const _CategoryCard({required this.categoryName, this.imageUrl});
+  const _CategoryCard({required this.categoryName, this.imageUrl, this.showOnlyLoved = false});
 
   @override
   State<_CategoryCard> createState() => _CategoryCardState();
@@ -164,7 +158,7 @@ class _CategoryCardState extends State<_CategoryCard> {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => CategoryPageTemplate(
               categoryName: widget.categoryName,
-              showOnlyLoved: false,
+              showOnlyLoved: widget.showOnlyLoved,
             ),
           ));
         },
@@ -199,31 +193,41 @@ class _CategoryCardState extends State<_CategoryCard> {
                 // Dark overlay
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  color: Colors.black.withOpacity(_isHovered ? 0.25 : 0.42),
+                  color: Colors.black.withOpacity(_isHovered ? 0.35 : 0.52),
                 ),
 
                 // Category name
                 Center(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        widget.categoryName,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.bodoniModa(
-                          fontSize: 28,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.5,
-                          shadows: [
-                            const Shadow(
-                              blurRadius: 8,
-                              color: Colors.black54,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
+                    child: AutoSizeText(
+                      widget.categoryName,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      minFontSize: 14,
+                      style: GoogleFonts.bodoniModa(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                        height: 1.3,
+                        shadows: [
+                          const Shadow(
+                            blurRadius: 2,
+                            color: Colors.black,
+                            offset: Offset(0, 1),
+                          ),
+                          const Shadow(
+                            blurRadius: 12,
+                            color: Colors.black87,
+                            offset: Offset(0, 0),
+                          ),
+                          const Shadow(
+                            blurRadius: 24,
+                            color: Colors.black54,
+                            offset: Offset(0, 0),
+                          ),
+                        ],
                       ),
                     ),
                   ),
