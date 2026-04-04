@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../templates/collection_page_template.dart';
 import '../templates/category_template.dart';
 import '../appstate.dart';
+import '../utils/image_utils.dart';
 import 'package:provider/provider.dart';
 
 
@@ -179,7 +180,7 @@ class _CategoryCardState extends State<_CategoryCard> {
                 // Background image or gradient fallback
                 if (widget.imageUrl != null)
                   Image.network(
-                    widget.imageUrl!,
+                    supabaseThumb(widget.imageUrl!, width: 600),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => _GradientBackground(),
                   )

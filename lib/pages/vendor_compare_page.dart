@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../utils/image_utils.dart';
 
 class VendorComparePage extends StatelessWidget {
   final List<Map<String, dynamic>> vendors;
@@ -68,9 +69,12 @@ class VendorComparePage extends StatelessWidget {
                                       children: [
                                         ClipOval(
                                           child: Image.network(
-                                            ((v['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
-                                                ? (v['image_url'] as List<dynamic>)[0].toString()
-                                                : 'https://picsum.photos/100/100',
+                                            supabaseThumb(
+                                              ((v['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
+                                                  ? (v['image_url'] as List<dynamic>)[0].toString()
+                                                  : 'https://picsum.photos/100/100',
+                                              width: 100,
+                                            ),
                                             width: 44,
                                             height: 44,
                                             fit: BoxFit.cover,

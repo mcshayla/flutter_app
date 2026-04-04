@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../appstate.dart';
+import '../utils/image_utils.dart';
 import 'individual_card.dart';
 
 class VendorMapPage extends StatefulWidget {
@@ -191,7 +192,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.network(
-                    (vendor['image_url'] as List).first as String,
+                    supabaseThumb((vendor['image_url'] as List).first as String),
                     height: 130,
                     width: double.infinity,
                     fit: BoxFit.cover,

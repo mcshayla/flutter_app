@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_styles.dart';
+import '../utils/image_utils.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomCard extends StatefulWidget {
@@ -56,18 +57,16 @@ class _CustomCardState extends State<CustomCard> {
                 fit: StackFit.expand,
                 children: [
                   Image.network(
-                    widget.imageUrl,
+                    supabaseThumb(widget.imageUrl),
                     width: double.infinity,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.medium,
-                    cacheWidth: 400,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.network(
                         "https://picsum.photos/200/300",
                         width: double.infinity,
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth: 400,
                       );
                     }
                   ),

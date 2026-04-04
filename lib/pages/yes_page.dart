@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import './individual_card.dart';
 import '../utils/app_styles.dart';
+import '../utils/image_utils.dart';
 import 'wedding_profile_setup.dart';
 import 'budget_item_form.dart';
 
@@ -270,20 +271,21 @@ class YesPage extends StatelessWidget {
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
                                         child: Image.network(
-                                          ((vendor['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
-                                              ? (vendor['image_url'] as List<dynamic>)[0].toString()
-                                              : "https://picsum.photos/200/300",
+                                          supabaseThumb(
+                                            ((vendor['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
+                                                ? (vendor['image_url'] as List<dynamic>)[0].toString()
+                                                : "https://picsum.photos/200/300",
+                                            width: 200,
+                                          ),
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          cacheWidth: 200,
                                           errorBuilder: (context, error, stackTrace) {
                                             return Image.network(
                                               "https://picsum.photos/200/300",
                                               width: 100,
                                               height: 100,
                                               fit: BoxFit.cover,
-                                              cacheWidth: 200,
                                             );
                                           },
                                         ),

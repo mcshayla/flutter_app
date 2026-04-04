@@ -5,6 +5,7 @@ import 'package:say_yes/utils/string_extensions.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_styles.dart';
+import '../utils/image_utils.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -190,9 +191,8 @@ class _CustomCardState extends State<IndividualCard> {
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      url,
+                      supabaseThumb(url, width: 800, quality: 75),
                       fit: BoxFit.cover,
-                      cacheWidth: 800,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.network(
                           "https://picsum.photos/200/300",
@@ -250,11 +250,10 @@ class _CustomCardState extends State<IndividualCard> {
                   child: AspectRatio(
                     aspectRatio: 4 / 3,
                     child: Image.network(
-                      url,
+                      supabaseThumb(url, width: 800, quality: 75),
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
-                      cacheWidth: 800,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.network(
                           "https://picsum.photos/800/600",
@@ -606,10 +605,9 @@ class _CustomCardState extends State<IndividualCard> {
                   itemCount: images.length,
                   itemBuilder: (context, index) {
                     return Image.network(
-                      images[index],
+                      supabaseThumb(images[index], width: 1200, quality: 80),
                       width: double.infinity,
                       fit: BoxFit.fitWidth,
-                      cacheWidth: 1600,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.network(
                           "https://picsum.photos/200/300",
