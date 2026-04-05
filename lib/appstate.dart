@@ -28,6 +28,9 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> guests = [];
   List<Map<String, dynamic>> guestLinkConfigs = [];
 
+  // App Config
+  int vendorPhotoLimit = 5;
+
   final supabase = Supabase.instance.client;
 
   bool isLoaded = false;
@@ -164,13 +167,14 @@ class AppState extends ChangeNotifier {
 
       lovedVendorUUIDsCategorizedMap = lovedVendorsByCategory;
 
-      // Load wedding profile, checklist, budget, guests, and RSVP links
+      // Load wedding profile, checklist, budget, guests, RSVP links, and app config
       await Future.wait([
         loadWeddingProfile(),
         loadChecklist(),
         loadBudget(),
         loadGuests(),
         loadGuestLinkConfigs(),
+        loadAppConfig(),
       ]);
 
       isLoaded = true;
@@ -183,6 +187,19 @@ class AppState extends ChangeNotifier {
 
   }
 
+
+  Future<void> loadAppConfig() async {
+    try {
+      final rows = await supabase.from('app_config').select('key, value');
+      for (final row in rows as List) {
+        if (row['key'] == 'vendor_photo_limit') {
+          vendorPhotoLimit = int.tryParse(row['value'].toString()) ?? vendorPhotoLimit;
+        }
+      }
+    } catch (e) {
+      print('Error loading app_config: $e');
+    }
+  }
 
   Future<void> trackCardClick(String vendorId) async {
     final supabase = Supabase.instance.client;

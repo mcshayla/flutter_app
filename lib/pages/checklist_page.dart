@@ -61,18 +61,19 @@ class _ChecklistPageState extends State<ChecklistPage>
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFDCC7AA).withOpacity(0.2),
+                          color: const Color(0xFFDCC7AA).withOpacity(0.15),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: TabBar(
                           controller: _tabController,
                           indicator: BoxDecoration(
-                            color: const Color(0xFF7B3F61),
+                            border: Border.all(
+                                color: const Color(0xFF7B3F61), width: 1.5),
                             borderRadius: BorderRadius.circular(24),
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
-                          labelColor: Colors.white,
-                          unselectedLabelColor: const Color(0xFF7B3F61),
+                          labelColor: const Color(0xFF7B3F61),
+                          unselectedLabelColor: const Color(0xFF6E6E6E),
                           labelStyle: GoogleFonts.montserrat(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -89,28 +90,6 @@ class _ChecklistPageState extends State<ChecklistPage>
                         ),
                       ),
                     ),
-                    if (_activeTab == 0) ...[
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.calendar_today,
-                            size: 18, color: Color(0xFF7B3F61)),
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => WeddingProfileSetup(
-                                existingProfile: appState.weddingProfile,
-                              ),
-                            ),
-                          );
-                          await appState.loadWeddingProfile();
-                          await appState.loadChecklist();
-                        },
-                        tooltip: 'Edit Wedding Date',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -136,6 +115,7 @@ class _ChecklistPageState extends State<ChecklistPage>
   Widget _buildFab(BuildContext context, AppState appState) {
     switch (_activeTab) {
       case 0:
+        if (appState.checklistItems.isEmpty) return const SizedBox.shrink();
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -217,41 +197,83 @@ class _ChecklistPageState extends State<ChecklistPage>
 
     return Column(
       children: [
-        // Progress header
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFDCC7AA).withOpacity(0.15),
-          ),
-          child: Column(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 10,
-                  backgroundColor:
-                      const Color(0xFFDCC7AA).withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                      Color(0xFF7B3F61)),
-                ),
+        // Wedding date button — sits at top of checklist tab
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WeddingProfileSetup(
+                      existingProfile: appState.weddingProfile,
+                    ),
+                  ),
+                );
+                await appState.loadWeddingProfile();
+                await appState.loadChecklist();
+              },
+              icon: const Icon(Icons.calendar_today, size: 13),
+              label: Text(
+                appState.weddingProfile?['wedding_date'] != null
+                    ? _formatWeddingDate(
+                        appState.weddingProfile!['wedding_date'] as String)
+                    : 'Set wedding date',
               ),
-              const SizedBox(height: 8),
-              Text(
-                '$completedCount of ${items.length} tasks complete',
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  color: const Color(0xFF6E6E6E),
-                ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF7B3F61),
+                side: const BorderSide(color: Color(0xFF7B3F61), width: 1),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                textStyle: GoogleFonts.montserrat(fontSize: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            ],
+            ),
           ),
         ),
 
-        // Filter/view controls
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
+        // Progress header — hidden until tasks exist
+        if (items.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFDCC7AA).withOpacity(0.15),
+            ),
+            child: Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor:
+                        const Color(0xFFDCC7AA).withOpacity(0.3),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF7B3F61)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '$completedCount of ${items.length} tasks complete',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: const Color(0xFF6E6E6E),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Filter/view controls — hidden until tasks exist
+        if (items.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
             children: [
               ToggleButtons(
                 isSelected: [
@@ -459,6 +481,14 @@ class _ChecklistPageState extends State<ChecklistPage>
     if (diff <= 180) return '3-6 Months';
     if (diff <= 365) return '6-12 Months';
     return '12+ Months';
+  }
+
+  String _formatWeddingDate(String dateStr) {
+    final date = DateTime.tryParse(dateStr);
+    if (date == null) return 'Set date';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun',
+                    'Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
   void _showGenerateSheet(BuildContext context, AppState appState) async {

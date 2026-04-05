@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'package:provider/provider.dart';
+import '../utils/image_compress.dart';
+import '../appstate.dart';
 import 'location_picker_page.dart';
 
 class VendorEditProfile extends StatefulWidget {
@@ -203,11 +206,20 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   }
 
   Future<void> _pickImages() async {
+    final limit = context.read<AppState>().vendorPhotoLimit;
+    final totalExisting = existingImageUrls.length + newImages.length;
+    final remaining = limit - totalExisting;
+    if (remaining <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Maximum of $limit photos allowed')),
+      );
+      return;
+    }
     try {
       final List<XFile> images = await _picker.pickMultiImage();
       if (images.isNotEmpty) {
         setState(() {
-          newImages.addAll(images);
+          newImages.addAll(images.take(remaining));
         });
       }
     } catch (e) {
@@ -298,20 +310,20 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
 
     for (int i = 0; i < newImages.length; i++) {
       final image = newImages[i];
-      final ext = image.name.split('.').last.toLowerCase();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.$ext';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
       final filePath = '$vendorName/$fileName';
 
       try {
-        final bytes = await image.readAsBytes();
+        final rawBytes = await image.readAsBytes();
+        final bytes = await compressForUpload(rawBytes);
 
         await supabase.storage
             .from('vendor-photos')
             .uploadBinary(
               filePath,
               bytes,
-              fileOptions: FileOptions(
-                contentType: 'image/$ext',
+              fileOptions: const FileOptions(
+                contentType: 'image/jpeg',
               ),
             );
 

@@ -46,6 +46,12 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>easiYESt needs access to your photo library so you can upload photos for your vendor profile.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>easiYESt needs access to your camera so you can take photos for your vendor profile.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>easiYESt needs permission to save photos to your library.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

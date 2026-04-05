@@ -5,6 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'package:provider/provider.dart';
+import '../utils/image_compress.dart';
+import '../appstate.dart';
 import 'vendor_dashboard.dart';
 import 'location_picker_page.dart';
 
@@ -118,13 +121,14 @@ setState(() {
   }
 
   Future<void> _pickImages() async {
+    final limit = context.read<AppState>().vendorPhotoLimit;
     try {
       final List<XFile> images = await _picker.pickMultiImage();
       if (images.isNotEmpty) {
-        final remaining = 5 - _selectedImages.length;
+        final remaining = limit - _selectedImages.length;
         if (remaining <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Maximum of 5 photos allowed')),
+            SnackBar(content: Text('Maximum of $limit photos allowed')),
           );
           return;
         }
@@ -169,20 +173,20 @@ setState(() {
 
     for (int i = 0; i < _selectedImages.length; i++) {
       final image = _selectedImages[i];
-      final ext = image.name.split('.').last.toLowerCase();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.$ext';
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
       final filePath = '$vendorName/$fileName';
 
       try {
-        final bytes = await image.readAsBytes();
+        final rawBytes = await image.readAsBytes();
+        final bytes = await compressForUpload(rawBytes);
 
         await supabase.storage
             .from('vendor-photos')
             .uploadBinary(
               filePath,
               bytes,
-              fileOptions: FileOptions(
-                contentType: 'image/$ext',
+              fileOptions: const FileOptions(
+                contentType: 'image/jpeg',
               ),
             );
 

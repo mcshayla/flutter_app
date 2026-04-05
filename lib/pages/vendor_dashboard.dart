@@ -125,7 +125,6 @@ class _VendorDashboardState extends State<VendorDashboard> {
           .rpc('count_diamonds', params: {'vendor': profileResponse['vendor_id']});
 
         final int diamondsCount = result as int;
-        print(diamondsCount);
 
         // Combine all the data
         vendorData = {
