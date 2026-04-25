@@ -27,7 +27,7 @@ class CategoryPageTemplate extends StatefulWidget {
 class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
   String? selectedState;
   String? selectedCounty;
-  final Set<String> _selectedStyles = {};
+  Map<String, Set<String>> _selectedFilters = {};
 
   // Compare mode (loved pages only)
   bool _compareMode = false;
@@ -113,11 +113,17 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
     setState(() {
       selectedState = null;
       selectedCounty = null;
-      _selectedStyles.clear();
+      _selectedFilters = {};
     });
   }
 
-  void _showKeywordSheet(BuildContext context, List<String> allKeywords) {
+  void _showFilterSheet(BuildContext context, List<Map<String, dynamic>> filters) {
+    // Work on a local copy so changes don't affect the grid until user confirms
+    Map<String, Set<String>> sheetSelections = {
+      for (final entry in _selectedFilters.entries)
+        entry.key: Set<String>.from(entry.value)
+    };
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -125,128 +131,167 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetCtx) => StatefulBuilder(
-        builder: (_, setSheetState) => Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.65,
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Search by Keywords',
-                    style: GoogleFonts.bodoniModa(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF7B3F61),
+        builder: (_, setSheetState) {
+          final int totalSelected = sheetSelections.values
+              .fold(0, (sum, s) => sum + s.length);
+
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  if (_selectedStyles.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _selectedStyles.clear());
-                        setSheetState(() {});
-                      },
-                      child: Text(
-                        'Clear',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          color: const Color(0xFF7B3F61),
-                        ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filter',
+                      style: GoogleFonts.bodoniModa(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF7B3F61),
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Select styles to filter vendors',
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  color: const Color(0xFF6E6E6E),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: allKeywords.map((k) {
-                      final selected = _selectedStyles.contains(k);
-                      return FilterChip(
-                        label: Text(k, style: GoogleFonts.montserrat(fontSize: 13)),
-                        selected: selected,
-                        onSelected: (v) {
-                          setState(() {
-                            if (v) {
-                              _selectedStyles.add(k);
-                            } else {
-                              _selectedStyles.remove(k);
-                            }
-                          });
-                          setSheetState(() {});
+                    if (totalSelected > 0)
+                      TextButton(
+                        onPressed: () {
+                          setSheetState(() => sheetSelections = {});
                         },
-                        selectedColor: const Color(0xFF7B3F61).withOpacity(0.15),
-                        checkmarkColor: const Color(0xFF7B3F61),
-                        labelStyle: TextStyle(
-                          color: selected
-                              ? const Color(0xFF7B3F61)
-                              : const Color(0xFF3E3E3E),
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                        child: Text(
+                          'Clear All',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 13,
+                            color: const Color(0xFF7B3F61),
+                          ),
                         ),
-                        side: BorderSide(
-                          color: selected
-                              ? const Color(0xFF7B3F61)
-                              : const Color(0xFFDCC7AA),
-                        ),
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(sheetCtx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7B3F61),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Text(
-                    _selectedStyles.isEmpty
-                        ? 'Show All'
-                        : 'Show Results (${_selectedStyles.length} selected)',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                const SizedBox(height: 12),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: filters.map((filterDef) {
+                        final key = filterDef['filter_key'] as String;
+                        final label = filterDef['filter_label'] as String;
+                        final options = (filterDef['options'] as List<dynamic>)
+                            .map((e) => e.toString())
+                            .toList();
+                        final selectedForKey = sheetSelections[key] ?? <String>{};
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF3E3E3E),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: options.map((option) {
+                                  final selected = selectedForKey.contains(option);
+                                  return FilterChip(
+                                    label: Text(
+                                      option,
+                                      style: GoogleFonts.montserrat(fontSize: 13),
+                                    ),
+                                    selected: selected,
+                                    onSelected: (val) {
+                                      setSheetState(() {
+                                        final set = sheetSelections
+                                            .putIfAbsent(key, () => {});
+                                        if (val) {
+                                          set.add(option);
+                                        } else {
+                                          set.remove(option);
+                                          if (set.isEmpty) {
+                                            sheetSelections.remove(key);
+                                          }
+                                        }
+                                      });
+                                    },
+                                    selectedColor:
+                                        const Color(0xFF7B3F61).withOpacity(0.15),
+                                    checkmarkColor: const Color(0xFF7B3F61),
+                                    labelStyle: TextStyle(
+                                      color: selected
+                                          ? const Color(0xFF7B3F61)
+                                          : const Color(0xFF3E3E3E),
+                                      fontWeight: selected
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
+                                    ),
+                                    side: BorderSide(
+                                      color: selected
+                                          ? const Color(0xFF7B3F61)
+                                          : const Color(0xFFDCC7AA),
+                                    ),
+                                    backgroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() => _selectedFilters = sheetSelections);
+                      Navigator.pop(sheetCtx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7B3F61),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      totalSelected == 0
+                          ? 'Show All'
+                          : 'Show Results ($totalSelected selected)',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -261,26 +306,28 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
             : (appState.allCategorizedMap[widget.categoryName]  ?? []);
 
           var filteredList = _getFilteredItems(categoryList);
-          if (_selectedStyles.isNotEmpty) {
-            filteredList = filteredList.where((v) {
-              final keywords = (v['style_keywords'] ?? '').toString()
-                  .split(',')
-                  .map((k) => k.trim())
-                  .where((k) => k.isNotEmpty)
-                  .toSet();
-              return _selectedStyles.any((s) => keywords.contains(s));
+          if (_selectedFilters.isNotEmpty) {
+            filteredList = filteredList.where((vendor) {
+              final Map<String, dynamic> vals =
+                  vendor['filter_values'] is Map<String, dynamic>
+                      ? vendor['filter_values'] as Map<String, dynamic>
+                      : {};
+              for (final entry in _selectedFilters.entries) {
+                if (entry.value.isEmpty) continue;
+                final vendorOpts = vals[entry.key];
+                if (vendorOpts == null || (vendorOpts as List).isEmpty) return false;
+                final List<String> vList =
+                    (vendorOpts as List).map((e) => e.toString()).toList();
+                if (!entry.value.any((opt) => vList.contains(opt))) return false;
+              }
+              return true;
             }).toList();
           }
           final availableStates = _getAvailableStates(categoryList);
           final availableCounties = _getAvailableCounties(categoryList);
-
-          final allKeywords = categoryList
-              .map((v) => (v['style_keywords'] ?? '').toString().split(','))
-              .expand((e) => e)
-              .map((k) => k.trim())
-              .where((k) => k.isNotEmpty)
-              .toSet()
-              .toList()..sort();
+          final filters = appState.categoryFilters[widget.categoryName] ?? [];
+          final int activeFilterCount = _selectedFilters.values
+              .fold(0, (sum, s) => sum + s.length);
 
         return Scaffold(
           body: Column( 
@@ -458,31 +505,31 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                                 borderRadius: BorderRadius.circular(20)),
                           ),
                         ),
-                      if (allKeywords.isNotEmpty)
+                      if (filters.isNotEmpty)
                         OutlinedButton.icon(
                           onPressed: () =>
-                              _showKeywordSheet(context, allKeywords),
+                              _showFilterSheet(context, filters),
                           icon: Icon(
-                            Icons.style_outlined,
+                            Icons.tune,
                             size: 16,
-                            color: _selectedStyles.isNotEmpty
+                            color: activeFilterCount > 0
                                 ? Colors.white
                                 : const Color(0xFF7B3F61),
                           ),
                           label: Text(
-                            _selectedStyles.isEmpty
-                                ? 'Search by Keywords'
-                                : 'Keywords (${_selectedStyles.length})',
+                            activeFilterCount == 0
+                                ? 'Filter'
+                                : 'Filter ($activeFilterCount)',
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: _selectedStyles.isNotEmpty
+                              color: activeFilterCount > 0
                                   ? Colors.white
                                   : const Color(0xFF7B3F61),
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: _selectedStyles.isNotEmpty
+                            backgroundColor: activeFilterCount > 0
                                 ? const Color(0xFF7B3F61)
                                 : Colors.transparent,
                             side: const BorderSide(color: Color(0xFF7B3F61)),
@@ -587,7 +634,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
               (filteredList.isEmpty) ? Expanded(
                 child: Center(
                   child: Text(
-                    selectedState != null || selectedCounty != null || _selectedStyles.isNotEmpty
+                    selectedState != null || selectedCounty != null || _selectedFilters.isNotEmpty
                         ? "No vendors found matching your filters"
                         : "No vendors for this category to display",
                     style: AppStyles.backButton,

@@ -50,6 +50,11 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   late TextEditingController _youtubeController;
   late TextEditingController _tiktokController;
 
+  // Category filter state
+  List<Map<String, dynamic>> _categoryFilterDefs = [];
+  Map<String, List<String>> _filterValues = {};
+  bool _filtersLoading = false;
+
   // State and County
   List<String> selectedStates = [];
   List<String> selectedCounties = [];
@@ -82,6 +87,34 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _loadSocialMediaLinks();
     _loadStateAndCounty();
     _loadExistingImages();
+    _loadCategoryFilters();
+  }
+
+  Future<void> _loadCategoryFilters() async {
+    final category = widget.vendorData['vendor_category'] as String?;
+    if (category == null || category.isEmpty) return;
+    setState(() => _filtersLoading = true);
+    try {
+      // Parse existing filter_values from vendor data
+      final raw = widget.vendorData['filter_values'];
+      if (raw is Map<String, dynamic>) {
+        _filterValues = raw.map((k, v) =>
+            MapEntry(k, v is List ? v.map((e) => e.toString()).toList() : []));
+      }
+      final rows = await supabase
+          .from('category_filters')
+          .select()
+          .eq('category_name', category)
+          .order('display_order', ascending: true);
+      if (mounted) {
+        setState(() {
+          _categoryFilterDefs = (rows as List).cast<Map<String, dynamic>>();
+          _filtersLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _filtersLoading = false);
+    }
   }
 
   void _initializeControllers() {
@@ -373,6 +406,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'vendor_state': selectedStates,
         'vendor_county': selectedCounties,
         'image_url': allImageUrls,
+        'filter_values': _filterValues,
       };
       if (_pickedLat != null) updates['latitude'] = _pickedLat;
       if (_pickedLng != null) updates['longitude'] = _pickedLng;
@@ -605,6 +639,47 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
               prefixIcon: Icons.music_note,
             ),
             const SizedBox(height: 32),
+
+            // Category Details Section
+            if (_filtersLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_categoryFilterDefs.isNotEmpty) ...[
+              _buildSectionHeader('Category Details'),
+              const SizedBox(height: 8),
+              Text(
+                'These details help couples find you when filtering by category.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: const Color(0xFF6E6E6E),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._categoryFilterDefs.map((filterDef) {
+                final key = filterDef['filter_key'] as String;
+                final label = filterDef['filter_label'] as String;
+                final options = (filterDef['options'] as List<dynamic>)
+                    .map((e) => e.toString())
+                    .toList();
+                final currentValues = _filterValues[key] ?? [];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: _buildMultiSelectField(
+                    label: label,
+                    items: options,
+                    selectedItems: currentValues,
+                    onChanged: (newValues) {
+                      setState(() {
+                        _filterValues[key] = newValues;
+                      });
+                    },
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
 
             // Photos Section
             _buildSectionHeader('Photos'),

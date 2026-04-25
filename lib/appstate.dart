@@ -24,6 +24,9 @@ class AppState extends ChangeNotifier {
   // Categories (from DB)
   List<String> categoryNames = [];
 
+  // Category-specific filter definitions, keyed by category_name
+  Map<String, List<Map<String, dynamic>>> categoryFilters = {};
+
   // Guest List
   List<Map<String, dynamic>> guests = [];
   List<Map<String, dynamic>> guestLinkConfigs = [];
@@ -75,6 +78,7 @@ class AppState extends ChangeNotifier {
     weddingProfile = null;
     checklistItems = [];
     categoryNames = [];
+    categoryFilters = {};
     userBudget = null;
     budgetItems = [];
     guests = [];
@@ -110,6 +114,23 @@ class AppState extends ChangeNotifier {
           .order('display_order', ascending: true);
       final orderedNames = (categoryRows as List).map((r) => r['name'] as String).toList();
       categoryNames = orderedNames;
+
+      // Load category filter definitions (table may not exist yet)
+      try {
+        final filterRows = await supabase
+            .from('category_filters')
+            .select()
+            .order('display_order', ascending: true);
+
+        final Map<String, List<Map<String, dynamic>>> loadedFilters = {};
+        for (final row in filterRows as List) {
+          final cat = row['category_name'] as String;
+          loadedFilters.putIfAbsent(cat, () => []).add(row as Map<String, dynamic>);
+        }
+        categoryFilters = loadedFilters;
+      } catch (_) {
+        // Table not yet created — filters simply won't appear
+      }
 
       allCategorizedMap = {
         for (final name in orderedNames)
