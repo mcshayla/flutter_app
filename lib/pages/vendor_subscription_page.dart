@@ -25,10 +25,12 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
   // final String yearlyPriceId = 'price_1SnvuFGv1vBeiVDOIfacBvQt';
   final String yearlyPriceId = 'price_1Sq4aNGpavVyOfbN9rpaau8N';
   final String discountedMonthlyPriceId = 'price_1TAMjFGpavVyOfbN0XDE9MtD';
+  final String discountedMonthly14PriceId = 'price_1TRLHQGpavVyOfbNB4bOqW2Q';
 
   final _promoController = TextEditingController();
   String? _promoError;
   static const _validCode = 'SAYYES10';
+  static const _validCode14 = 'EASYYES14';
 
   @override
   void dispose() {
@@ -41,6 +43,9 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
     if (code == _validCode) {
       setState(() => _promoError = null);
       _createCheckoutSession(discountedMonthlyPriceId);
+    } else if (code == _validCode14) {
+      setState(() => _promoError = null);
+      _createCheckoutSession(discountedMonthly14PriceId);
     } else {
       setState(() => _promoError = 'Invalid promo code. Please try again.');
     }
