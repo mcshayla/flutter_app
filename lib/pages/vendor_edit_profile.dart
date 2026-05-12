@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'package:provider/provider.dart';
 import '../utils/image_compress.dart';
+import '../utils/image_utils.dart';
 import '../appstate.dart';
 import 'location_picker_page.dart';
 
@@ -311,7 +312,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     for (int i = 0; i < newImages.length; i++) {
       final image = newImages[i];
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-      final filePath = '$vendorName/$fileName';
+      final filePath = '${sanitizeStorageName(vendorName)}/$fileName';
 
       try {
         final rawBytes = await image.readAsBytes();

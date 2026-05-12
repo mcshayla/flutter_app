@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'package:provider/provider.dart';
 import '../utils/image_compress.dart';
+import '../utils/image_utils.dart';
 import '../appstate.dart';
 import 'vendor_dashboard.dart';
 import 'location_picker_page.dart';
@@ -174,7 +175,7 @@ setState(() {
     for (int i = 0; i < _selectedImages.length; i++) {
       final image = _selectedImages[i];
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-      final filePath = '$vendorName/$fileName';
+      final filePath = '${sanitizeStorageName(vendorName)}/$fileName';
 
       try {
         final rawBytes = await image.readAsBytes();
