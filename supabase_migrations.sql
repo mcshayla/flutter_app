@@ -243,3 +243,97 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- ==================== NUMERIC FILTER FIELDS ====================
+-- vendor_price and guest_capacity stay as free text for display.
+-- These are the numeric twins used only for range filtering.
+ALTER TABLE vendors
+  ADD COLUMN IF NOT EXISTS starting_price INT,
+  ADD COLUMN IF NOT EXISTS capacity_min   INT,
+  ADD COLUMN IF NOT EXISTS capacity_max   INT;
+
+CREATE INDEX IF NOT EXISTS vendors_starting_price_idx
+  ON vendors (starting_price)
+  WHERE starting_price IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS vendors_capacity_idx
+  ON vendors (capacity_min, capacity_max)
+  WHERE capacity_min IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS vendors_filter_values_idx
+  ON vendors USING GIN (filter_values);
+
+-- ==================== FILTER GROUP TYPES ====================
+-- 'chips' = multi-select tags (existing behaviour, the default)
+-- 'range' = numeric RangeSlider driven by the range_* columns below
+ALTER TABLE category_filters
+  ADD COLUMN IF NOT EXISTS filter_type TEXT NOT NULL DEFAULT 'chips',
+  ADD COLUMN IF NOT EXISTS range_min   INT,
+  ADD COLUMN IF NOT EXISTS range_max   INT,
+  ADD COLUMN IF NOT EXISTS range_step  INT,
+  ADD COLUMN IF NOT EXISTS range_unit  TEXT;
+
+-- ==================== FILTER OPTIONS ====================
+-- Options move out of the category_filters.options array and become rows, so
+-- they can carry a sub-group heading and an icon, and so a typo can't silently
+-- break matching. category_filters.options stays as a fallback for categories
+-- that have not been migrated yet.
+CREATE TABLE IF NOT EXISTS filter_options (
+  id            BIGSERIAL PRIMARY KEY,
+  filter_key    TEXT NOT NULL,
+  option_value  TEXT NOT NULL,   -- what is stored in vendors.filter_values
+  option_label  TEXT NOT NULL,   -- what the couple sees
+  option_group  TEXT,            -- sub-section heading; NULL = ungrouped
+  icon_name     TEXT,            -- resolved by lib/utils/amenity_icons.dart
+  display_order INT NOT NULL DEFAULT 0,
+  UNIQUE (filter_key, option_value)
+);
+
+CREATE INDEX IF NOT EXISTS filter_options_key_idx
+  ON filter_options (filter_key, display_order);
+
+ALTER TABLE filter_options ENABLE ROW LEVEL SECURITY;
+
+-- Scoped to `authenticated` to match the existing "Allow authenticated read"
+-- policy on category_filters. The two tables are always read together, so a
+-- more permissive policy here would expose option rows whose parent group is
+-- unreadable anyway.
+DROP POLICY IF EXISTS "filter_options readable by everyone" ON filter_options;
+DROP POLICY IF EXISTS "Allow authenticated read" ON filter_options;
+CREATE POLICY "Allow authenticated read"
+  ON filter_options FOR SELECT TO authenticated USING (true);
+
+-- ==================== VENUE TAXONOMY SEED ====================
+-- Applied 2026-08-09 as migrations `venue_filter_schema` and
+-- `venue_filter_taxonomy_seed`. Row data is seeded by
+-- python_scripts/seed_venue_filters.py --seed (idempotent).
+--
+-- Three Venue filter groups were RETIRED as superseded:
+--   venue_style  - its 7 options are a strict subset of the 13 venue types
+--   capacity     - replaced by the guest_capacity_range slider
+--   price_range  - replaced by the starting_price slider
+-- Safe to delete: no vendor row had any filter_values set, so nothing
+-- referenced them. To roll back, re-insert:
+--
+--   INSERT INTO category_filters (category_name, filter_key, filter_label, options, display_order) VALUES
+--     ('Venue','capacity','Capacity',
+--      '["Under 50","50–100","100–200","200–500","500+"]'::jsonb, 2),
+--     ('Venue','price_range','Starting Price Range',
+--      '["Under $2,500","$2,500–$5,000","$5,000–$10,000","$10,000–$20,000","$20,000+"]'::jsonb, 3),
+--     ('Venue','venue_style','Venue Style',
+--      '["Barn","Estate","Hotel","Garden","Industrial","Restaurant","Vineyard"]'::jsonb, 4);
+--
+-- Note: category_filters.options is jsonb and NOT NULL with no default, so
+-- every insert must set it. '[]' means "no legacy options, read filter_options".
+--
+-- Resulting Venue filter sheet, in display order:
+--   0  venue_type            chips  (13 options)
+--   10 venue_amenities       chips  (16 options across 4 option_groups)
+--   20 setting_type          chips  (legacy options array: Indoor/Outdoor/Both)
+--   30 catering              chips  (legacy options array)
+--   40 starting_price        range  ($0-20,000 step 500)
+--   50 guest_capacity_range  range  (0-1,000 guests step 25)
+--
+-- "Urban" was dropped rather than added anywhere: Setting Type is an
+-- indoor/outdoor axis, so it did not belong there, and folding it into Venue
+-- Type would reintroduce the cross-cutting overlap this taxonomy removes.

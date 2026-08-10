@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'category_template.dart';
 import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
+import '../services/vendor_filter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -48,95 +49,29 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
     return min(itemsLength, max(cardsToShow, 6)); 
   }
 
+  /// Every vendor across every category on this page.
+  List<Map<String, dynamic>> get _allItems =>
+      widget.categories.values.expand((items) => items).toList();
+
   Map<String, List<Map<String, dynamic>>> _getFilteredCategories() {
     if (selectedState == null && selectedCounty == null) {
       return widget.categories;
     }
 
-    Map<String, List<Map<String, dynamic>>> filteredCategories = {};
-
+    final filteredCategories = <String, List<Map<String, dynamic>>>{};
     widget.categories.forEach((categoryName, items) {
-      final filteredItems = items.where((item) {
-        // Handle vendor_state as array
-        bool matchesState = selectedState == null;
-        if (!matchesState && item['vendor_state'] != null) {
-          final states = item['vendor_state'] is List 
-              ? (item['vendor_state'] as List).map((e) => e.toString()).toList()
-              : [item['vendor_state'].toString()];
-          // If "any" is in the array, it matches all filters
-          matchesState = states.contains('Any') || states.contains(selectedState);
-        }
-
-        // Handle vendor_county as array
-        bool matchesCounty = selectedCounty == null;
-        if (!matchesCounty && item['vendor_county'] != null) {
-          final counties = item['vendor_county'] is List 
-              ? (item['vendor_county'] as List).map((e) => e.toString()).toList()
-              : [item['vendor_county'].toString()];
-          // If "any" is in the array, it matches all filters
-          matchesCounty = counties.contains('Any') || counties.contains(selectedCounty);
-        }
-
-        return matchesState && matchesCounty;
-      }).toList();
-
+      final filteredItems = filterByRegion(items, selectedState, selectedCounty);
       if (filteredItems.isNotEmpty) {
         filteredCategories[categoryName] = filteredItems;
       }
     });
-
     return filteredCategories;
   }
 
-  List<String> _getAvailableStates() {
-    Set<String> states = {};
-    widget.categories.forEach((_, items) {
-      for (var item in items) {
-        if (item['vendor_state'] != null) {
-          if (item['vendor_state'] is List) {
-            for (var state in item['vendor_state'] as List) {
-              if (state != null && state.toString().trim().isNotEmpty) {
-                states.add(state.toString());
-              }
-            }
-          } else if (item['vendor_state'].toString().trim().isNotEmpty) {
-            states.add(item['vendor_state'].toString());
-          }
-        }
-      }
-    });
-    return states.toList()..sort();
-  }
+  List<String> _getAvailableStates() => availableStates(_allItems);
 
-  List<String> _getAvailableCounties() {
-    Set<String> counties = {};
-    widget.categories.forEach((_, items) {
-      for (var item in items) {
-        // Filter by selected state if one is chosen
-        if (selectedState != null && item['vendor_state'] != null) {
-          final states = item['vendor_state'] is List 
-              ? (item['vendor_state'] as List).map((e) => e.toString()).toList()
-              : [item['vendor_state'].toString()];
-          if (!states.contains(selectedState)) {
-            continue;
-          }
-        }
-
-        if (item['vendor_county'] != null) {
-          if (item['vendor_county'] is List) {
-            for (var county in item['vendor_county'] as List) {
-              if (county != null && county.toString().trim().isNotEmpty && county.toString().trim() != "Any") {
-                counties.add(county.toString());
-              }
-            }
-          } else if (item['vendor_county'].toString().trim().isNotEmpty && item['vendor_county'].toString().trim() != "Any") {
-            counties.add(item['vendor_county'].toString());
-          }
-        }
-      }
-    });
-    return counties.toList()..sort();
-  }
+  List<String> _getAvailableCounties() =>
+      availableCounties(_allItems, selectedState);
 
   void _clearFilters() {
     setState(() {
@@ -425,6 +360,7 @@ class _CollectionPageTemplateState extends State<CollectionPageTemplate> {
                                             .toList() ?? [],
                                         vendor_id: item['vendor_id'] ?? "",
                                         category: categoryName,
+                                        filterValues: (item['filter_values'] as Map<String, dynamic>?) ?? const {},
                                         isHearted: appState.lovedVendorUUIDsCategorizedMap[categoryName]?.contains(item['vendor_id']) ?? false,
                                         
                                         isDiamonded: appState.diamondedCards[appState.vendorIdToCategory[item['vendor_id']]] == item['vendor_id'],

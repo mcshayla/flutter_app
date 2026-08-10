@@ -50,3 +50,6 @@ lib/keys.dart
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Supabase CLI scratch
+supabase/.temp/

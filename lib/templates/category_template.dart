@@ -6,6 +6,8 @@ import '../utils/string_extensions.dart';
 import '../pages/individual_card.dart';
 import '../pages/vendor_map_page.dart';
 import '../pages/vendor_compare_page.dart';
+import '../services/vendor_filter.dart';
+import '../utils/amenity_icons.dart';
 import '../utils/app_styles.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -29,100 +31,217 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
   String? selectedCounty;
   Map<String, Set<String>> _selectedFilters = {};
 
+  // Numeric range filters. Null means "no preference" — distinct from a band
+  // dragged to its full extent, which is a real constraint that excludes
+  // vendors with no value.
+  final Map<String, NumRange> _selectedRanges = {};
+
   // Compare mode (loved pages only)
   bool _compareMode = false;
   final Set<String> _selectedForCompare = {};
 
-  List<Map<String, dynamic>> _getFilteredItems(List<Map<String, dynamic>> items) {
-    if (selectedState == null && selectedCounty == null) {
-      return items;
-    }
+  /// Which vendor column a range filter constrains.
+  static const _priceKey = 'starting_price';
+  static const _capacityKey = 'guest_capacity_range';
 
-    return items.where((item) {
-      // Handle vendor_state as array
-      bool matchesState = selectedState == null;
-      if (!matchesState && item['vendor_state'] != null) {
-        final states = item['vendor_state'] is List 
-            ? (item['vendor_state'] as List).map((e) => e.toString()).toList()
-            : [item['vendor_state'].toString()];
-        // If "any" is in the array, it matches all filters
-        matchesState = states.contains('Any') || states.contains(selectedState);
-      }
+  List<Map<String, dynamic>> _getFilteredItems(List<Map<String, dynamic>> items) =>
+      filterByRegion(items, selectedState, selectedCounty);
 
-      // Handle vendor_county as array
-      bool matchesCounty = selectedCounty == null;
-      if (!matchesCounty && item['vendor_county'] != null) {
-        final counties = item['vendor_county'] is List 
-            ? (item['vendor_county'] as List).map((e) => e.toString()).toList()
-            : [item['vendor_county'].toString()];
-        // If "any" is in the array, it matches all filters
-        matchesCounty = counties.contains('Any') || counties.contains(selectedCounty);
-      }
+  List<String> _getAvailableStates(List<Map<String, dynamic>> items) =>
+      availableStates(items);
 
-      return matchesState && matchesCounty;
-    }).toList();
-  }
-
-  List<String> _getAvailableStates(List<Map<String, dynamic>> items) {
-    Set<String> states = {};
-    for (var item in items) {
-      if (item['vendor_state'] != null) {
-        if (item['vendor_state'] is List) {
-          for (var state in item['vendor_state'] as List) {
-            if (state != null && state.toString().trim().isNotEmpty && state.toString() != 'Any') {
-              states.add(state.toString());
-            }
-          }
-        } else if (item['vendor_state'].toString().trim().isNotEmpty && item['vendor_state'].toString() != 'Any') {
-          states.add(item['vendor_state'].toString());
-        }
-      }
-    }
-    return states.toList()..sort();
-  }
-
-  List<String> _getAvailableCounties(List<Map<String, dynamic>> items) {
-    Set<String> counties = {};
-    for (var item in items) {
-      // Filter by selected state if one is chosen
-      if (selectedState != null && item['vendor_state'] != null) {
-        final states = item['vendor_state'] is List 
-            ? (item['vendor_state'] as List).map((e) => e.toString()).toList()
-            : [item['vendor_state'].toString()];
-        if (!states.contains('Any') && !states.contains(selectedState)) {
-          continue;
-        }
-      }
-
-      if (item['vendor_county'] != null) {
-        if (item['vendor_county'] is List) {
-          for (var county in item['vendor_county'] as List) {
-            if (county != null && county.toString().trim().isNotEmpty && county.toString() != 'Any') {
-              counties.add(county.toString());
-            }
-          }
-        } else if (item['vendor_county'].toString().trim().isNotEmpty && item['vendor_county'].toString() != 'Any') {
-          counties.add(item['vendor_county'].toString());
-        }
-      }
-    }
-    return counties.toList()..sort();
-  }
+  List<String> _getAvailableCounties(List<Map<String, dynamic>> items) =>
+      availableCounties(items, selectedState);
 
   void _clearFilters() {
     setState(() {
       selectedState = null;
       selectedCounty = null;
       _selectedFilters = {};
+      _selectedRanges.clear();
     });
   }
 
-  void _showFilterSheet(BuildContext context, List<Map<String, dynamic>> filters) {
+  /// The full set of constraints currently applied to the grid.
+  VendorFilterSelection get _selection => VendorFilterSelection(
+        state: selectedState,
+        county: selectedCounty,
+        tags: _selectedFilters,
+        priceBand: _selectedRanges[_priceKey],
+        capacityBand: _selectedRanges[_capacityKey],
+      );
+
+  /// One chip row per option sub-group, with the group heading above it when
+  /// the filter defines sections (e.g. Amenities).
+  List<Widget> _buildChipGroups(
+    Map<String, dynamic> filterDef,
+    List<Map<String, dynamic>> optionRows,
+    Map<String, Set<String>> sheetSelections,
+    void Function(VoidCallback) setSheetState,
+  ) {
+    final key = filterDef['filter_key'] as String;
+    final groups = groupOptionsFor(filterDef, optionRows);
+    final selectedForKey = sheetSelections[key] ?? <String>{};
+
+    return [
+      for (final group in groups) ...[
+        if (group.title != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: Text(
+              group.title!,
+              style: GoogleFonts.montserrat(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+                color: const Color(0xFF9A8FA0),
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: group.options.map((option) {
+              final selected = selectedForKey.contains(option.value);
+              final icon = amenityIcon(option.iconName);
+              return FilterChip(
+                avatar: icon == null
+                    ? null
+                    : Icon(
+                        icon,
+                        size: 16,
+                        color: selected
+                            ? const Color(0xFF7B3F61)
+                            : const Color(0xFF6E6E6E),
+                      ),
+                label: Text(
+                  option.label,
+                  style: GoogleFonts.montserrat(fontSize: 13),
+                ),
+                selected: selected,
+                onSelected: (val) {
+                  setSheetState(() {
+                    final set = sheetSelections.putIfAbsent(key, () => {});
+                    if (val) {
+                      set.add(option.value);
+                    } else {
+                      set.remove(option.value);
+                      if (set.isEmpty) sheetSelections.remove(key);
+                    }
+                  });
+                },
+                selectedColor: const Color(0xFF7B3F61).withOpacity(0.15),
+                checkmarkColor: const Color(0xFF7B3F61),
+                labelStyle: TextStyle(
+                  color: selected
+                      ? const Color(0xFF7B3F61)
+                      : const Color(0xFF3E3E3E),
+                  fontWeight:
+                      selected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: selected
+                      ? const Color(0xFF7B3F61)
+                      : const Color(0xFFDCC7AA),
+                ),
+                backgroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    ];
+  }
+
+  /// A two-thumb slider for a numeric filter. Untouched means "no preference";
+  /// once dragged it becomes a real constraint.
+  Widget _buildRangeFilter(
+    Map<String, dynamic> filterDef,
+    Map<String, NumRange> sheetRanges,
+    void Function(VoidCallback) setSheetState,
+  ) {
+    final key = filterDef['filter_key'] as String;
+    final min = (filterDef['range_min'] as num?)?.toDouble() ?? 0;
+    final max = (filterDef['range_max'] as num?)?.toDouble() ?? 100;
+    final step = (filterDef['range_step'] as num?)?.toInt() ?? 1;
+    final unit = (filterDef['range_unit'] as String?) ?? '';
+    final divisions = step > 0 ? ((max - min) / step).round() : null;
+
+    final active = sheetRanges[key];
+    final values = active == null
+        ? RangeValues(min, max)
+        : RangeValues(active.min.toDouble(), active.max.toDouble());
+
+    String format(double v) => unit == '\$'
+        ? '\$${v.round()}'
+        : '${v.round()}${unit.isEmpty ? '' : ' $unit'}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              active == null
+                  ? 'Any'
+                  : '${format(values.start)} – ${format(values.end)}',
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF7B3F61),
+              ),
+            ),
+            if (active != null)
+              TextButton(
+                onPressed: () =>
+                    setSheetState(() => sheetRanges.remove(key)),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(0, 0),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Reset',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: const Color(0xFF9A8FA0),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        RangeSlider(
+          values: values,
+          min: min,
+          max: max,
+          divisions: divisions,
+          activeColor: const Color(0xFF7B3F61),
+          inactiveColor: const Color(0xFFDCC7AA),
+          labels: RangeLabels(format(values.start), format(values.end)),
+          onChanged: (v) => setSheetState(() {
+            sheetRanges[key] = NumRange(v.start.round(), v.end.round());
+          }),
+        ),
+      ],
+    );
+  }
+
+  void _showFilterSheet(
+    BuildContext context,
+    List<Map<String, dynamic>> filters,
+    Map<String, List<Map<String, dynamic>>> optionsByKey,
+  ) {
     // Work on a local copy so changes don't affect the grid until user confirms
     Map<String, Set<String>> sheetSelections = {
       for (final entry in _selectedFilters.entries)
         entry.key: Set<String>.from(entry.value)
     };
+    final Map<String, NumRange> sheetRanges = Map.of(_selectedRanges);
 
     showModalBottomSheet(
       context: context,
@@ -132,8 +251,9 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
       ),
       builder: (sheetCtx) => StatefulBuilder(
         builder: (_, setSheetState) {
-          final int totalSelected = sheetSelections.values
-              .fold(0, (sum, s) => sum + s.length);
+          final int totalSelected =
+              sheetSelections.values.fold(0, (sum, s) => sum + s.length) +
+                  sheetRanges.length;
 
           return Container(
             constraints: BoxConstraints(
@@ -169,7 +289,10 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     if (totalSelected > 0)
                       TextButton(
                         onPressed: () {
-                          setSheetState(() => sheetSelections = {});
+                          setSheetState(() {
+                            sheetSelections = {};
+                            sheetRanges.clear();
+                          });
                         },
                         child: Text(
                           'Clear All',
@@ -189,10 +312,8 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                       children: filters.map((filterDef) {
                         final key = filterDef['filter_key'] as String;
                         final label = filterDef['filter_label'] as String;
-                        final options = (filterDef['options'] as List<dynamic>)
-                            .map((e) => e.toString())
-                            .toList();
-                        final selectedForKey = sheetSelections[key] ?? <String>{};
+                        final isRange =
+                            (filterDef['filter_type'] as String?) == 'range';
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 20),
@@ -208,53 +329,19 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: options.map((option) {
-                                  final selected = selectedForKey.contains(option);
-                                  return FilterChip(
-                                    label: Text(
-                                      option,
-                                      style: GoogleFonts.montserrat(fontSize: 13),
-                                    ),
-                                    selected: selected,
-                                    onSelected: (val) {
-                                      setSheetState(() {
-                                        final set = sheetSelections
-                                            .putIfAbsent(key, () => {});
-                                        if (val) {
-                                          set.add(option);
-                                        } else {
-                                          set.remove(option);
-                                          if (set.isEmpty) {
-                                            sheetSelections.remove(key);
-                                          }
-                                        }
-                                      });
-                                    },
-                                    selectedColor:
-                                        const Color(0xFF7B3F61).withOpacity(0.15),
-                                    checkmarkColor: const Color(0xFF7B3F61),
-                                    labelStyle: TextStyle(
-                                      color: selected
-                                          ? const Color(0xFF7B3F61)
-                                          : const Color(0xFF3E3E3E),
-                                      fontWeight: selected
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
-                                    ),
-                                    side: BorderSide(
-                                      color: selected
-                                          ? const Color(0xFF7B3F61)
-                                          : const Color(0xFFDCC7AA),
-                                    ),
-                                    backgroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                  );
-                                }).toList(),
-                              ),
+                              if (isRange)
+                                _buildRangeFilter(
+                                  filterDef,
+                                  sheetRanges,
+                                  setSheetState,
+                                )
+                              else
+                                ..._buildChipGroups(
+                                  filterDef,
+                                  optionsByKey[key] ?? const [],
+                                  sheetSelections,
+                                  setSheetState,
+                                ),
                             ],
                           ),
                         );
@@ -267,7 +354,12 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      setState(() => _selectedFilters = sheetSelections);
+                      setState(() {
+                        _selectedFilters = sheetSelections;
+                        _selectedRanges
+                          ..clear()
+                          ..addAll(sheetRanges);
+                      });
                       Navigator.pop(sheetCtx);
                     },
                     style: ElevatedButton.styleFrom(
@@ -305,29 +397,14 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
             ? (appState.lovedCategorizedMap[widget.categoryName] ?? [])
             : (appState.allCategorizedMap[widget.categoryName]  ?? []);
 
-          var filteredList = _getFilteredItems(categoryList);
-          if (_selectedFilters.isNotEmpty) {
-            filteredList = filteredList.where((vendor) {
-              final Map<String, dynamic> vals =
-                  vendor['filter_values'] is Map<String, dynamic>
-                      ? vendor['filter_values'] as Map<String, dynamic>
-                      : {};
-              for (final entry in _selectedFilters.entries) {
-                if (entry.value.isEmpty) continue;
-                final vendorOpts = vals[entry.key];
-                if (vendorOpts == null || (vendorOpts as List).isEmpty) return false;
-                final List<String> vList =
-                    (vendorOpts as List).map((e) => e.toString()).toList();
-                if (!entry.value.any((opt) => vList.contains(opt))) return false;
-              }
-              return true;
-            }).toList();
-          }
-          final availableStates = _getAvailableStates(categoryList);
-          final availableCounties = _getAvailableCounties(categoryList);
+          final filteredList = filterVendors(categoryList, _selection);
+          final stateOptions = _getAvailableStates(categoryList);
+          final countyOptions = _getAvailableCounties(categoryList);
           final filters = appState.categoryFilters[widget.categoryName] ?? [];
-          final int activeFilterCount = _selectedFilters.values
-              .fold(0, (sum, s) => sum + s.length);
+          final optionsByKey = appState.filterOptions;
+          final int activeFilterCount =
+              _selectedFilters.values.fold(0, (sum, s) => sum + s.length) +
+                  _selectedRanges.length;
 
         return Scaffold(
           body: Column( 
@@ -395,7 +472,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                               style: GoogleFonts.montserrat(fontSize: 11),
                             ),
                           ),
-                          ...availableStates.map((state) => DropdownMenuItem(
+                          ...stateOptions.map((state) => DropdownMenuItem(
                                 value: state,
                                 child: Text(
                                   state,
@@ -455,7 +532,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                               style: GoogleFonts.montserrat(fontSize: 11),
                             ),
                           ),
-                          ...availableCounties.map((county) => DropdownMenuItem(
+                          ...countyOptions.map((county) => DropdownMenuItem(
                                 value: county,
                                 child: Text(
                                   county,
@@ -508,7 +585,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                       if (filters.isNotEmpty)
                         OutlinedButton.icon(
                           onPressed: () =>
-                              _showFilterSheet(context, filters),
+                              _showFilterSheet(context, filters, optionsByKey),
                           icon: Icon(
                             Icons.tune,
                             size: 16,
@@ -701,6 +778,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                         MaterialPageRoute(
                           builder:(_) => IndividualCard(
                             category: widget.categoryName,
+                            filterValues: (item['filter_values'] as Map<String, dynamic>?) ?? const {},
                             vendor_id:item['vendor_id'],
                             title: item['vendor_name'] ?? "",
                             description: item['vendor_description'] ?? "",

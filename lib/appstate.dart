@@ -27,6 +27,11 @@ class AppState extends ChangeNotifier {
   // Category-specific filter definitions, keyed by category_name
   Map<String, List<Map<String, dynamic>>> categoryFilters = {};
 
+  // Selectable options for each filter group, keyed by filter_key.
+  // Empty for filter groups still using the legacy category_filters.options
+  // array — groupOptionsFor() falls back to that.
+  Map<String, List<Map<String, dynamic>>> filterOptions = {};
+
   // Guest List
   List<Map<String, dynamic>> guests = [];
   List<Map<String, dynamic>> guestLinkConfigs = [];
@@ -130,6 +135,23 @@ class AppState extends ChangeNotifier {
         categoryFilters = loadedFilters;
       } catch (_) {
         // Table not yet created — filters simply won't appear
+      }
+
+      // Load the selectable options for those filters (table may not exist yet)
+      try {
+        final optionRows = await supabase
+            .from('filter_options')
+            .select()
+            .order('display_order', ascending: true);
+
+        final Map<String, List<Map<String, dynamic>>> loadedOptions = {};
+        for (final row in optionRows as List) {
+          final key = row['filter_key'] as String;
+          loadedOptions.putIfAbsent(key, () => []).add(row as Map<String, dynamic>);
+        }
+        filterOptions = loadedOptions;
+      } catch (_) {
+        // Table not yet created — falls back to category_filters.options
       }
 
       allCategorizedMap = {
