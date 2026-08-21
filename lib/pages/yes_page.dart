@@ -222,6 +222,7 @@ class YesPage extends StatelessWidget {
                                         builder: (_) => IndividualCard(
                                               vendor_id: vendor['vendor_id'],
                                               category: category,
+                                              filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
                                               title: vendor['vendor_name'] ?? "",
                                               description: vendor['vendor_description'] ?? "",
                                               style_keywords: vendor['style_keywords'] ?? "",

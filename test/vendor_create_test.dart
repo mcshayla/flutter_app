@@ -298,4 +298,57 @@ void main() {
       );
     });
   });
+
+  // ─── Pricing and capacity fields ────────────────────────────────────────
+  //
+  // The form used to ask for price three ways (Price, Estimated Price Range,
+  // and "Starting Price (used by filters)") plus capacity three ways. These
+  // pin the simplified shape: one number the filters use, one free-text field
+  // couples read.
+
+  group('VendorCreatePage – pricing and capacity', () {
+    testWidgets('asks for price exactly twice: a number and free text',
+        (tester) async {
+      await _pump(tester);
+
+      expect(find.text('Starting Price'), findsOneWidget);
+      expect(find.text('Pricing Details'), findsOneWidget);
+    });
+
+    testWidgets('no longer offers the removed duplicate price fields',
+        (tester) async {
+      await _pump(tester);
+
+      expect(find.text('Estimated Price Range'), findsNothing);
+      expect(find.text('Starting Price (used by filters)'), findsNothing);
+      expect(find.text('Price'), findsNothing);
+    });
+
+    testWidgets('capacity keeps min and max, which the overlap filter needs',
+        (tester) async {
+      await _pump(tester);
+
+      expect(find.text('Minimum Guests'), findsOneWidget);
+      expect(find.text('Maximum Guests'), findsOneWidget);
+      expect(find.text('Capacity Details'), findsOneWidget);
+      // The old "(filters)" suffixes are gone.
+      expect(find.text('Min Guests (filters)'), findsNothing);
+    });
+
+    testWidgets('the starting price field only accepts numbers',
+        (tester) async {
+      await _pump(tester);
+
+      final editable = tester.widget<EditableText>(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('Lowest price a couple could pay, e.g. 2500'),
+            matching: find.byType(TextFormField),
+          ),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(editable.keyboardType, TextInputType.number);
+    });
+  });
 }

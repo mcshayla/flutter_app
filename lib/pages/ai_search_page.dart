@@ -159,6 +159,7 @@ class _AISearchPageState extends State<AISearchPage> {
                                     builder:(_) => IndividualCard(
                                       vendor_id: vendor['vendor_id'],
                                       category: category ?? "",
+                                      filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
                                       imageUrl: (vendor['image_url'] as List<dynamic>?)
                                           ?.whereType<String>()
                                           .toList() ?? [],

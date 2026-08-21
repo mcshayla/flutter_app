@@ -6,6 +6,8 @@ import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_styles.dart';
 import '../utils/image_utils.dart';
+import '../widgets/spec_card.dart';
+import '../widgets/vendor_details_section.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -31,6 +33,11 @@ class IndividualCard extends StatefulWidget {
   final Function(bool)? onHeartToggled;
   final Function(bool)? onDiamondToggled;
 
+  /// The vendor's `filter_values` jsonb, used to show confirmed amenities.
+  /// Optional so existing call sites keep working; an empty map simply hides
+  /// the amenities section.
+  final Map<String, dynamic> filterValues;
+
   const IndividualCard({
     required this.category,
     required this.vendor_id,
@@ -50,6 +57,7 @@ class IndividualCard extends StatefulWidget {
     required this.isDiamonded,
     this.onHeartToggled,
     this.onDiamondToggled,
+    this.filterValues = const {},
     super.key,
   });
 
@@ -394,48 +402,14 @@ class _CustomCardState extends State<IndividualCard> {
                 ],
               ),
               const SizedBox(height: 24),
-              if (widget.style_keywords.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: Wrap(
-                    spacing: 10.0,
-                    runSpacing: 10.0,
-                    children: widget.style_keywords
-                        .split(',')
-                        .map((keyword) => keyword.trim())
-                        .where((keyword) => keyword.isNotEmpty)
-                        .map((keyword) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCC7AA).withOpacity(0.2),
-                                border: Border.all(color: const Color(0xFFDCC7AA)),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                keyword,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.8,
-                                  color: const Color(0xFF7B3F61),
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              if (widget.description.isNotEmpty)
-                Text(
-                  widget.description,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 1.0,
-                    height: 1.6,
-                    color: const Color(0xFF6E6E6E),
-                  ),
-                ),
+              _buildAboutPanel(isWide: true),
+              VendorDetailsSection(
+                filterValues: widget.filterValues,
+                filterGroups:
+                    appState.categoryFilters[widget.category] ?? const [],
+                optionsByKey: appState.filterOptions,
+                isWide: true,
+              ),
             ],
           ),
         ),
@@ -446,7 +420,10 @@ class _CustomCardState extends State<IndividualCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDesktopDetails(context, appState, details),
+              SpecCard(
+                entries: _coreSpecEntries(appState, details),
+                heading: 'Details',
+              ),
               if (widget.social_media_links.isNotEmpty) ...[
                 const SizedBox(height: 32),
                 Container(
@@ -507,85 +484,115 @@ class _CustomCardState extends State<IndividualCard> {
     );
   }
 
-  Widget _buildDesktopDetails(
-    BuildContext context,
+  /// The description and the style keywords on one elevated panel.
+  ///
+  /// Written once and used by both layouts. The keyword pills used to be
+  /// duplicated in `_buildDesktopContent` and `_buildMobileContent`, which is
+  /// the same duplication that let the amenities row exist on desktop and go
+  /// missing on mobile — so this is deliberately not copy-pasted.
+  Widget _buildAboutPanel({required bool isWide}) {
+    final keywords = widget.style_keywords
+        .split(',')
+        .map((k) => k.trim())
+        .where((k) => k.isNotEmpty)
+        .toList();
+
+    if (widget.description.isEmpty && keywords.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ElevatedPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeading('About'),
+          SizedBox(height: isWide ? 14 : 12),
+          if (widget.description.isNotEmpty)
+            Text(
+              widget.description,
+              style: GoogleFonts.montserrat(
+                fontSize: isWide ? 15 : 12.5,
+                fontWeight: FontWeight.w500,
+                letterSpacing: isWide ? 1.0 : 0.6,
+                height: isWide ? 1.6 : 1.55,
+                color: AppStyles.lightWrods,
+              ),
+              softWrap: true,
+            ),
+          if (keywords.isNotEmpty) ...[
+            SizedBox(height: widget.description.isEmpty ? 0 : 18),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              // White on the panel's cream, matching the amenity cards, so the
+              // pills read as raised rather than washing into the background.
+              children: keywords
+                  .map((keyword) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(
+                            color: AppStyles.accentColor
+                                .withValues(alpha: 0.75),
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          keyword,
+                          style: GoogleFonts.montserrat(
+                            fontSize: isWide ? 12 : 11,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.8,
+                            color: AppStyles.secondaryColor,
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The vendor's core facts as [SpecEntry]s, so they render on the same
+  /// elevated surface as the filter-derived specs instead of as loose text.
+  ///
+  /// Style Keywords and Description are excluded: both have their own
+  /// presentation elsewhere on the page.
+  List<SpecEntry> _coreSpecEntries(
     AppState appState,
     List<List<String>> details,
   ) {
-    final filteredDetails = details
+    return details
         .where((item) =>
-            item[1] != null &&
-            (item[1] as String).trim().isNotEmpty &&
-            item[1] != "Unknown" &&
+            item[1].trim().isNotEmpty &&
+            item[1] != 'Unknown' &&
             item[0] != 'Style Keywords' &&
             item[0] != 'Description')
-        .toList();
+        .map((item) {
+      final label = item[0];
+      final value = item[1];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: filteredDetails.map((item) {
-        final detailTitle = item[0];
-        final value = item[1] as String;
+      final launchTarget = switch (label) {
+        'Email' => 'mailto:$value',
+        'Phone' => 'tel:$value',
+        'Website' => value.startsWith('http') ? value : 'https://$value',
+        _ => null,
+      };
 
-        bool isClickable = false;
-        String? launchUrl;
-
-        if (detailTitle == 'Email') {
-          isClickable = true;
-          launchUrl = 'mailto:$value';
-        } else if (detailTitle == 'Phone') {
-          isClickable = true;
-          launchUrl = 'tel:$value';
-        } else if (detailTitle == 'Website') {
-          isClickable = true;
-          launchUrl = value.startsWith('http') ? value : 'https://$value';
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                detailTitle,
-                style: GoogleFonts.montserrat(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: const Color(0xFF7B3F61).withOpacity(0.7),
-                ),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: isClickable && launchUrl != null
-                    ? () {
-                        appState.trackLinksClick(widget.vendor_id);
-                        _launchInBrowser(Uri.parse(launchUrl!));
-                      }
-                    : null,
-                child: Text(
-                  value,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.5,
-                    height: 1.4,
-                    color: isClickable
-                        ? const Color(0xFF7B3F61)
-                        : const Color(0xFF6E6E6E),
-                    decoration: isClickable
-                        ? TextDecoration.underline
-                        : TextDecoration.none,
-                    decorationColor:
-                        isClickable ? const Color(0xFF7B3F61) : null,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
+      return SpecEntry(
+        label,
+        value,
+        onTap: launchTarget == null
+            ? null
+            : () {
+                appState.trackLinksClick(widget.vendor_id);
+                _launchInBrowser(Uri.parse(launchTarget));
+              },
+      );
+    }).toList();
   }
 
   Widget _buildImageCarousel(List<String> images, bool isDesktop) {
@@ -793,126 +800,18 @@ class _CustomCardState extends State<IndividualCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.style_keywords.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
-                  child: Wrap(
-                    spacing: 8.0,
-                    runSpacing: 8.0,
-                    children: widget.style_keywords
-                        .split(',')
-                        .map((keyword) => keyword.trim())
-                        .where((keyword) => keyword.isNotEmpty)
-                        .map((keyword) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFDCC7AA).withOpacity(0.2),
-                                border: Border.all(color: const Color(0xFFDCC7AA)),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                keyword,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: 0.8,
-                                  color: const Color(0xFF7B3F61),
-                                ),
-                              ),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ...details
-                  .where((item) =>
-                      item[1] != null &&
-                      (item[1] as String).trim().isNotEmpty &&
-                      item[1] != "Unknown" &&
-                      item[0] != 'Style Keywords')
-                  .map((item) {
-                final detailTitle = item[0];
-                final value = item[1] as String;
-
-                bool isClickable = false;
-                String? launchUrl;
-
-                if (detailTitle == 'Email') {
-                  isClickable = true;
-                  launchUrl = 'mailto:$value';
-                } else if (detailTitle == 'Phone') {
-                  isClickable = true;
-                  launchUrl = 'tel:$value';
-                } else if (detailTitle == 'Website') {
-                  isClickable = true;
-                  launchUrl =
-                      value.startsWith('http') ? value : 'https://$value';
-                }
-
-                if (detailTitle == 'Description') {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: Text(
-                      value,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 1.2,
-                        height: 1.4,
-                        color: const Color(0xFF6E6E6E),
-                      ),
-                      softWrap: true,
-                    ),
-                  );
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        "$detailTitle: ",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: isClickable && launchUrl != null
-                              ? () {
-                                  appState.trackLinksClick(widget.vendor_id);
-                                  _launchInBrowser(Uri.parse(launchUrl!));
-                                }
-                              : null,
-                          child: Text(
-                            value,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 1.2,
-                              height: 1.4,
-                              color: isClickable
-                                  ? const Color(0xFF7B3F61)
-                                  : const Color(0xFF6E6E6E),
-                              decoration: isClickable
-                                  ? TextDecoration.underline
-                                  : TextDecoration.none,
-                              decorationColor:
-                                  isClickable ? const Color(0xFF7B3F61) : null,
-                            ),
-                            softWrap: true,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+              _buildAboutPanel(isWide: false),
+              // Core facts and filter-derived specs share one card, so mobile
+              // shows a single block of facts rather than a loose label/value
+              // list followed by a second styled block.
+              VendorDetailsSection(
+                filterValues: widget.filterValues,
+                filterGroups:
+                    appState.categoryFilters[widget.category] ?? const [],
+                optionsByKey: appState.filterOptions,
+                leadingEntries: _coreSpecEntries(appState, details),
+                isWide: false,
+              ),
             ],
           ),
         ),
@@ -1362,8 +1261,11 @@ class _CustomCardState extends State<IndividualCard> {
     final details = [
       ['Style Keywords', widget.style_keywords],
       ['Description', widget.description],
-      ['Estimated Price', widget.vendor_estimated_price],
-      ['Base Price', widget.vendor_price],
+      // 'Estimated Price' (vendor_estimated_price) is no longer shown: it was a
+      // third price field that duplicated Base Price and is no longer editable
+      // on either vendor form, so displaying it would strand vendors with a
+      // value on their profile they cannot change. The column is untouched.
+      ['Starting Price', widget.vendor_price],
       ['Location', widget.location],
       ['Address', widget.address],
       ['Email', widget.contact_email],

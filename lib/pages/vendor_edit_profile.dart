@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'package:provider/provider.dart';
+import '../services/vendor_filter.dart';
+import '../widgets/field_hint.dart';
+import '../widgets/vendor_filter_picker.dart';
 import '../utils/image_compress.dart';
 import '../utils/image_utils.dart';
 import '../appstate.dart';
@@ -35,7 +38,14 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   late TextEditingController _locationController;
   late TextEditingController _addressController;
   late TextEditingController _priceController;
-  late TextEditingController _estimatedPriceController;
+  late TextEditingController _startingPriceController;
+  late TextEditingController _capacityMinController;
+  late TextEditingController _capacityMaxController;
+  // vendor_estimated_price is intentionally no longer edited here. It was a
+  // third price field that duplicated vendor_price (one vendor had "$1300"
+  // against a price of "1000"), and pricing is now one number + one free-text
+  // field. The column and its 3 existing rows are left untouched — dropping
+  // the key from the save payload means editing a profile cannot blank them.
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _websiteController;
@@ -54,6 +64,9 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   // Category filter state
   List<Map<String, dynamic>> _categoryFilterDefs = [];
   Map<String, List<String>> _filterValues = {};
+
+  /// filter_options rows keyed by filter_key, for the vendor's category.
+  Map<String, List<Map<String, dynamic>>> _filterOptionRows = {};
   bool _filtersLoading = false;
 
   // State and County
@@ -107,9 +120,37 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
           .select()
           .eq('category_name', category)
           .order('display_order', ascending: true);
+      final defs = (rows as List).cast<Map<String, dynamic>>();
+
+      // Options now live in filter_options; the legacy category_filters.options
+      // array is only a fallback for groups that have not been migrated.
+      final Map<String, List<Map<String, dynamic>>> optionsByKey = {};
+      final keys = defs
+          .map((d) => d['filter_key'] as String?)
+          .whereType<String>()
+          .toList();
+      if (keys.isNotEmpty) {
+        try {
+          final optionRows = await supabase
+              .from('filter_options')
+              .select()
+              .inFilter('filter_key', keys)
+              .order('display_order', ascending: true);
+          for (final row in optionRows as List) {
+            final key = row['filter_key'] as String;
+            optionsByKey
+                .putIfAbsent(key, () => [])
+                .add(row as Map<String, dynamic>);
+          }
+        } catch (_) {
+          // Table not created yet — the legacy array still works.
+        }
+      }
+
       if (mounted) {
         setState(() {
-          _categoryFilterDefs = (rows as List).cast<Map<String, dynamic>>();
+          _categoryFilterDefs = defs;
+          _filterOptionRows = optionsByKey;
           _filtersLoading = false;
         });
       }
@@ -131,7 +172,12 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _locationController = TextEditingController(text: widget.vendorData['vendor_location']);
     _addressController = TextEditingController(text: widget.vendorData['address']);
     _priceController = TextEditingController(text: widget.vendorData['vendor_price']);
-    _estimatedPriceController = TextEditingController(text: widget.vendorData['vendor_estimated_price']);
+    _startingPriceController = TextEditingController(
+        text: widget.vendorData['starting_price']?.toString() ?? '');
+    _capacityMinController = TextEditingController(
+        text: widget.vendorData['capacity_min']?.toString() ?? '');
+    _capacityMaxController = TextEditingController(
+        text: widget.vendorData['capacity_max']?.toString() ?? '');
     _emailController = TextEditingController(text: widget.vendorData['contact_email']);
     _phoneController = TextEditingController(text: widget.vendorData['contact_phone']);
     _websiteController = TextEditingController(text: widget.vendorData['website_url']);
@@ -223,7 +269,9 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     _locationController.dispose();
     _addressController.dispose();
     _priceController.dispose();
-    _estimatedPriceController.dispose();
+    _startingPriceController.dispose();
+    _capacityMinController.dispose();
+    _capacityMaxController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _websiteController.dispose();
@@ -397,8 +445,12 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'vendor_location': _locationController.text.trim(),
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
-        'vendor_estimated_price': _estimatedPriceController.text.trim(),
         'guest_capacity': _guestCapacityController.text.trim(),
+        // null (not 0) when blank, so an unset number means "no answer" and
+        // the range filters skip this vendor rather than matching them at 0.
+        'starting_price': int.tryParse(_startingPriceController.text.trim()),
+        'capacity_min': int.tryParse(_capacityMinController.text.trim()),
+        'capacity_max': int.tryParse(_capacityMaxController.text.trim()),
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -540,22 +592,70 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             // Pricing Section
             _buildSectionHeader('Pricing'),
             const SizedBox(height: 16),
+            // Two fields, one job each: a number the filters can match on,
+            // and free text that couples actually read. They are deliberately
+            // not merged — "$1,500–$3,800 depending on season" cannot be
+            // compared numerically, and 2500 alone tells a couple nothing.
             _buildTextField(
-              controller: _priceController,
-              label: 'Price',
-              hint: 'e.g., \$500 - \$2000',
+              controller: _startingPriceController,
+              label: 'Starting Price',
+              hint: 'Lowest price a couple could pay, e.g. 2500',
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Numbers only. This is what couples filter by — leave it blank '
+              'and price filters will skip you entirely.',
             ),
             const SizedBox(height: 16),
             _buildTextField(
-              controller: _estimatedPriceController,
-              label: 'Estimated Price Range',
+              controller: _priceController,
+              label: 'Pricing Details',
+              hint: 'e.g. \$1,500–\$3,800 depending on season',
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Shown on your profile exactly as you write it.',
+            ),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader('Guest Capacity'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _capacityMinController,
+                    label: 'Minimum Guests',
+                    hint: 'e.g. 50',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _capacityMaxController,
+                    label: 'Maximum Guests',
+                    hint: 'e.g. 300',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Couples filter by this range. Two numbers, not one: a venue '
+              'that holds 50–300 should match a couple searching for 200.',
             ),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _guestCapacityController,
-              label: 'Guest Capacity',
-              hint: 'e.g., 50 - 300',
-              keyboardType: TextInputType.text,
+              label: 'Capacity Details',
+              hint: 'e.g. 150 seated, 300 for a standing reception',
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Optional. Shown on your profile exactly as you write it.',
             ),
             const SizedBox(height: 24),
 
@@ -658,27 +758,15 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
                 ),
               ),
               const SizedBox(height: 16),
-              ..._categoryFilterDefs.map((filterDef) {
-                final key = filterDef['filter_key'] as String;
-                final label = filterDef['filter_label'] as String;
-                final options = (filterDef['options'] as List<dynamic>)
-                    .map((e) => e.toString())
-                    .toList();
-                final currentValues = _filterValues[key] ?? [];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: _buildMultiSelectField(
-                    label: label,
-                    items: options,
-                    selectedItems: currentValues,
-                    onChanged: (newValues) {
-                      setState(() {
-                        _filterValues[key] = newValues;
-                      });
-                    },
-                  ),
-                );
-              }),
+              // Shared with the create form so the two cannot drift: the
+              // create page previously offered no filter questions at all.
+              VendorFilterPicker(
+                filterGroups: _categoryFilterDefs,
+                optionsByKey: _filterOptionRows,
+                selected: _filterValues,
+                onChanged: (key, values) =>
+                    setState(() => _filterValues[key] = values),
+              ),
               const SizedBox(height: 8),
             ],
 
@@ -940,6 +1028,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     );
   }
 
+
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -1007,6 +1096,9 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
     required List<String> items,
     required List<String> selectedItems,
     required Function(List<String>) onChanged,
+    /// Optional display text per item. Items are the values that get stored;
+    /// labels are what the vendor reads. Falls back to the item itself.
+    Map<String, String>? itemLabels,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1033,7 +1125,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
               final isSelected = selectedItems.contains(item);
               return FilterChip(
                 label: Text(
-                  item,
+                  itemLabels?[item] ?? item,
                   style: GoogleFonts.montserrat(
                     fontSize: 11,
                     color: isSelected ? Colors.white : const Color(0xFF7B3F61),

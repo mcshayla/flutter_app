@@ -67,6 +67,21 @@ class _CustomCardState extends State<CustomCard> {
                         width: double.infinity,
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.medium,
+                        // Last resort: if the placeholder host is unreachable
+                        // too (offline, or a sandboxed test), show a local
+                        // stand-in rather than letting the image error escape.
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: double.infinity,
+                            color: const Color(0xFFDCC7AA),
+                            child: const Center(
+                              child: Icon(
+                                Icons.photo_outlined,
+                                color: Color(0xFF7B3F61),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     }
                   ),

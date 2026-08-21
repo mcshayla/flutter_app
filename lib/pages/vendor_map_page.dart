@@ -1,14 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../appstate.dart';
+import '../services/vendor_filter.dart';
 import '../utils/image_utils.dart';
 import 'individual_card.dart';
 
@@ -16,9 +14,15 @@ class VendorMapPage extends StatefulWidget {
   final List<Map<String, dynamic>> vendors;
   final String categoryName;
 
+  /// Overrides the OpenStreetMap tile source. Only meant for tests, which have
+  /// no network — production always uses the default provider.
+  @visibleForTesting
+  final TileProvider? tileProvider;
+
   const VendorMapPage({
     required this.vendors,
     required this.categoryName,
+    this.tileProvider,
     super.key,
   });
 
@@ -35,108 +39,31 @@ class _VendorMapPageState extends State<VendorMapPage> {
   // vendorId → vendor data (for quick lookup in marker tap)
   final Map<String, Map<String, dynamic>> _vendorById = {};
 
-  // Static geocoding cache — persists for the app session
-  static final Map<String, LatLng?> _cache = {};
-
-  bool _isGeocoding = false;
-  int _locatedCount = 0;
   bool _mapIsReady = false;
-  bool _positionsLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    for (final v in widget.vendors) {
-      final id = (v['vendor_id'] as String?) ?? '';
-      if (id.isNotEmpty) _vendorById[id] = v;
-    }
     _loadPositions();
   }
 
-  Future<void> _loadPositions() async {
-    setState(() => _isGeocoding = true);
-
-    // ── Fast path: vendors with stored coordinates ──────────────────────────
-    final needsGeocoding = <Map<String, dynamic>>[];
-    for (final v in widget.vendors) {
-      final id = (v['vendor_id'] as String?) ?? '';
-      final lat = (v['latitude'] as num?)?.toDouble();
-      final lng = (v['longitude'] as num?)?.toDouble();
-      if (lat != null && lng != null) {
-        _positions[id] = LatLng(lat, lng);
-        _locatedCount++;
-      } else {
-        needsGeocoding.add(v);
-      }
-    }
-
-    if (mounted) setState(() {});
-
-    // ── Fallback: Nominatim geocoding for legacy vendors ────────────────────
-    for (final v in needsGeocoding) {
-      final id = (v['vendor_id'] as String?) ?? '';
-      final query = ((v['address'] as String?)?.isNotEmpty == true
-              ? v['address'] as String
-              : v['vendor_location'] as String?) ??
-          '';
-
-      if (query.isEmpty) continue;
-
-      if (_cache.containsKey(query)) {
-        final cached = _cache[query];
-        if (cached != null && mounted) {
-          setState(() {
-            _positions[id] = cached;
-            _locatedCount++;
-          });
-        }
-        continue;
-      }
-
-      // Nominatim rate limit: 1 req/sec
-      await Future.delayed(const Duration(milliseconds: 1100));
-      if (!mounted) return;
-
-      try {
-        final uri = Uri.parse(
-          'https://nominatim.openstreetmap.org/search'
-          '?q=${Uri.encodeComponent(query)}'
-          '&format=json&limit=1&countrycodes=us',
-        );
-        final resp = await http.get(uri, headers: {
-          'User-Agent': 'EasiYESt Wedding App',
-        });
-
-        if (resp.statusCode == 200) {
-          final results = json.decode(resp.body) as List;
-          if (results.isNotEmpty) {
-            final lat = double.tryParse(results[0]['lat'] as String);
-            final lon = double.tryParse(results[0]['lon'] as String);
-            if (lat != null && lon != null && mounted) {
-              final ll = LatLng(lat, lon);
-              _cache[query] = ll;
-              setState(() {
-                _positions[id] = ll;
-                _locatedCount++;
-              });
-            } else {
-              _cache[query] = null;
-            }
-          } else {
-            _cache[query] = null;
-          }
-        }
-      } catch (_) {
-        // Skip vendors that fail to geocode
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _isGeocoding = false;
-        _positionsLoaded = true;
-      });
-      if (_mapIsReady && _positions.isNotEmpty) _fitBounds();
+  /// Plots every vendor that already has stored coordinates.
+  ///
+  /// Synchronous and instant by design. This used to fall back to geocoding
+  /// missing addresses through Nominatim one vendor at a time, with a 1.1s
+  /// rate-limit sleep each, and it withheld the camera until the whole loop
+  /// finished — 45-75s for a category with unfilled coordinates, and broken
+  /// outright on web where the browser strips the required User-Agent header.
+  /// Vendors without coordinates are now simply not shown; a one-time backfill
+  /// (python_scripts/backfill_vendor_coords.py) populates the column instead.
+  void _loadPositions() {
+    for (final v in vendorsWithCoordinates(widget.vendors)) {
+      final id = v['vendor_id'] as String;
+      _vendorById[id] = v;
+      _positions[id] = LatLng(
+        (v['latitude'] as num).toDouble(),
+        (v['longitude'] as num).toDouble(),
+      );
     }
   }
 
@@ -260,6 +187,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
                       MaterialPageRoute(
                         builder: (_) => IndividualCard(
                           category: category,
+                          filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
                           vendor_id: vendorId,
                           title: (vendor['vendor_name'] as String?) ?? '',
                           description:
@@ -324,10 +252,9 @@ class _VendorMapPageState extends State<VendorMapPage> {
   Widget build(BuildContext context) {
     // Build markers list for clustering
     final markers = <Marker>[];
-    for (final v in widget.vendors) {
-      final id = (v['vendor_id'] as String?) ?? '';
-      final pos = _positions[id];
-      if (pos == null) continue;
+    for (final entry in _positions.entries) {
+      final v = _vendorById[entry.key]!;
+      final pos = entry.value;
 
       markers.add(Marker(
         point: pos,
@@ -383,7 +310,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
               initialZoom: initialZoom,
               onMapReady: () {
                 _mapIsReady = true;
-                if (_positionsLoaded && _positions.isNotEmpty) _fitBounds();
+                if (_positions.isNotEmpty) _fitBounds();
               },
             ),
             children: [
@@ -391,6 +318,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
                 urlTemplate:
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.easiyest.say_yes',
+                tileProvider: widget.tileProvider,
               ),
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
@@ -461,52 +389,8 @@ class _VendorMapPageState extends State<VendorMapPage> {
             ),
           ),
 
-          // Progress pill while geocoding
-          if (_isGeocoding)
-            Positioned(
-              bottom: 24,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.12),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF7B3F61)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Locating vendors… $_locatedCount found',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 12, color: const Color(0xFF3E3E3E)),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
           // Empty state
-          if (!_isGeocoding && markers.isEmpty)
+          if (markers.isEmpty)
             Center(
               child: Container(
                 padding: const EdgeInsets.all(24),

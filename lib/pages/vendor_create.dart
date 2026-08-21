@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import '../utils/image_compress.dart';
 import '../utils/image_utils.dart';
 import '../appstate.dart';
+import '../widgets/field_hint.dart';
+import '../widgets/vendor_filter_picker.dart';
 import 'vendor_dashboard.dart';
 import 'location_picker_page.dart';
 
@@ -36,6 +38,9 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final _locationController = TextEditingController();
   final _addressController = TextEditingController();
   final _priceController = TextEditingController();
+  final _startingPriceController = TextEditingController();
+  final _capacityMinController = TextEditingController();
+  final _capacityMaxController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _websiteController = TextEditingController();
@@ -54,6 +59,13 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   // Category dropdown
   String? _selectedCategory;
   List<String> _categoryOptions = [];
+
+  // Category-specific filter answers. Loaded once a category is chosen, since
+  // the questions depend on it. Without these a brand-new vendor is invisible
+  // to every chip filter until they go back and edit their profile.
+  List<Map<String, dynamic>> _categoryFilterDefs = [];
+  Map<String, List<Map<String, dynamic>>> _filterOptionRows = {};
+  Map<String, List<String>> _filterValues = {};
 
   // State and County
   List<String> selectedStates = [];
@@ -99,6 +111,55 @@ setState(() {
     }
   }
 
+  /// Loads the filter questions for [category] and clears any answers given
+  /// for the previous one — a Venue's amenities are meaningless on a Florist.
+  Future<void> _loadCategoryFilters(String? category) async {
+    setState(() {
+      _categoryFilterDefs = [];
+      _filterOptionRows = {};
+      _filterValues = {};
+    });
+    if (category == null || category.isEmpty) return;
+
+    try {
+      final defs = await supabase
+          .from('category_filters')
+          .select()
+          .eq('category_name', category)
+          .order('display_order', ascending: true);
+
+      final keys = [
+        for (final d in defs as List)
+          if (d['filter_key'] != null) d['filter_key'] as String
+      ];
+
+      // Options now live in filter_options; the legacy category_filters.options
+      // array stays as a fallback for categories not yet migrated.
+      final Map<String, List<Map<String, dynamic>>> optionRows = {};
+      if (keys.isNotEmpty) {
+        final rows = await supabase
+            .from('filter_options')
+            .select()
+            .inFilter('filter_key', keys)
+            .order('display_order', ascending: true);
+        for (final row in rows as List) {
+          optionRows
+              .putIfAbsent(row['filter_key'] as String, () => [])
+              .add(row as Map<String, dynamic>);
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _categoryFilterDefs = List<Map<String, dynamic>>.from(defs);
+        _filterOptionRows = optionRows;
+      });
+    } catch (e) {
+      // Filters simply won't appear; the rest of the form still works.
+      print('Error loading category filters: $e');
+    }
+  }
+
   @override
   void dispose() {
     _businessNameController.dispose();
@@ -106,6 +167,9 @@ setState(() {
     _locationController.dispose();
     _addressController.dispose();
     _priceController.dispose();
+    _startingPriceController.dispose();
+    _capacityMinController.dispose();
+    _capacityMaxController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _websiteController.dispose();
@@ -221,6 +285,17 @@ setState(() {
         'address': _addressController.text.trim(),
         'vendor_price': _priceController.text.trim(),
         'guest_capacity': _guestCapacityController.text.trim(),
+        // null (not 0) when blank, so an unset number means "no answer" and
+        // the range filters skip this vendor rather than matching them at 0.
+        'starting_price': int.tryParse(_startingPriceController.text.trim()),
+        'capacity_min': int.tryParse(_capacityMinController.text.trim()),
+        'capacity_max': int.tryParse(_capacityMaxController.text.trim()),
+        // Drop groups the vendor skipped: an empty list would read as "answered
+        // with nothing", and the detail page treats absence as "not filled in".
+        'filter_values': <String, List<String>>{
+          for (final entry in _filterValues.entries)
+            if (entry.value.isNotEmpty) entry.key: entry.value,
+        },
         'contact_email': _emailController.text.trim(),
         'contact_phone': _phoneController.text.trim(),
         'website_url': _websiteController.text.trim(),
@@ -364,7 +439,10 @@ DropdownButtonFormField<String>(
                 value: cat,
                 child: Text(cat, style: GoogleFonts.montserrat(fontSize: 12)),
               )).toList(),
-              onChanged: (val) => setState(() => _selectedCategory = val),
+              onChanged: (val) {
+                setState(() => _selectedCategory = val);
+                _loadCategoryFilters(val);
+              },
               validator: (val) => val == null ? 'Please select a category' : null,
             ),
             const SizedBox(height: 16),
@@ -426,18 +504,103 @@ DropdownButtonFormField<String>(
             // Pricing Section
             _buildSectionHeader('Pricing'),
             const SizedBox(height: 16),
+            // Two fields, one job each: a number the filters can match on,
+            // and free text that couples actually read. They are deliberately
+            // not merged — "$1,500–$3,800 depending on season" cannot be
+            // compared numerically, and 2500 alone tells a couple nothing.
+            // Kept identical to vendor_edit_profile.dart.
+            _buildTextField(
+              controller: _startingPriceController,
+              label: 'Starting Price',
+              hint: 'Lowest price a couple could pay, e.g. 2500',
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Numbers only. This is what couples filter by — leave it blank '
+              'and price filters will skip you entirely.',
+            ),
+            const SizedBox(height: 16),
             _buildTextField(
               controller: _priceController,
-              label: 'Price',
-              hint: 'e.g., \$500 - \$2000',
+              label: 'Pricing Details',
+              hint: 'e.g. \$1,500–\$3,800 depending on season',
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Shown on your profile exactly as you write it.',
+            ),
+            const SizedBox(height: 24),
+
+            _buildSectionHeader('Guest Capacity'),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    controller: _capacityMinController,
+                    label: 'Minimum Guests',
+                    hint: 'e.g. 50',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    controller: _capacityMaxController,
+                    label: 'Maximum Guests',
+                    hint: 'e.g. 300',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Couples filter by this range. Two numbers, not one: a venue '
+              'that holds 50–300 should match a couple searching for 200.',
             ),
             const SizedBox(height: 16),
             _buildTextField(
               controller: _guestCapacityController,
-              label: 'Guest Capacity',
-              hint: 'e.g., 50 - 300',
-              keyboardType: TextInputType.text,
+              label: 'Capacity Details',
+              hint: 'e.g. 150 seated, 300 for a standing reception',
             ),
+            const SizedBox(height: 6),
+            FieldHint(
+              'Optional. Shown on your profile exactly as you write it.',
+            ),
+
+            // Category-specific questions (Venue Type, Amenities, …). Appears
+            // once a category is picked; categories with no filters defined
+            // render nothing at all.
+            if (_categoryFilterDefs.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Text(
+                'Category Details',
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF7B3F61),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'These details help couples find you when filtering.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: const Color(0xFF6E6E6E),
+                ),
+              ),
+              const SizedBox(height: 16),
+              VendorFilterPicker(
+                filterGroups: _categoryFilterDefs,
+                optionsByKey: _filterOptionRows,
+                selected: _filterValues,
+                onChanged: (key, values) =>
+                    setState(() => _filterValues[key] = values),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Contact Information Section
