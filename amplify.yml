@@ -1,0 +1,48 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Flutter is pinned deliberately. This was `-b stable`, which made every
+        # build pull whatever stable happened to be that day, so the build
+        # environment drifted even when the code did not: the 2026-05-12 build
+        # succeeded and the next two (2026-08-21, 2026-10-15) failed to compile
+        # with no relevant source change. Bump this tag on purpose, after
+        # confirming `flutter build web --release` passes locally on the same
+        # version.
+        - echo "Installing Flutter SDK 3.35.6"
+        - git clone https://github.com/flutter/flutter.git -b 3.35.6 --depth 1
+        - export PATH="$PATH:$(pwd)/flutter/bin"
+        - flutter config --no-analytics
+        # Logged so a future failure can be compared against a known-good build.
+        - flutter --version
+        - flutter doctor
+        - echo "Installing dependencies"
+        - flutter clean
+        - flutter pub get
+    build:
+      commands:
+        - echo "Building Flutter web application"
+        - export PATH="$PATH:$(pwd)/flutter/bin"
+        - flutter build web --release --base-href /app/
+        - mkdir -p public/app
+        - cp -r build/web/* public/app/
+        - cp public/app/landing.html public/
+        - cp public/app/for-couples.html public/
+        - cp public/app/for-vendors.html public/
+        - cp public/app/utah-weddings.html public/
+        - cp public/app/rsvp.html public/
+        - cp public/app/privacy.html public/
+        - cp public/app/vendorRegistration.html public/
+        - cp public/app/resetPassword.html public/
+        - cp public/app/favicon.png public/
+        - cp -r public/app/icons public/
+        - cp public/app/robots.txt public/
+        - cp public/app/sitemap.xml public/
+  artifacts:
+    baseDirectory: public
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - flutter/.pub-cache
