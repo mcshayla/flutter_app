@@ -501,7 +501,16 @@ class _CustomCardState extends State<IndividualCard> {
       return const SizedBox.shrink();
     }
 
-    return ElevatedPanel(
+    // Deliberately not an ElevatedPanel. That surface fills with the same cream
+    // as the page, so on a single prose paragraph its border fences the text in
+    // without buying any contrast. The panels are kept for the blocks that group
+    // discrete items (the specs, the amenities), which gives the page a
+    // hierarchy instead of a stack of identical rectangles.
+    //
+    // The horizontal inset matches ElevatedPanel's own padding so the paragraph
+    // stays in the same text column as the boxed blocks around it.
+    return Padding(
+      padding: const EdgeInsets.only(left: 22, right: 22, bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -524,18 +533,17 @@ class _CustomCardState extends State<IndividualCard> {
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              // White on the panel's cream, matching the amenity cards, so the
-              // pills read as raised rather than washing into the background.
+              // The same tan wash as the amenity pills in amenity_row.dart, not
+              // white: now that About is unboxed these sit directly on the page
+              // cream, where white read as a bright cut-out. The wash keeps them
+              // legible as tags while staying in the warm palette.
               children: keywords
                   .map((keyword) => Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(
-                            color: AppStyles.accentColor
-                                .withValues(alpha: 0.75),
-                          ),
+                          color: AppStyles.accentColor.withValues(alpha: 0.2),
+                          border: Border.all(color: AppStyles.accentColor),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
