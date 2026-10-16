@@ -12,12 +12,88 @@ class LocationResult {
   final double longitude;
   final String address;
 
+  /// Parsed pieces of the address, empty when the geocoder didn't return them.
+  final String city;
+  final String state;
+  final String county;
+
   const LocationResult({
     required this.latitude,
     required this.longitude,
     required this.address,
+    this.city = '',
+    this.state = '',
+    this.county = '',
   });
+
+  /// Short "City, ST" label shown on vendor cards.
+  String get cityLabel {
+    final abbr = _stateAbbreviations[state] ?? state;
+    return [city, abbr].where((p) => p.isNotEmpty).join(', ');
+  }
 }
+
+/// A Nominatim result trimmed to what the vendor form needs.
+class _Place {
+  final String address;
+  final String city;
+  final String state;
+  final String county;
+
+  const _Place(this.address, this.city, this.state, this.county);
+
+  /// Builds "140 N Main St, Spanish Fork, UT 84660" from Nominatim's
+  /// address details, instead of its long display_name
+  /// ("140, North Main Street, Spanish Fork, Utah County, Utah, 84660, United States").
+  factory _Place.fromNominatim(Map<String, dynamic> data) {
+    final parts = (data['address'] as Map?)?.cast<String, dynamic>() ?? {};
+    String part(String key) => (parts[key] as String?)?.trim() ?? '';
+
+    final city = [
+      'city',
+      'town',
+      'village',
+      'hamlet',
+      'suburb',
+    ].map(part).firstWhere((v) => v.isNotEmpty, orElse: () => '');
+    final state = part('state');
+    final street = [part('house_number'), part('road')]
+        .where((p) => p.isNotEmpty)
+        .join(' ');
+    final stateZip = [_stateAbbreviations[state] ?? state, part('postcode')]
+        .where((p) => p.isNotEmpty)
+        .join(' ');
+    final formatted =
+        [street, city, stateZip].where((p) => p.isNotEmpty).join(', ');
+
+    return _Place(
+      formatted.isNotEmpty
+          ? formatted
+          : (data['display_name'] as String?) ?? '',
+      city,
+      state,
+      part('county'),
+    );
+  }
+}
+
+const _stateAbbreviations = {
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR',
+  'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT',
+  'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI',
+  'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME',
+  'Maryland': 'MD', 'Massachusetts': 'MA', 'Michigan': 'MI',
+  'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+  'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+  'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM',
+  'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND',
+  'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA',
+  'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD',
+  'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+  'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+  'Wisconsin': 'WI', 'Wyoming': 'WY',
+};
 
 class LocationPickerPage extends StatefulWidget {
   final double? initialLat;
@@ -40,7 +116,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   final MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
 
-  String _address = '';
+  _Place _place = const _Place('', '', '', '');
+  String get _address => _place.address;
   bool _isSearching = false;
   bool _isReverseGeocoding = false;
 
@@ -75,15 +152,14 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
     try {
       final uri = Uri.parse(
         'https://nominatim.openstreetmap.org/reverse'
-        '?lat=${pos.latitude}&lon=${pos.longitude}&format=json',
+        '?lat=${pos.latitude}&lon=${pos.longitude}&format=json&addressdetails=1',
       );
       final resp = await http.get(uri, headers: {
         'User-Agent': 'EasiYESt Wedding App',
       });
       if (resp.statusCode == 200 && mounted) {
         final data = json.decode(resp.body) as Map<String, dynamic>;
-        final display = (data['display_name'] as String?) ?? '';
-        setState(() => _address = display);
+        setState(() => _place = _Place.fromNominatim(data));
       }
     } catch (_) {
       // Silently ignore — address just stays empty
@@ -99,7 +175,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
       final uri = Uri.parse(
         'https://nominatim.openstreetmap.org/search'
         '?q=${Uri.encodeComponent(query.trim())}'
-        '&format=json&limit=1',
+        '&format=json&limit=1&addressdetails=1',
       );
       final resp = await http.get(uri, headers: {
         'User-Agent': 'EasiYESt Wedding App',
@@ -113,7 +189,8 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
             final newPos = LatLng(lat, lon);
             setState(() {
               _pinPosition = newPos;
-              _address = (results[0]['display_name'] as String?) ?? '';
+              _place = _Place.fromNominatim(
+                  results[0] as Map<String, dynamic>);
             });
             _mapController.move(newPos, 13.0);
           }
@@ -317,7 +394,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                         LocationResult(
                           latitude: _pinPosition.latitude,
                           longitude: _pinPosition.longitude,
-                          address: _address,
+                          address: _place.address,
+                          city: _place.city,
+                          state: _place.state,
+                          county: _place.county,
                         ),
                       );
                     },

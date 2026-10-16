@@ -13,6 +13,7 @@ import '../utils/image_compress.dart';
 import '../utils/image_utils.dart';
 import '../appstate.dart';
 import 'location_picker_page.dart';
+import '../utils/regions.dart';
 
 class VendorEditProfile extends StatefulWidget {
   final Map<String, dynamic> vendorData;
@@ -72,18 +73,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   // State and County
   List<String> selectedStates = [];
   List<String> selectedCounties = [];
-  final List<String> availableStates = [
-    'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
-    'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
-    'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
-    'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota',
-    'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada',
-    'New Hampshire', 'New Jersey', 'New Mexico', 'New York',
-    'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon',
-    'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
-    'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
-    'West Virginia', 'Wisconsin', 'Wyoming', 'Any'
-  ];
+  final List<String> availableStates = kUsStates;
 
   // Location picker
   double? _pickedLat;
@@ -457,7 +447,8 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         'style_keywords': _styleKeywordsController.text.trim(),
         'social_media_links': _collectSocialMediaLinks(),
         'vendor_state': selectedStates,
-        'vendor_county': selectedCounties,
+        'vendor_county':
+            servesUtah(selectedStates) ? selectedCounties : <String>[],
         'image_url': allImageUrls,
         'filter_values': _filterValues,
       };
@@ -546,18 +537,13 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             // Location Section
             _buildSectionHeader('Location'),
             const SizedBox(height: 16),
-            _buildTextField(
-              controller: _locationController,
-              label: 'Location',
-              hint: 'City, State',
-            ),
-            const SizedBox(height: 16),
+            _buildLocationPickerTile(),
+            const SizedBox(height: 12),
             _buildTextField(
               controller: _addressController,
               label: 'Full Address',
+              hint: 'Filled in from the map. No storefront? Keep just your city.',
             ),
-            const SizedBox(height: 12),
-            _buildLocationPickerTile(),
             const SizedBox(height: 16),
 
             // State Selection
@@ -573,20 +559,30 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             ),
             const SizedBox(height: 16),
 
-            _buildTextField(
-              controller: TextEditingController(
-                text: selectedCounties.join(', '),
+            if (servesUtah(selectedStates)) ...[
+              _buildMultiSelectField(
+                label: 'Utah Counties Served',
+                // Keep any older free-typed value visible so it can be removed.
+                items: [
+                  ...kUtahCounties,
+                  ...selectedCounties.where((c) => !kUtahCounties.contains(c)),
+                ],
+                selectedItems: selectedCounties,
+                onChanged: (values) {
+                  setState(() {
+                    selectedCounties = values;
+                  });
+                },
               ),
-              label: 'Counties Served (comma-separated)',
-              hint: 'e.g., Salt Lake County, Utah County, "Any"',
-              onChanged: (value) {
-                selectedCounties = value
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList();
-              },
-            ),
+              const SizedBox(height: 6),
+              Text(
+                'Choose "Any" if you travel anywhere in Utah.',
+                style: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  color: const Color(0xFF6E6E6E),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
 
             // Pricing Section
@@ -970,8 +966,20 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             _pickedLat = result.latitude;
             _pickedLng = result.longitude;
             _pickedAddress = result.address;
-            if (_addressController.text.trim().isEmpty) {
-              _addressController.text = result.address;
+            // The pin is the source of truth: fill the address and the short
+            // "City, ST" label, and pre-select the state/county it falls in.
+            _addressController.text = result.address;
+            if (result.cityLabel.isNotEmpty) {
+              _locationController.text = result.cityLabel;
+            }
+            if (kUsStates.contains(result.state) &&
+                !selectedStates.contains(result.state)) {
+              selectedStates = [...selectedStates, result.state];
+            }
+            if (result.state == 'Utah' &&
+                kUtahCounties.contains(result.county) &&
+                selectedCounties.isEmpty) {
+              selectedCounties = [result.county];
             }
           });
         }
