@@ -337,3 +337,38 @@ CREATE POLICY "Allow authenticated read"
 -- "Urban" was dropped rather than added anywhere: Setting Type is an
 -- indoor/outdoor axis, so it did not belong there, and folding it into Venue
 -- Type would reintroduce the cross-cutting overlap this taxonomy removes.
+
+-- ============================================================
+-- Vendor listing approval (is_listed)
+-- Applied 2026-10-15. Flip is_listed in the Table Editor to approve a vendor
+-- or take one off the app; the row and all its data stay in the table.
+-- ============================================================
+-- Existing vendors are backfilled as listed; new rows default to unlisted.
+alter table public.vendors add column if not exists is_listed boolean not null default true;
+alter table public.vendors alter column is_listed set default false;
+
+-- Vendors can edit their own row, so stop them from approving themselves.
+-- Only the dashboard/SQL editor (postgres / service_role) can change is_listed.
+create or replace function public.protect_vendor_is_listed()
+returns trigger language plpgsql as $$
+begin
+  if current_user in ('anon', 'authenticated') then
+    if tg_op = 'INSERT' then
+      new.is_listed := false;
+    else
+      new.is_listed := old.is_listed;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists vendors_protect_is_listed on public.vendors;
+create trigger vendors_protect_is_listed
+  before insert or update on public.vendors
+  for each row execute function public.protect_vendor_is_listed();
+
+-- Couples only see listed vendors; a vendor can always see their own row.
+drop policy if exists vendors_policy on public.vendors;
+create policy vendors_policy on public.vendors for select
+  using (is_listed or auth.uid() = vendor_user_id);

@@ -100,7 +100,9 @@ class AppState extends ChangeNotifier {
         notifyListeners();
         return;
       }
-      final data = await supabase.from('vendors').select();
+      // Only approved vendors appear to couples; unlisted rows stay in the
+      // table (pending review, or taken down at the vendor's request).
+      final data = await supabase.from('vendors').select().eq('is_listed', true);
       final vendors = (data as List).map((e) => e as Map<String, dynamic>).toList();
       Map<String, List<Map<String, dynamic>>> allData = {};
 

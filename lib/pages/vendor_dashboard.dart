@@ -6,6 +6,7 @@ import 'vendor_login.dart';
 import 'vendor_edit_profile.dart';
 import 'vendor_subscription_page.dart';
 import 'login.dart';
+import '../utils/vendor_config.dart';
 
 class VendorDashboard extends StatefulWidget {
   final bool isInMainScaffold;
@@ -47,15 +48,17 @@ class _VendorDashboardState extends State<VendorDashboard> {
       }
 
       // Guard: require an active subscription before showing the dashboard.
-      bool isActive = false;
-      final vendorRecord = await supabase
-          .from('vendors')
-          .select('subscription_status')
-          .eq('vendor_user_id', user.id)
-          .maybeSingle();
-      if (vendorRecord != null &&
-          vendorRecord['subscription_status'] == 'active') {
-        isActive = true;
+      bool isActive = !kVendorPaymentRequired;
+      if (!isActive) {
+        final vendorRecord = await supabase
+            .from('vendors')
+            .select('subscription_status')
+            .eq('vendor_user_id', user.id)
+            .maybeSingle();
+        if (vendorRecord != null &&
+            vendorRecord['subscription_status'] == 'active') {
+          isActive = true;
+        }
       }
       if (!isActive) {
         final sub = await supabase
@@ -146,6 +149,36 @@ class _VendorDashboardState extends State<VendorDashboard> {
     }
   }
 
+  Widget _buildPendingReviewBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDCC7AA).withOpacity(0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFDCC7AA)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.hourglass_top, color: Color(0xFF7B3F61)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Your profile is not listed yet. Our team reviews every vendor '
+              'before they appear to couples — you\'ll show up in the app '
+              'once you\'re approved.',
+              style: GoogleFonts.montserrat(
+                fontSize: 13,
+                color: const Color(0xFF3E3E3E),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _signOut() async {
     await supabase.auth.signOut();
     if (mounted) {
@@ -232,6 +265,11 @@ class _VendorDashboardState extends State<VendorDashboard> {
                 ),
               ),
               const SizedBox(height: 24),
+
+              if (vendorData!['is_listed'] != true) ...[
+                _buildPendingReviewBanner(),
+                const SizedBox(height: 24),
+              ],
 
               // Quick Stats
               _buildStatsCard(),

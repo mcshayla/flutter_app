@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_subscription_page.dart';
 import 'vendor_dashboard.dart';
+import 'vendor_create.dart';
+import '../utils/vendor_config.dart';
 
 class VendorClaimPage extends StatefulWidget {
   final String userId;
@@ -43,13 +45,15 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
       if (existing == null || !mounted) return;
 
       // They have a vendor profile — check if they have an active subscription.
-      bool isActive = false;
-      final vendorRecord = await supabase
-          .from('vendors')
-          .select('subscription_status')
-          .eq('vendor_user_id', widget.userId)
-          .maybeSingle();
-      if (vendorRecord?['subscription_status'] == 'active') isActive = true;
+      bool isActive = !kVendorPaymentRequired;
+      if (!isActive) {
+        final vendorRecord = await supabase
+            .from('vendors')
+            .select('subscription_status')
+            .eq('vendor_user_id', widget.userId)
+            .maybeSingle();
+        if (vendorRecord?['subscription_status'] == 'active') isActive = true;
+      }
 
       if (!isActive) {
         final sub = await supabase
@@ -165,7 +169,8 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
 
       if (mounted) {
         // If the vendor record itself is already active, skip subscription
-        final vendorIsActive = vendor['subscription_status'] == 'active';
+        final vendorIsActive = !kVendorPaymentRequired ||
+            vendor['subscription_status'] == 'active';
 
         if (vendorIsActive) {
           Navigator.pushReplacement(
@@ -256,7 +261,9 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => VendorSubscriptionPage(userId: widget.userId),
+                    builder: (_) => kVendorPaymentRequired
+                        ? VendorSubscriptionPage(userId: widget.userId)
+                        : VendorCreatePage(userId: widget.userId),
                   ),
                 );
               },

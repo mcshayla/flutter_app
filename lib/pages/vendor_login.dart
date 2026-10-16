@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'vendor_signup.dart';
 import 'vendor_dashboard.dart';
 import 'vendor_subscription_page.dart';
+import '../utils/vendor_config.dart';
 
 class VendorLogin extends StatefulWidget {
   const VendorLogin({super.key});
@@ -48,8 +49,9 @@ class _VendorLoginState extends State<VendorLogin> {
           .eq('vendor_user_id', userId)
           .maybeSingle();
 
-      bool isActive = vendorRecord != null &&
-          vendorRecord['subscription_status'] == 'active';
+      bool isActive = !kVendorPaymentRequired ||
+          (vendorRecord != null &&
+              vendorRecord['subscription_status'] == 'active');
 
       if (!isActive) {
         // Check vendor_subscriptions table as fallback
