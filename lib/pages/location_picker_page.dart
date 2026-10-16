@@ -121,8 +121,16 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   bool _isSearching = false;
   bool _isReverseGeocoding = false;
 
+  /// Matches from the last search, shown as a pick list when there are several.
+  List<Map<String, dynamic>> _searchResults = [];
+
   // Debounce timer for reverse geocoding
   Timer? _debounceTimer;
+
+  // Drags fire many lookups; only the newest one may update the address.
+  int _geocodeRequest = 0;
+
+  static const _headers = {'User-Agent': 'EasiYESt Wedding App'};
 
   @override
   void initState() {
@@ -132,12 +140,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         ? LatLng(widget.initialLat!, widget.initialLng!)
         : _defaultCenter;
 
-    if (hasInitial) {
-      // Reverse geocode the initial position to show an address
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _reverseGeocode(_pinPosition);
-      });
-    }
+    // Show an address for the starting pin so "Confirm" never saves a blank.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _reverseGeocode(_pinPosition);
+    });
   }
 
   @override
@@ -148,77 +154,179 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   }
 
   Future<void> _reverseGeocode(LatLng pos) async {
+    final request = ++_geocodeRequest;
     setState(() => _isReverseGeocoding = true);
     try {
       final uri = Uri.parse(
         'https://nominatim.openstreetmap.org/reverse'
         '?lat=${pos.latitude}&lon=${pos.longitude}&format=json&addressdetails=1',
       );
-      final resp = await http.get(uri, headers: {
-        'User-Agent': 'EasiYESt Wedding App',
-      });
-      if (resp.statusCode == 200 && mounted) {
+      final resp = await http.get(uri, headers: _headers);
+      if (resp.statusCode == 200 && mounted && request == _geocodeRequest) {
         final data = json.decode(resp.body) as Map<String, dynamic>;
         setState(() => _place = _Place.fromNominatim(data));
       }
     } catch (_) {
       // Silently ignore — address just stays empty
     } finally {
-      if (mounted) setState(() => _isReverseGeocoding = false);
+      if (mounted && request == _geocodeRequest) {
+        setState(() => _isReverseGeocoding = false);
+      }
     }
   }
 
+  /// Nominatim only returns exact matches, and OpenStreetMap is missing many
+  /// Utah house numbers (and some whole streets). So if the full address
+  /// finds nothing, retry without the ZIP, then without the house number,
+  /// then with just the city, so the vendor at least lands nearby.
+  static List<String> _fallbackQueries(String query) {
+    final noZip = query.replaceAll(RegExp(r',?\s*\d{5}(-\d{4})?\s*$'), '');
+    final noHouseNumber = noZip.replaceFirst(RegExp(r'^\d+\s+'), '');
+    final comma = noZip.indexOf(',');
+    final cityOnly = comma == -1 ? '' : noZip.substring(comma + 1).trim();
+    return {query, noZip, noHouseNumber, cityOnly}
+        .where((q) => q.isNotEmpty)
+        .toList();
+  }
+
   Future<void> _searchAddress(String query) async {
-    if (query.trim().isEmpty) return;
-    setState(() => _isSearching = true);
+    query = query.trim();
+    if (query.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isSearching = true;
+      _searchResults = [];
+    });
     try {
-      final uri = Uri.parse(
-        'https://nominatim.openstreetmap.org/search'
-        '?q=${Uri.encodeComponent(query.trim())}'
-        '&format=json&limit=1&addressdetails=1',
-      );
-      final resp = await http.get(uri, headers: {
-        'User-Agent': 'EasiYESt Wedding App',
-      });
-      if (resp.statusCode == 200 && mounted) {
-        final results = json.decode(resp.body) as List;
-        if (results.isNotEmpty) {
-          final lat = double.tryParse(results[0]['lat'] as String);
-          final lon = double.tryParse(results[0]['lon'] as String);
-          if (lat != null && lon != null) {
-            final newPos = LatLng(lat, lon);
-            setState(() {
-              _pinPosition = newPos;
-              _place = _Place.fromNominatim(
-                  results[0] as Map<String, dynamic>);
-            });
-            _mapController.move(newPos, 13.0);
-          }
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Address not found. Try a different search.',
-                style: GoogleFonts.montserrat(fontSize: 12),
-              ),
-              backgroundColor: const Color(0xFF7B3F61),
-            ),
-          );
-        }
+      List<Map<String, dynamic>> results = [];
+      final attempts = _fallbackQueries(query);
+      for (var i = 0; i < attempts.length && results.isEmpty; i++) {
+        // Nominatim's usage policy allows one request per second.
+        if (i > 0) await Future.delayed(const Duration(seconds: 1));
+        final uri = Uri.parse(
+          'https://nominatim.openstreetmap.org/search'
+          '?q=${Uri.encodeComponent(attempts[i])}'
+          '&format=json&limit=5&addressdetails=1&countrycodes=us'
+          // Prefer (but don't restrict to) Utah results.
+          '&viewbox=-114.05,42.0,-109.04,37.0',
+        );
+        final resp = await http.get(uri, headers: _headers);
+        if (resp.statusCode != 200) break;
+        results =
+            (json.decode(resp.body) as List).cast<Map<String, dynamic>>();
+      }
+      if (!mounted) return;
+
+      if (results.isEmpty) {
+        _showMessage('Address not found. Try just the street and city, '
+            'or drag the map to your spot.');
+      } else if (results.length == 1) {
+        _selectResult(results.first, query);
+      } else {
+        setState(() => _searchResults = results);
       }
     } catch (_) {
-      // Silently ignore search errors
+      if (mounted) {
+        _showMessage("Search isn't working right now. "
+            'Drag the map to your spot instead.');
+      }
     } finally {
       if (mounted) setState(() => _isSearching = false);
     }
   }
 
-  void _onMapTap(TapPosition tapPos, LatLng latLng) {
-    setState(() => _pinPosition = latLng);
+  void _selectResult(Map<String, dynamic> result, String query) {
+    final lat = double.tryParse(result['lat'] as String);
+    final lon = double.tryParse(result['lon'] as String);
+    if (lat == null || lon == null) return;
+
+    var place = _Place.fromNominatim(result);
+    final houseNumber = (result['address'] as Map?)?['house_number'];
+    // A street-level match drops the vendor's house number; keep what they
+    // typed as the address, but take city/state/county from the match.
+    if (houseNumber == null && RegExp(r'^\d+\s').hasMatch(query)) {
+      place = _Place(query, place.city, place.state, place.county);
+      _showMessage("Couldn't find that exact address, so this is the closest "
+          'match. Drag the map so the pin sits on your spot.');
+    }
+
+    final newPos = LatLng(lat, lon);
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _reverseGeocode(latLng);
+    _geocodeRequest++; // discard any lookup still in flight
+    setState(() {
+      _pinPosition = newPos;
+      _place = place;
+      _searchResults = [];
+      _isReverseGeocoding = false;
     });
+    _mapController.move(newPos, 17.0);
+  }
+
+  void _showMessage(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text, style: GoogleFonts.montserrat(fontSize: 12)),
+        backgroundColor: const Color(0xFF7B3F61),
+      ),
+    );
+  }
+
+  void _scheduleReverseGeocode(LatLng pos) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+      _reverseGeocode(pos);
+    });
+  }
+
+  /// The pin is fixed at the center of the map, so dragging the map moves it.
+  void _onMapMoved(MapCamera camera, bool hasGesture) {
+    if (!hasGesture) return;
+    _pinPosition = camera.center;
+    if (_searchResults.isNotEmpty) setState(() => _searchResults = []);
+    _scheduleReverseGeocode(camera.center);
+  }
+
+  void _onMapTap(TapPosition tapPos, LatLng latLng) {
+    _pinPosition = latLng;
+    _mapController.move(latLng, _mapController.camera.zoom);
+    _scheduleReverseGeocode(latLng);
+  }
+
+  Widget _buildSearchResults() {
+    return Positioned(
+      top: 0,
+      left: 16,
+      right: 16,
+      child: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        child: ListView.separated(
+          shrinkWrap: true,
+          padding: EdgeInsets.zero,
+          itemCount: _searchResults.length,
+          separatorBuilder: (_, _) =>
+              const Divider(height: 1, color: Color(0xFFDCC7AA)),
+          itemBuilder: (_, i) {
+            final result = _searchResults[i];
+            return ListTile(
+              dense: true,
+              leading: const Icon(Icons.location_on,
+                  color: Color(0xFF7B3F61), size: 18),
+              title: Text(
+                _Place.fromNominatim(result).address,
+                style: GoogleFonts.montserrat(
+                    fontSize: 12, color: const Color(0xFF3E3E3E)),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              onTap: () =>
+                  _selectResult(result, _searchController.text.trim()),
+            );
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -302,35 +410,40 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
             ),
           ),
 
-          // Map
+          // Map, with the pin fixed at the center
           Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: _pinPosition,
-                initialZoom: widget.initialLat != null ? 13.0 : 10.0,
-                onTap: _onMapTap,
-              ),
+            child: Stack(
               children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.easiyest.say_yes',
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: _pinPosition,
+                    initialZoom: widget.initialLat != null ? 16.0 : 10.0,
+                    onTap: _onMapTap,
+                    onPositionChanged: _onMapMoved,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.easiyest.say_yes',
+                    ),
+                  ],
                 ),
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: _pinPosition,
-                      width: 40,
-                      height: 40,
-                      child: const Icon(
+                // Lifted by its own height so the pin's tip marks the center.
+                const IgnorePointer(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: 40),
+                      child: Icon(
                         Icons.location_pin,
                         color: Color(0xFF7B3F61),
                         size: 40,
                       ),
                     ),
-                  ],
+                  ),
                 ),
+                if (_searchResults.isNotEmpty) _buildSearchResults(),
               ],
             ),
           ),
@@ -371,7 +484,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                           : Text(
                               _address.isNotEmpty
                                   ? _address
-                                  : 'Tap on the map to place a pin',
+                                  : 'Drag the map to move the pin',
                               style: GoogleFonts.montserrat(
                                 fontSize: 12,
                                 color: _address.isNotEmpty
