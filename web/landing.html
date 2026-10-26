@@ -40,301 +40,393 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Montserrat', sans-serif; color: #3E3E3E; background: #F8F5F0; }
-    a { color: #7B3F61; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    /* Nav */
-    nav {
-      background: #7B3F61;
-      padding: 16px 28px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
+    /* easiYESt brand tokens (contrast-checked) */
+    :root {
+      --plum: #7B3F61;          /* Hero color */
+      --plum-deep: #5E2F4A;     /* hover / pressed */
+      --plum-ink: #4A2239;      /* text on champagne & light buttons */
+      --champagne: #DCC7AA;     /* Accent – only on plum or dark */
+      --champagne-light: #F1E6D4;
+      --gold-line: #B8996E;     /* fine lines on light backgrounds */
+      --blush: #F2E4E1;         /* soft section background */
+      --rose: #C99A93;          /* lines & ornaments only, never text */
+      --cream: #F8F5F0;
+      --white: #FFFFFF;
+      --ink: #3D3438;           /* body text */
+      --ink-soft: #6B6266;      /* secondary text */
+      --night: #2B2427;         /* footer */
+      --display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --body: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      --gutter-l: max(20px, env(safe-area-inset-left, 0px));
+      --gutter-r: max(20px, env(safe-area-inset-right, 0px));
     }
-    nav .logo { color: #DCC7AA; font-family: 'Bodoni Moda', serif; font-size: 1.5rem; font-weight: 600; letter-spacing: 0.5px; }
-    nav .nav-links { display: flex; gap: 20px; align-items: center; margin-left: auto; }
-    nav .nav-links a { color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 500; }
-    nav .nav-links a:hover { color: #DCC7AA; text-decoration: none; }
-    nav .cta-btn { background: #DCC7AA; color: #7B3F61; padding: 10px 24px; border-radius: 24px; font-size: 0.85rem; font-weight: 700; }
-    nav .cta-btn:hover { text-decoration: none; background: #e8d8bf; }
-    nav .nav-login { color: rgba(255,255,255,0.8); font-size: 0.85rem; font-weight: 500; border: 1.5px solid rgba(255,255,255,0.4); padding: 8px 20px; border-radius: 24px; }
-    nav .nav-login:hover { color: #DCC7AA; border-color: #DCC7AA; text-decoration: none; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body { font-family: var(--body); color: var(--ink); background: var(--cream); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+    a { color: var(--plum); }
+    img { max-width: 100%; display: block; }
+    :focus-visible { outline: 2px solid var(--champagne); outline-offset: 4px; }
+    main :focus-visible, footer :focus-visible { outline-color: var(--plum); }
 
-    /* Hero */
-    .hero { background: #7B3F61; color: #fff; padding: 80px 24px 96px; text-align: center; }
-    .free-badge {
-      display: inline-block;
-      background: rgba(220,199,170,0.18);
-      border: 1.5px solid rgba(220,199,170,0.5);
-      color: #DCC7AA;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      padding: 6px 20px;
-      border-radius: 20px;
-      margin-bottom: 28px;
+    /* ---------- Stationery buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      font-family: var(--body); font-weight: 600; font-size: 0.74rem; letter-spacing: 2.4px; text-transform: uppercase;
+      text-decoration: none; padding: 15px 30px; border-radius: 0;
+      outline-offset: 4px; transition: background .25s, color .25s, outline-color .25s;
     }
-    .hero h1 {
-      font-family: 'Bodoni Moda', serif;
-      font-size: 3rem;
-      font-weight: 600;
-      line-height: 1.2;
-      margin-bottom: 18px;
+    .btn svg { width: 15px; height: 15px; transition: transform .25s; }
+    .btn:hover svg { transform: translateX(4px); }
+    /* Solid champagne, for the main call to action on photos and plum */
+    .btn-solid { background: var(--champagne); color: var(--plum-ink); border: 1px solid var(--champagne); outline: 1px solid rgba(220,199,170,0.7); }
+    .btn-solid:hover { background: var(--champagne-light); border-color: var(--champagne-light); }
+    /* Outlined, for light backgrounds */
+    .btn-line { background: transparent; color: var(--plum-ink); border: 1px solid var(--plum-ink); outline: 1px solid var(--gold-line); }
+    .btn-line:hover { background: var(--plum-ink); color: var(--white); }
+    .btn:focus-visible { outline: 2px solid var(--plum); outline-offset: 4px; }
+    .hero .btn:focus-visible, .nav .btn:focus-visible { outline-color: var(--white); }
+
+    /* ---------- Whisper labels & gold dividers ---------- */
+    .eyebrow { font-size: 0.66rem; font-weight: 600; letter-spacing: 3.2px; text-transform: uppercase; color: var(--plum); }
+    .rule { display: flex; align-items: center; gap: 16px; width: min(320px, 80%); margin: 0 auto; color: var(--rose); }
+    .rule i { flex: 1; height: 1px; background: currentColor; }
+    .rule span { font-family: var(--display); font-style: italic; font-size: 1.05rem; color: var(--plum); white-space: nowrap; }
+    .rule svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ---------- Nav (floats over the hero) ---------- */
+    .nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+      display: flex; align-items: center; gap: 32px;
+      padding: calc(24px + env(safe-area-inset-top, 0px)) var(--gutter-r) 24px var(--gutter-l);
+      max-width: 1400px; margin: 0 auto;
     }
-    .hero .hero-sub {
-      font-size: 1rem;
-      font-weight: 400;
-      max-width: 560px;
-      margin: 0 auto 0;
-      opacity: 0.88;
-      line-height: 1.8;
+    .logo { font-family: var(--display); font-weight: 500; font-size: 1.65rem; color: var(--white); text-decoration: none; letter-spacing: 0.2px; }
+    .logo span { color: var(--champagne); font-style: italic; }
+    .nav-links { display: flex; gap: 30px; margin-left: auto; align-items: center; }
+    .nav-links a:not(.btn) { color: rgba(255,255,255,0.92); text-decoration: none; font-size: 0.7rem; font-weight: 600; letter-spacing: 2.2px; text-transform: uppercase; }
+    .nav-links a:not(.btn):hover { color: var(--champagne); }
+    .nav .btn { padding: 11px 20px; font-size: 0.68rem; }
+    .menu-btn { display: none; margin-left: auto; background: none; border: 0; padding: 8px; cursor: pointer; }
+    .menu-btn span { display: block; width: 24px; height: 1.5px; background: var(--white); margin: 6px 0; transition: transform .25s, opacity .25s; }
+    .menu-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+    .menu-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .menu-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+    .mobile-menu {
+      position: absolute; top: calc(76px + env(safe-area-inset-top, 0px)); left: 12px; right: 12px; z-index: 30;
+      background: var(--plum-deep); padding: 8px 22px 24px; border: 1px solid rgba(220,199,170,0.35);
+      display: flex; flex-direction: column; box-shadow: 0 18px 40px rgba(43,36,39,0.35);
     }
+    .mobile-menu a:not(.btn) { color: var(--white); text-decoration: none; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.12); font-size: 0.74rem; font-weight: 600; letter-spacing: 2.2px; text-transform: uppercase; }
+    .mobile-menu .btn { margin-top: 18px; }
 
-    /* Path pills */
-    .path-pills { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 44px 0 28px; }
-    .pill {
-      background: rgba(255,255,255,0.1);
-      border: 1.5px solid rgba(255,255,255,0.25);
-      border-radius: 16px;
-      padding: 24px 28px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      min-width: 170px;
-      max-width: 210px;
-      flex: 1;
-      color: #fff;
-      transition: background 0.18s, border-color 0.18s, transform 0.18s;
-      text-align: center;
-      cursor: pointer;
+    /* ---------- Hero slideshow ---------- */
+    .hero { position: relative; height: min(90vh, 840px); min-height: 580px; overflow: hidden; background: var(--night); color: var(--white); }
+    .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.4s ease; }
+    .slide.is-active { opacity: 1; }
+    .slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.05); transition: transform 8s ease-out; }
+    .slide.is-active img { transform: scale(1); }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+      background:
+        linear-gradient(180deg, rgba(43,36,39,0.55) 0%, rgba(43,36,39,0) 24%),
+        linear-gradient(0deg, rgba(43,36,39,0.8) 0%, rgba(43,36,39,0.28) 46%, rgba(43,36,39,0) 72%);
     }
-    .pill:hover { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.55); transform: translateY(-3px); text-decoration: none; color: #fff; }
-    .pill-primary { background: #DCC7AA; border-color: #DCC7AA; color: #7B3F61; }
-    .pill-primary:hover { background: #e8d8bf; border-color: #e8d8bf; color: #7B3F61; }
-    .pill svg { width: 32px; height: 32px; flex-shrink: 0; }
-    .pill strong { font-family: 'Bodoni Moda', serif; font-size: 1rem; font-weight: 600; display: block; margin-top: 2px; }
-    .pill span { font-size: 0.78rem; opacity: 0.75; line-height: 1.4; }
-    .pill-primary span { opacity: 0.65; }
+    /* Thin champagne frame inset in the photo, like a mat on a print */
+    .hero-frame { position: absolute; z-index: 2; inset: 14px; border: 1px solid rgba(220,199,170,0.38); pointer-events: none; }
+    .placeholder { width: 100%; height: 100%; display: grid; place-items: center; }
+    .placeholder em { font-family: var(--display); font-style: italic; font-size: clamp(5rem, 16vw, 13rem); color: rgba(255,255,255,0.10); }
 
-    .hero .sub { font-size: 0.8rem; opacity: 0.55; letter-spacing: 0.2px; }
-
-    /* Features */
-    .features { background: #fff; padding: 80px 24px; }
-    .features-inner { max-width: 960px; margin: 0 auto; }
-    .features-inner h2 { font-family: 'Bodoni Moda', serif; font-size: 1.9rem; font-weight: 600; color: #7B3F61; margin-bottom: 8px; text-align: center; }
-    .features-tagline { text-align: center; color: #6E6E6E; margin-bottom: 44px; font-size: 0.97rem; }
-    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
-
-    .feature-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 32px 28px;
-      border: 1px solid #e8e0d8;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      display: block;
-      color: inherit;
-      text-decoration: none;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-      cursor: pointer;
-      border-top: 3px solid #7B3F61;
+    .hero-copy {
+      position: absolute; z-index: 5; left: 0; right: 0; bottom: 0;
+      max-width: 1400px; margin: 0 auto;
+      padding: 0 var(--gutter-r) clamp(72px, 11vh, 112px) calc(var(--gutter-l) + 12px);
+      display: flex; flex-direction: column; align-items: flex-start; gap: 18px;
     }
-    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(123,63,97,0.12); text-decoration: none; }
-    .feature-card .icon { width: 40px; height: 40px; margin-bottom: 20px; display: block; }
-    .feature-card h3 { font-family: 'Bodoni Moda', serif; font-size: 1.05rem; font-weight: 600; color: #7B3F61; margin-bottom: 10px; }
-    .feature-card p { font-size: 0.88rem; color: #6E6E6E; line-height: 1.75; margin-bottom: 0; }
-    .feature-card .arrow { display: inline-block; margin-top: 16px; font-size: 0.8rem; font-weight: 600; color: #7B3F61; letter-spacing: 0.3px; opacity: 0.7; }
-    .feature-card:hover .arrow { opacity: 1; }
+    .hero .eyebrow { color: var(--champagne-light); display: flex; align-items: center; gap: 14px; }
+    .hero .eyebrow::before { content: ""; width: 36px; height: 1px; background: var(--champagne); }
+    .hero h1 { font-family: var(--display); font-weight: 500; font-size: clamp(2.2rem, 4.6vw, 3.6rem); line-height: 1.08; margin: 0; max-width: 17ch; text-wrap: balance; }
+    .hero h1 em { font-style: italic; color: var(--champagne); }
+    .hero p.sub { margin: 0; max-width: 44ch; font-size: clamp(0.95rem, 1.4vw, 1.06rem); color: rgba(255,255,255,0.9); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 18px 22px; align-items: center; margin-top: 10px; }
+    .hero .btn { padding: 17px 34px; font-size: 0.76rem; }
+    .hero-note { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.85); }
 
-    /* Why strip */
-    .why-strip { background: #F8F5F0; padding: 48px 24px; border-top: 1px solid #e8e0d8; }
-    .why-inner { max-width: 860px; margin: 0 auto; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-    .why-link {
-      background: #fff;
-      border: 1px solid #DCC7AA;
-      border-radius: 40px;
-      padding: 14px 28px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: #7B3F61;
-      transition: background 0.15s, box-shadow 0.15s;
+    /* Vendor credit, bottom-right */
+    .credit {
+      position: absolute; z-index: 6;
+      right: calc(max(16px, env(safe-area-inset-right, 0px)) + 14px); bottom: 34px;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(43,36,39,0.55); backdrop-filter: blur(8px);
+      color: var(--white); text-decoration: none; border: 1px solid rgba(220,199,170,0.3);
+      padding: 8px 14px 8px 10px; font-size: 0.78rem; max-width: calc(100% - 60px);
+      transition: background .2s;
     }
-    .why-link:hover { background: #7B3F61; color: #fff; text-decoration: none; box-shadow: 0 4px 16px rgba(123,63,97,0.18); }
+    .credit:hover { background: rgba(43,36,39,0.82); }
+    .credit .cam { width: 26px; height: 26px; border-radius: 50%; background: var(--champagne); display: grid; place-items: center; flex-shrink: 0; }
+    .credit .cam svg { width: 14px; height: 14px; }
+    .credit b { font-weight: 600; }
+    .credit small { display: block; font-size: 0.64rem; color: rgba(255,255,255,0.78); letter-spacing: 1.4px; text-transform: uppercase; }
+    .credit-text { min-width: 0; line-height: 1.35; }
 
-    /* Footer */
-    footer { background: #2e2e2e; color: #999; text-align: center; padding: 28px 24px; font-size: 0.82rem; }
-    footer a { color: #DCC7AA; }
-    footer a:hover { text-decoration: underline; }
-    .footer-links { margin-top: 10px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .controls { position: absolute; z-index: 6; left: calc(var(--gutter-l) + 12px); bottom: 38px; display: flex; align-items: center; gap: 14px; }
+    .dots { display: flex; gap: 8px; }
+    .dots button { width: 28px; height: 2px; padding: 0; border: 0; background: rgba(255,255,255,0.4); cursor: pointer; position: relative; }
+    .dots button[aria-current="true"] { background: var(--champagne); }
+    .dots button::before { content: ""; position: absolute; inset: -11px -2px; }
+    .ctrl { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.45); background: transparent; color: var(--white); display: grid; place-items: center; cursor: pointer; padding: 0; }
+    .ctrl:hover { background: rgba(255,255,255,0.12); }
+    .ctrl svg { width: 13px; height: 13px; }
 
-    /* Hamburger + mobile menu */
-    .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-shrink: 0; }
-    .hamburger span { display: block; width: 24px; height: 2px; background: #DCC7AA; margin: 5px 0; border-radius: 2px; transition: all 0.25s; }
-    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger.open span:nth-child(2) { opacity: 0; }
-    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-    .mobile-menu { display: none; flex-direction: column; background: #6a3554; padding: 16px 24px 24px; }
-    .mobile-menu a { color: rgba(255,255,255,0.9); font-size: 1rem; font-weight: 500; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.1); text-decoration: none; display: block; }
-    .mobile-menu a:last-child { border-bottom: none; }
-    .mobile-menu .mobile-cta { background: #DCC7AA; color: #7B3F61 !important; padding: 12px 24px; border-radius: 24px; font-weight: 700; text-align: center; margin-top: 12px; border-bottom: none !important; }
-    .mobile-menu.open { display: flex; }
+    /* ---------- Three paths, on blush ---------- */
+    .paths { background: var(--blush); padding-block: clamp(72px, 10vw, 128px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+    .paths-inner { max-width: 1140px; margin: 0 auto; display: flex; flex-direction: column; gap: clamp(44px, 6vw, 64px); }
+    .section-head { display: flex; flex-direction: column; gap: 16px; text-align: center; align-items: center; }
+    .section-head h2 { font-family: var(--display); font-weight: 500; font-size: clamp(1.7rem, 3vw, 2.3rem); line-height: 1.15; margin: 0; color: var(--ink); text-wrap: balance; max-width: 22ch; }
+    .section-head h2 em { font-style: italic; color: var(--plum); }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(28px, 4vw, 48px); }
+    .card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; text-decoration: none; color: var(--ink); min-width: 0; }
+    /* Arched photo frame */
+    .arch {
+      position: relative; width: 100%; max-width: 300px; aspect-ratio: 3 / 4;
+      border-radius: 999px 999px 0 0; overflow: hidden; margin-bottom: 14px;
+      box-shadow: 0 0 0 6px var(--blush), 0 0 0 7px var(--rose);
+      transition: transform .35s ease, box-shadow .35s ease;
+    }
+    .arch img, .arch .ph { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; }
+    .arch .ph { display: grid; place-items: center; }
+    .arch .ph svg { width: 54px; height: 54px; stroke: rgba(255,255,255,0.7); }
+    .card:hover .arch { transform: translateY(-6px); box-shadow: 0 0 0 6px var(--blush), 0 0 0 7px var(--plum), 0 22px 40px rgba(123,63,97,0.18); }
+    .card:hover .arch img, .card:hover .arch .ph { transform: scale(1.04); }
+    .arch-credit { font-size: 0.6rem; letter-spacing: 1.8px; text-transform: uppercase; color: var(--ink-soft); margin-top: -4px; }
+    .card .num { font-family: var(--display); font-style: italic; font-size: 1rem; color: var(--plum); }
+    .card h3 { font-family: var(--display); font-weight: 500; font-size: 1.45rem; line-height: 1.2; margin: 0; color: var(--ink); }
+    .card p { margin: 0; color: var(--ink-soft); font-size: 0.93rem; max-width: 32ch; flex: 1; }
+    .card .go { margin-top: 10px; }
+    .card:hover .go { background: var(--plum-ink); color: var(--white); }
+    .card:hover .go svg { transform: translateX(4px); }
 
-    @media (max-width: 600px) {
-      .hero h1 { font-size: 2rem; }
-      .path-pills { flex-direction: column; align-items: center; }
-      .pill { max-width: 100%; width: 100%; flex-direction: row; text-align: left; gap: 16px; }
-      nav .nav-links { display: none; }
-      nav .nav-login { display: none; }
-      nav .cta-btn { display: none; }
-      .hamburger { display: block; }
+    /* ---------- Closing note on cream ---------- */
+    .closing { padding-block: clamp(64px, 8vw, 104px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); text-align: center; }
+    .closing-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .closing p.quote { font-family: var(--display); font-style: italic; font-size: clamp(1.35rem, 2.6vw, 1.75rem); line-height: 1.4; color: var(--ink); margin: 0; text-wrap: balance; }
+
+    /* ---------- Footer ---------- */
+    footer { background: var(--night); color: #A89FA3; padding-block: 52px 40px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); font-size: 0.875rem; }
+    .foot { max-width: 1140px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; }
+    .foot .logo { font-size: 1.5rem; }
+    .foot .rule { color: rgba(220,199,170,0.5); width: min(260px, 70%); }
+    .foot nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; }
+    .foot nav a { color: var(--champagne); text-decoration: none; font-size: 0.68rem; letter-spacing: 2.2px; text-transform: uppercase; font-weight: 600; }
+    .foot nav a:hover { color: var(--champagne-light); }
+    .foot small { font-size: 0.78rem; }
+    footer :focus-visible { outline-color: var(--champagne); }
+
+    @media (max-width: 900px) {
+      .cards { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; width: 100%; gap: 64px; }
+    }
+    @media (max-width: 760px) {
+      .nav-links { display: none; }
+      .menu-btn { display: block; }
+      .hero { height: auto; min-height: 660px; }
+      .hero-frame { inset: 10px; }
+      .hero-copy { padding-bottom: 140px; padding-top: 150px; position: relative; }
+      .controls { bottom: 92px; }
+      .credit { bottom: 28px; right: auto; left: calc(var(--gutter-l) + 10px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .slide, .slide img, .arch, .arch img, .arch .ph, .btn, .btn svg { transition: none !important; }
+      .slide img { transform: none !important; }
     }
   </style>
 </head>
 <body>
 
-  <nav>
-    <span class="logo">easiYESt</span>
-    <div class="nav-links">
-      <a href="/for-couples">For Couples</a>
-      <a href="/utah-weddings">Utah Guide</a>
+  <header class="hero" aria-roledescription="carousel" aria-label="Utah wedding vendors">
+    <nav class="nav" aria-label="Main">
+      <a class="logo" href="/">easi<span>YES</span>t</a>
+      <div class="nav-links">
+        <a href="/app">Begin Planning</a>
+        <a href="/vendorRegistration">For Vendors</a>
+        <a href="/blog/">Blog</a>
+        <a href="/app">Log In</a>
+        <a class="btn btn-solid" href="/app">Start Free</a>
+      </div>
+      <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
+    </nav>
+    <div class="mobile-menu" id="mobile-menu" hidden>
+      <a href="/app">Begin Planning</a>
       <a href="/vendorRegistration">For Vendors</a>
-    </div>
-    <a class="nav-login" href="/app">Log In</a>
-    <a class="cta-btn" href="/app">Start Planning Free</a>
-    <button class="hamburger" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
-  </nav>
-  <div class="mobile-menu">
-    <a href="/for-couples">For Couples</a>
-    <a href="/utah-weddings">Utah Guide</a>
-    <a href="/vendorRegistration">For Vendors</a>
-    <a href="/app">Log In</a>
-    <a class="mobile-cta" href="/app">Start Planning Free</a>
-  </div>
-
-  <header class="hero">
-    <div class="free-badge">100% Free for Couples — Always</div>
-    <h1>Plan your perfect wedding,<br>your way.</h1>
-    <p class="hero-sub">Find vendors, track your budget, manage your guest list, and check off every milestone — all in one place.</p>
-
-    <div class="path-pills">
-      <a class="pill pill-primary" href="/app">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="4" width="20" height="13" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
-        <strong>Plan on Web</strong>
-        <span>Start now, no download needed</span>
-      </a>
-      <a class="pill" href="https://apps.apple.com/us/app/easiyest/id6757418346" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="1" width="14" height="22" rx="3"/><line x1="12" y1="18" x2="12" y2="18.5" stroke-width="2"/>
-        </svg>
-        <strong>Download the App</strong>
-        <span>Available on iOS</span>
-      </a>
-      <a class="pill" href="/vendorRegistration">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
-        <strong>I'm a Vendor</strong>
-        <span>List my business</span>
-      </a>
+      <a href="/blog/">Blog</a>
+      <a href="/app">Log In</a>
+      <a class="btn btn-solid" href="/app">Start Free</a>
     </div>
 
-    <p class="sub">No credit card &middot; No hidden fees &middot; No paywalls</p>
-  </header>
+    <div id="slides"></div>
+    <div class="hero-frame" aria-hidden="true"></div>
 
-  <!-- Features -->
-  <div class="features">
-    <div class="features-inner">
-      <h2>Everything You Need to Plan Your Wedding</h2>
-      <p class="features-tagline">All of it free. All of it in one place.</p>
-      <div class="feature-grid">
-        <a class="feature-card" href="/app?tab=0">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="10.5" cy="10.5" r="7.5"/><line x1="16" y1="16" x2="22" y2="22"/>
-          </svg>
-          <h3>Vendor Discovery</h3>
-          <p>Browse a curated directory of local vendors — photographers, venues, caterers, florists, and more — and save your favorites as you go.</p>
-          <span class="arrow">Explore vendors →</span>
-        </a>
-        <a class="feature-card" href="/app?tab=1">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="3" width="9" height="18" rx="1.5"/><rect x="13" y="3" width="9" height="18" rx="1.5"/>
-          </svg>
-          <h3>Vendor Comparison</h3>
-          <p>Compare your shortlisted vendors side by side — pricing, services, and details — so you can make confident decisions without the back-and-forth.</p>
-          <span class="arrow">Compare vendors →</span>
-        </a>
-        <a class="feature-card" href="/app?tab=2">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1"/><path d="M9.5 9.5c0-1 .9-1.5 2.5-1.5s2.5.7 2.5 1.8c0 2.2-5 1.9-5 4.4 0 1.2 1 1.8 2.5 1.8s2.5-.8 2.5-1.8"/>
-          </svg>
-          <h3>Budget Tracker</h3>
-          <p>Set your total budget and track every expense. See exactly where your money is going and stay on top of payments before they sneak up on you.</p>
-          <span class="arrow">Track your budget →</span>
-        </a>
-        <a class="feature-card" href="/app?tab=2">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/>
-          </svg>
-          <h3>Guest List &amp; Digital RSVPs</h3>
-          <p>Build your guest list, collect dietary preferences and plus-ones, and share a custom RSVP link so guests can respond online instantly.</p>
-          <span class="arrow">Manage guests →</span>
-        </a>
-        <a class="feature-card" href="/app?tab=2">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-          </svg>
-          <h3>Wedding Checklist</h3>
-          <p>Follow a comprehensive, month-by-month wedding planning checklist. Check off milestones from engagement announcement all the way to the honeymoon.</p>
-          <span class="arrow">View checklist →</span>
-        </a>
-        <a class="feature-card" href="/app?tab=3">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="#7B3F61" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 3h12l4 6-10 13L2 9z"/><line x1="2" y1="9" x2="22" y2="9"/><line x1="12" y1="3" x2="8" y2="9"/><line x1="12" y1="3" x2="16" y2="9"/>
-          </svg>
-          <h3>Countdown &amp; YES Page</h3>
-          <p>Watch the days count down to your big day. Your personal YES page keeps your most-loved vendors and wedding details front and center.</p>
-          <span class="arrow">See your YES page →</span>
+    <div class="hero-copy">
+      <h1>The easi<em>YES</em>t way to plan your Utah wedding</h1>
+      <p class="sub">Explore loved, local, handpicked vendors.</p>
+      <div class="hero-actions">
+        <a class="btn btn-solid" href="/app">Begin Planning
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
         </a>
       </div>
     </div>
-  </div>
 
-  <!-- Quick links to sub-pages -->
-  <div class="why-strip">
-    <div class="why-inner">
-      <a class="why-link" href="/for-couples">Why couples choose easiYESt →</a>
-      <a class="why-link" href="/utah-weddings">Planning a Utah wedding? →</a>
-      <a class="why-link" href="/vendorRegistration">Are you a wedding vendor? →</a>
+    <div class="controls">
+      <button class="ctrl" id="pause" aria-label="Pause slideshow"></button>
+      <div class="dots" id="dots"></div>
     </div>
-  </div>
+
+    <a class="credit" id="credit" href="#">
+      <span class="cam"><svg viewBox="0 0 24 24" fill="none" stroke="#4A2239" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+      <span class="credit-text"><b id="credit-name"></b><small id="credit-role"></small></span>
+    </a>
+  </header>
+
+  <main>
+    <section class="paths" aria-labelledby="paths-title">
+      <div class="paths-inner">
+        <div class="section-head">
+          <span class="eyebrow">Where to begin</span>
+          <h2 id="paths-title">Everything in <em>one place</em></h2>
+          <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
+        </div>
+        <div class="cards">
+          <a class="card" href="/app">
+            <span class="arch"><img src="images/card-sand-and-sun-floral.jpg" alt="Draped ceremony aisle with white chairs" loading="lazy"></span>
+            <span class="arch-credit">Photo · Sand and Sun Floral</span>
+            <span class="num">i.</span>
+            <h3>Begin Planning</h3>
+            <p>Browse every Utah vendor type and plan it all in one place.</p>
+            <span class="btn btn-line go">Start planning <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></span>
+          </a>
+          <a class="card" href="/vendorRegistration">
+            <span class="arch"><img src="images/card-still-rooted.jpg" alt="Candlelit reception table with white florals" loading="lazy"></span>
+            <span class="arch-credit">Photo · Still Rooted Photography</span>
+            <span class="num">ii.</span>
+            <h3>For Vendors</h3>
+            <p>List your business and get found by Utah couples.</p>
+            <span class="btn btn-line go">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></span>
+          </a>
+          <a class="card" href="/blog/">
+            <span class="arch"><img src="images/card-simply-sophie.jpg" alt="Bride holding a white bouquet, showing her ring" loading="lazy"></span>
+            <span class="arch-credit">Photo · Simply Sophie Floral Design</span>
+            <span class="num">iii.</span>
+            <h3>The Blog</h3>
+            <p>Our story, app tips and what nobody tells you.</p>
+            <span class="btn btn-line go">Read the blog <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
   <footer>
-    <p>&copy; 2026 easiYESt. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="/app">App</a>
-      <a href="/landing">Home</a>
-      <a href="/for-couples">For Couples</a>
-      <a href="/utah-weddings">Utah Guide</a>
-      <a href="/vendorRegistration">For Vendors</a>
-      <a href="/privacy">Privacy Policy</a>
+    <div class="foot">
+      <a class="logo" href="/" style="color:#fff">easi<span style="color:var(--champagne);font-style:italic">YES</span>t</a>
+      <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
+      <nav aria-label="Footer">
+        <a href="/app">Begin Planning</a>
+        <a href="/for-couples">For Couples</a>
+        <a href="/utah-weddings">Utah Guide</a>
+        <a href="/vendorRegistration">For Vendors</a>
+        <a href="/blog/">Blog</a>
+        <a href="/privacy">Privacy Policy</a>
+      </nav>
+      <small>&copy; 2026 easiYESt</small>
     </div>
   </footer>
 
   <script>
-    (function(){
-      var btn = document.querySelector('.hamburger');
-      var menu = document.querySelector('.mobile-menu');
-      btn.addEventListener('click', function(){ btn.classList.toggle('open'); menu.classList.toggle('open'); });
+    /* ===== EDIT YOUR SLIDES HERE =====
+       image:  path or URL to the vendor's photo (wide, at least 2000px across looks best)
+       vendor: the name shown in the credit
+       type:   their category, shown under the name
+       link:   where the credit goes (their page in your app, or their website)
+       Leave image empty ('') to show a placeholder. */
+    var SLIDES = [
+      { image: 'images/hero-cc-photo-film.jpg',      vendor: 'C+C Photo Film',                     type: 'Photo & Film · Utah',    link: 'https://www.ccphotofilm.com' },
+      { image: 'images/hero-memorial-house-garden.jpg', vendor: 'Memorial House',                  type: 'Venue · Salt Lake City', link: 'https://www.memorialhouse-utah.com/' },
+      { image: 'images/hero-rockwell-ice-cream.jpg',    vendor: 'Rockwell Ice Cream Catering',     type: 'Catering · Salt Lake & Utah County', link: 'https://rockwellicecream.com/pages/catering' },
+      { image: 'images/hero-firefly-reception.jpg',     vendor: 'Firefly Event Rental',            type: 'Decor & Rentals · American Fork',    link: 'https://fireflyeventrentals.com/' },
+      { image: 'images/hero-bay-and-bre.jpg',        vendor: 'Bay and Bre Photo',                  type: 'Photographer · Orem',    link: 'https://bayandbrephoto.com/' }
+    ];
+    var INTERVAL = 6000;
+
+    (function () {
+      var host = document.getElementById('slides'), dots = document.getElementById('dots');
+      var credit = document.getElementById('credit'), cName = document.getElementById('credit-name'), cRole = document.getElementById('credit-role');
+      var pauseBtn = document.getElementById('pause');
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var i = 0, timer = null, paused = reduce;
+
+      SLIDES.forEach(function (s, n) {
+        var el = document.createElement('div');
+        el.className = 'slide' + (n === 0 ? ' is-active' : '');
+        el.setAttribute('role', 'group'); el.setAttribute('aria-roledescription', 'slide');
+        el.setAttribute('aria-label', (n + 1) + ' of ' + SLIDES.length);
+        if (s.image) {
+          var img = document.createElement('img');
+          img.src = s.image; img.alt = s.type + ' by ' + s.vendor;
+          if (n > 0) img.loading = 'lazy';
+          el.appendChild(img);
+        } else {
+          var ph = document.createElement('div'); ph.className = 'placeholder';
+          var t = s.tone || ['#5E2F4A', '#C99A93'];
+          ph.style.background = 'radial-gradient(120% 90% at 75% 20%, ' + t[1] + ' 0%, ' + t[0] + ' 60%)';
+          ph.innerHTML = '<em>' + (s.mark || '') + '</em>';
+          el.appendChild(ph);
+        }
+        host.appendChild(el);
+        var d = document.createElement('button');
+        d.setAttribute('aria-label', 'Show slide ' + (n + 1));
+        d.addEventListener('click', function () { go(n); restart(); });
+        dots.appendChild(d);
+      });
+
+      function go(n) {
+        var slides = host.children;
+        slides[i].classList.remove('is-active');
+        i = (n + SLIDES.length) % SLIDES.length;
+        slides[i].classList.add('is-active');
+        Array.prototype.forEach.call(dots.children, function (d, k) { d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+        cName.textContent = SLIDES[i].vendor;
+        cRole.textContent = SLIDES[i].type;
+        credit.href = SLIDES[i].link || '#';
+        if (/^https?:/.test(credit.href)) { credit.target = '_blank'; credit.rel = 'noopener'; } else { credit.removeAttribute('target'); }
+        credit.setAttribute('aria-label', 'Photo by ' + SLIDES[i].vendor + ', ' + SLIDES[i].type);
+      }
+      function restart() { clearInterval(timer); if (!paused) timer = setInterval(function () { go(i + 1); }, INTERVAL); }
+      function setPaused(p) {
+        paused = p;
+        pauseBtn.setAttribute('aria-label', p ? 'Play slideshow' : 'Pause slideshow');
+        pauseBtn.innerHTML = p
+          ? '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5l12 7-12 7z"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+        restart();
+      }
+      pauseBtn.addEventListener('click', function () { setPaused(!paused); });
+      go(0); setPaused(paused);
+
+      var x0 = null;
+      host.parentElement.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+      host.parentElement.addEventListener('touchend', function (e) {
+        if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null;
+        if (Math.abs(dx) > 50) { go(i + (dx < 0 ? 1 : -1)); restart(); }
+      });
+
+      var mb = document.getElementById('menu-btn'), mm = document.getElementById('mobile-menu');
+      mb.addEventListener('click', function () {
+        var open = mb.getAttribute('aria-expanded') !== 'true';
+        mb.setAttribute('aria-expanded', String(open)); mb.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        mm.hidden = !open;
+      });
     })();
   </script>
 </body>

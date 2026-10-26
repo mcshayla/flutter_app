@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>The easiYESt Blog – Utah Wedding Planning Tips</title>
+  <meta name="description" content="The story behind easiYESt, how to use the app, and the wedding planning things nobody tells you.">
+  <link rel="canonical" href="https://www.easiyest.com/blog/">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --plum: #7B3F61; --plum-deep: #5E2F4A; --plum-ink: #4A2239; --champagne: #DCC7AA; --champagne-light: #F1E6D4;
+      --gold-line: #B8996E; --blush: #F2E4E1; --rose: #C99A93;
+      --cream: #F8F5F0; --white: #FFFFFF; --ink: #3D3438; --ink-soft: #6B6266; --night: #2B2427;
+      --display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --body: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+      --gutter-l: max(20px, env(safe-area-inset-left, 0px)); --gutter-r: max(20px, env(safe-area-inset-right, 0px));
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: var(--body); color: var(--ink); background: var(--cream); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+    :focus-visible { outline: 2px solid var(--plum); outline-offset: 4px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 10px; font-family: var(--body); font-weight: 600; font-size: 0.68rem; letter-spacing: 2.4px; text-transform: uppercase; text-decoration: none; padding: 11px 20px; outline-offset: 4px; transition: background .25s, color .25s; }
+    .btn-solid { background: var(--champagne); color: var(--plum-ink); border: 1px solid var(--champagne); outline: 1px solid rgba(220,199,170,0.7); }
+    .btn-solid:hover { background: var(--champagne-light); }
+    .btn-solid:focus-visible { outline: 2px solid var(--white); }
+
+    .eyebrow { font-size: 0.66rem; font-weight: 600; letter-spacing: 3.2px; text-transform: uppercase; color: var(--plum); }
+    .rule { display: flex; align-items: center; gap: 16px; width: min(320px, 80%); margin: 0 auto; color: var(--rose); }
+    .rule i { flex: 1; height: 1px; background: currentColor; }
+    .rule svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .top { background: var(--plum); padding-block: calc(22px + env(safe-area-inset-top, 0px)) 22px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+    .top-inner { max-width: 1140px; margin: 0 auto; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    .logo { font-family: var(--display); font-weight: 500; font-size: 1.55rem; color: var(--white); text-decoration: none; }
+    .logo span { color: var(--champagne); font-style: italic; }
+    .top nav { margin-left: auto; display: flex; gap: 28px; align-items: center; }
+    .top nav a:not(.btn) { color: rgba(255,255,255,0.92); text-decoration: none; font-size: 0.68rem; font-weight: 600; letter-spacing: 2.2px; text-transform: uppercase; }
+    .top nav a:not(.btn):hover { color: var(--champagne); }
+
+    .intro { background: var(--blush); text-align: center; padding-block: clamp(56px, 8vw, 96px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+    .intro-inner { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+    h1 { font-family: var(--display); font-weight: 500; font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.12; margin: 0; text-wrap: balance; }
+    h1 em { font-style: italic; color: var(--plum); }
+    .intro p { margin: 0; color: var(--ink-soft); max-width: 50ch; }
+
+    main { max-width: 1140px; margin: 0 auto; padding-block: clamp(56px, 8vw, 96px); padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+    .posts { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(32px, 4vw, 48px); }
+    .post { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; text-decoration: none; color: var(--ink); min-width: 0; }
+    .arch { width: 100%; max-width: 280px; aspect-ratio: 4 / 5; border-radius: 999px 999px 0 0; overflow: hidden; margin-bottom: 12px; box-shadow: 0 0 0 6px var(--cream), 0 0 0 7px var(--rose); }
+    .arch img, .arch .ph { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .post .cat { font-size: 0.64rem; font-weight: 600; letter-spacing: 2.8px; text-transform: uppercase; color: var(--plum); }
+    .post h2 { font-family: var(--display); font-weight: 500; font-size: 1.5rem; line-height: 1.25; margin: 0; }
+    .post p { margin: 0; color: var(--ink-soft); font-size: 0.93rem; max-width: 32ch; }
+    .post .soon { font-family: var(--display); font-style: italic; color: var(--plum); font-size: 0.95rem; }
+
+    footer { background: var(--night); color: #A89FA3; padding-block: 44px; padding-left: var(--gutter-l); padding-right: var(--gutter-r); font-size: 0.82rem; text-align: center; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+    footer .rule { color: rgba(220,199,170,0.5); width: min(240px, 70%); }
+    footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; }
+    footer nav a { color: var(--champagne); text-decoration: none; font-size: 0.66rem; letter-spacing: 2.2px; text-transform: uppercase; font-weight: 600; }
+    footer :focus-visible { outline-color: var(--champagne); }
+
+    @media (max-width: 900px) { .posts { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; gap: 56px; } }
+    @media (max-width: 640px) { .top nav a:not(.btn) { display: none; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="logo" href="/">easi<span>YES</span>t</a>
+      <nav aria-label="Main">
+        <a href="/app">Begin Planning</a>
+        <a href="/vendorRegistration">For Vendors</a>
+        <a class="btn btn-solid" href="/app">Start Free</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="intro">
+    <div class="intro-inner">
+      <span class="eyebrow">The easiYESt Blog</span>
+      <h1>Planning notes for <em>Utah couples</em></h1>
+      <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
+      <p>Our story, how to get the most out of the app, and the things nobody tells you until you're in the middle of it.</p>
+    </div>
+  </section>
+
+  <main>
+    <!-- To publish a post: change <article class="post"> to <a class="post" href="/blog/your-post"> (and </article> to </a>),
+         replace the <span class="ph"> with <img src="images/your-photo.jpg" alt="Describe the photo">, and remove "Coming soon". -->
+    <div class="posts">
+      <article class="post">
+        <span class="arch"><span class="ph" style="background:linear-gradient(170deg,#C99A93,#7B3F61 75%)"></span></span>
+        <span class="cat">Our story</span>
+        <h2>The story behind easiYESt</h2>
+        <p>How easiYESt started, and why planning your wedding shouldn't cost you anything.</p>
+        <span class="soon">Coming soon</span>
+      </article>
+      <article class="post">
+        <span class="arch"><span class="ph" style="background:linear-gradient(170deg,#DCC7AA,#9C6B4E 80%)"></span></span>
+        <span class="cat">Using the app</span>
+        <h2>How to find vendors with filters</h2>
+        <p>A walk-through of every filter, from category and city to price, so you only see vendors that fit.</p>
+        <span class="soon">Coming soon</span>
+      </article>
+      <article class="post">
+        <span class="arch"><span class="ph" style="background:linear-gradient(170deg,#E9CFC9,#5E2F4A 85%)"></span></span>
+        <span class="cat">Good to know</span>
+        <h2>Things brides don't find out until later</h2>
+        <p>Deposits, service fees, venue rules and the timeline details that are easier to plan for early.</p>
+        <span class="soon">Coming soon</span>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    <a class="logo" href="/" style="font-size:1.35rem">easi<span>YES</span>t</a>
+    <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
+    <nav aria-label="Footer">
+      <a href="/">Home</a>
+      <a href="/app">Begin Planning</a>
+      <a href="/vendorRegistration">For Vendors</a>
+      <a href="/privacy">Privacy Policy</a>
+    </nav>
+    <small>&copy; 2026 easiYESt</small>
+  </footer>
+</body>
+</html>

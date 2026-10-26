@@ -37,6 +37,8 @@ frontend:
         - cp public/app/resetPassword.html public/
         - cp public/app/favicon.png public/
         - cp -r public/app/icons public/
+        - cp -r public/app/images public/
+        - cp -r public/app/blog public/
         - cp public/app/robots.txt public/
         - cp public/app/sitemap.xml public/
   artifacts:

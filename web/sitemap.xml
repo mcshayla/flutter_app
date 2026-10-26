@@ -57,4 +57,12 @@
     <priority>0.7</priority>
   </url>
 
+  <!-- Blog -->
+  <url>
+    <loc>https://www.easiyest.com/blog/</loc>
+    <lastmod>2026-10-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
 </urlset>
