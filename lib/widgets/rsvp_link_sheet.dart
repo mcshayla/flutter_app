@@ -123,7 +123,7 @@ class _RsvpLinkSheetState extends State<_RsvpLinkSheet> {
                     children: [
                       Text(
                         'RSVP Links',
-                        style: GoogleFonts.bodoniModa(
+                        style: GoogleFonts.playfairDisplay(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF7B3F61),
@@ -211,7 +211,7 @@ class _RsvpLinkSheetState extends State<_RsvpLinkSheet> {
         children: [
           Text(
             'New RSVP Link',
-            style: GoogleFonts.bodoniModa(
+            style: GoogleFonts.playfairDisplay(
               fontSize: 17,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF7B3F61),
@@ -398,7 +398,7 @@ class _RsvpLinkSheetState extends State<_RsvpLinkSheet> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Delete Link?', style: GoogleFonts.bodoniModa()),
+        title: Text('Delete Link?', style: GoogleFonts.playfairDisplay()),
         content: Text(
           'The link "$label" will stop working. Guests who already submitted will remain in your list.',
           style: GoogleFonts.montserrat(fontSize: 13),

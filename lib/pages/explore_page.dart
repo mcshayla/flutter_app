@@ -77,11 +77,10 @@ class CategoryLanding extends StatelessWidget {
                           Text(
                             'Plan your wedding the easiest way!',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.bodoniModa(
+                            style: GoogleFonts.playfairDisplay(
                               fontSize: 28,
                               color: const Color(0xFF7B3F61),
                               fontWeight: FontWeight.w400,
-                              letterSpacing: 1.2,
                               height: 1.3,
                             ),
                           ),
@@ -205,11 +204,10 @@ class _CategoryCardState extends State<_CategoryCard> {
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       minFontSize: 14,
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 22,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 0.8,
                         height: 1.3,
                         shadows: [
                           const Shadow(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'utils/app_styles.dart';
 import 'package:say_yes/pages/web_landing_page.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -33,10 +34,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Wedding Planner App | Easiyest',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 174, 176, 129)),
-        scaffoldBackgroundColor: Color(0xFFF8F5F0),
-      ),
+      theme: AppStyles.theme(),
       onGenerateRoute: (RouteSettings settings) {
         String routePath = settings.name ?? '/';
         if (kIsWeb) {

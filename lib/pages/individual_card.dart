@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:say_yes/utils/string_extensions.dart';
 import '../appstate.dart';
 import 'package:provider/provider.dart';
 import '../utils/app_styles.dart';
 import '../utils/image_utils.dart';
 import '../widgets/spec_card.dart';
-import '../widgets/vendor_details_section.dart';
-import 'package:url_launcher/link.dart';
+import '../services/vendor_page_logic.dart';
+import '../widgets/vendor_page_parts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'budget_item_form.dart';
@@ -38,6 +37,12 @@ class IndividualCard extends StatefulWidget {
   /// the amenities section.
   final Map<String, dynamic> filterValues;
 
+  /// Numeric `starting_price`, `capacity_min` and `capacity_max` columns.
+  /// Optional; when present they feed the "at a glance" numbers.
+  final num? startingPrice;
+  final int? capacityMin;
+  final int? capacityMax;
+
   const IndividualCard({
     required this.category,
     required this.vendor_id,
@@ -58,6 +63,9 @@ class IndividualCard extends StatefulWidget {
     this.onHeartToggled,
     this.onDiamondToggled,
     this.filterValues = const {},
+    this.startingPrice,
+    this.capacityMin,
+    this.capacityMax,
     super.key,
   });
 
@@ -160,12 +168,7 @@ class _CustomCardState extends State<IndividualCard> {
     if (images.isEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          "https://picsum.photos/200/300",
-          width: double.infinity,
-          height: 500,
-          fit: BoxFit.cover,
-        ),
+        child: _photoPlaceholder(keyed: true),
       );
     }
 
@@ -202,10 +205,7 @@ class _CustomCardState extends State<IndividualCard> {
                       supabaseThumb(url, width: 800, quality: 75),
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.network(
-                          "https://picsum.photos/200/300",
-                          fit: BoxFit.cover,
-                        );
+                        return _photoPlaceholder();
                       },
                     ),
                     if (index == 2 && images.length > 3)
@@ -263,10 +263,7 @@ class _CustomCardState extends State<IndividualCard> {
                       width: double.infinity,
                       height: double.infinity,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.network(
-                          "https://picsum.photos/800/600",
-                          fit: BoxFit.cover,
-                        );
+                        return _photoPlaceholder();
                       },
                     ),
                   ),
@@ -356,60 +353,10 @@ class _CustomCardState extends State<IndividualCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.title,
-                      style: GoogleFonts.bodoniModa(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2.5,
-                        color: const Color(0xFF7B3F61),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        iconSize: 40,
-                        icon: Icon(
-                          isHearted ? Icons.favorite : Icons.favorite_border,
-                          color: const Color(0xFF7B3F61),
-                        ),
-                        onPressed: () {
-                          if (widget.onHeartToggled != null) {
-                            widget.onHeartToggled!(!isHearted);
-                          }
-                        },
-                      ),
-                      IconButton(
-                        iconSize: 40,
-                        icon: Icon(
-                          isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                          color: const Color(0xFF7B3F61),
-                        ),
-                        onPressed: () {
-                          if (widget.onDiamondToggled != null) {
-                            widget.onDiamondToggled!(!isDiamonded);
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+              _buildVendorHeader(appState, isHearted, isDiamonded, wide: true),
               const SizedBox(height: 24),
               _buildAboutPanel(isWide: true),
-              VendorDetailsSection(
-                filterValues: widget.filterValues,
-                filterGroups:
-                    appState.categoryFilters[widget.category] ?? const [],
-                optionsByKey: appState.filterOptions,
-                isWide: true,
-              ),
+              _buildVendorFacts(appState, details, images: widget.imageUrl, wide: true),
             ],
           ),
         ),
@@ -484,6 +431,131 @@ class _CustomCardState extends State<IndividualCard> {
     );
   }
 
+  VendorSlots _slots(AppState appState) => buildVendorSlots(
+        filterGroups: appState.categoryFilters[widget.category] ?? const [],
+        optionsByKey: appState.filterOptions,
+        filterValues: widget.filterValues,
+        startingPrice: widget.startingPrice,
+        priceText: widget.vendor_price.isNotEmpty ? widget.vendor_price : widget.vendor_estimated_price,
+        capacityMin: widget.capacityMin,
+        capacityMax: widget.capacityMax,
+      );
+
+  void _addToBudget() {
+    final price = widget.startingPrice?.toDouble() ??
+        double.tryParse(widget.vendor_price.replaceAll(RegExp(r'[^\d.]'), '')) ??
+        double.tryParse(widget.vendor_estimated_price.replaceAll(RegExp(r'[^\d.]'), ''));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BudgetItemForm(
+          prefillData: {
+            'item_name': widget.title,
+            'category': widget.category,
+            'estimated_cost': price,
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Name, Love/YES/Website, the YES note, the numbers and the highlights.
+  /// Shared by both layouts so they can't drift apart.
+  Widget _buildVendorHeader(AppState appState, bool isHearted, bool isDiamonded, {required bool wide}) {
+    final slots = _slots(appState);
+    final eyebrow = [widget.category, if (widget.location.trim().isNotEmpty && widget.location != 'Unknown') widget.location.trim()].join(' · ');
+    final hasPrice = widget.startingPrice != null || widget.vendor_price.isNotEmpty || widget.vendor_estimated_price.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(eyebrow.toUpperCase(), style: AppStyles.eyebrow()),
+        const SizedBox(height: 8),
+        Text(widget.title, style: AppStyles.display(wide ? 40 : 28)),
+        const SizedBox(height: 16),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: VendorActionRow(
+            isLoved: isHearted,
+            isYes: isDiamonded,
+            websiteUrl: widget.website_url,
+            onLove: (v) => widget.onHeartToggled?.call(v),
+            onYes: (v) => widget.onDiamondToggled?.call(v),
+            onWebsite: () {
+              appState.trackLinksClick(widget.vendor_id);
+              final url = widget.website_url.startsWith('http') ? widget.website_url : 'https://${widget.website_url}';
+              _launchInBrowser(Uri.parse(url));
+            },
+          ),
+        ),
+        if (isDiamonded) ...[
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: YesNote(category: widget.category, onAddToBudget: hasPrice ? _addToBudget : null),
+          ),
+        ],
+        if (slots.glance.isNotEmpty) ...[
+          const SizedBox(height: 18),
+          ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: AtAGlance(items: slots.glance)),
+        ],
+        if (slots.highlights.isNotEmpty) ...[
+          const SizedBox(height: 22),
+          ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: HighlightMedallions(items: slots.highlights)),
+        ],
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  /// The type-specific details, contact facts, What's included and photos.
+  Widget _buildVendorFacts(AppState appState, List<List<String>> details, {required List<String> images, required bool wide}) {
+    final slots = _slots(appState);
+    final mosaic = mosaicImages(images.where((u) => u.trim().isNotEmpty).toList());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (slots.details.isNotEmpty) ...[
+          const SectionHeading('Details'),
+          const SizedBox(height: 6),
+          DetailsList(items: slots.details),
+          const SizedBox(height: 24),
+        ],
+        if (!wide) ...[
+          SpecCard(entries: _coreSpecEntries(appState, details)),
+          const SizedBox(height: 24),
+        ],
+        if (slots.included.isNotEmpty) ...[
+          IncludedCard(groups: slots.included),
+          const SizedBox(height: 28),
+        ],
+        if (mosaic.isNotEmpty) ...[
+          PhotoMosaic(
+            images: mosaic,
+            imageBuilder: (url) => Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: AppStyles.blush)),
+          ),
+          const SizedBox(height: 28),
+        ],
+      ],
+    );
+  }
+
+  /// Shown when a vendor has no photos, or one fails to load. A soft brand
+  /// panel rather than a stock photo, which would misrepresent the vendor.
+  Widget _photoPlaceholder({bool keyed = false}) => Container(
+        key: keyed ? const ValueKey('photo-placeholder') : null,
+        width: double.infinity,
+        height: 260,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppStyles.blush, AppStyles.champagneLight],
+          ),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(Icons.photo_camera_outlined, size: 36, color: AppStyles.rose),
+      );
+
   /// The description and the style keywords on one elevated panel.
   ///
   /// Written once and used by both layouts. The keyword pills used to be
@@ -510,7 +582,7 @@ class _CustomCardState extends State<IndividualCard> {
     // The horizontal inset matches ElevatedPanel's own padding so the paragraph
     // stays in the same text column as the boxed blocks around it.
     return Padding(
-      padding: const EdgeInsets.only(left: 22, right: 22, bottom: 24),
+      padding: const EdgeInsets.only(bottom: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -519,13 +591,7 @@ class _CustomCardState extends State<IndividualCard> {
           if (widget.description.isNotEmpty)
             Text(
               widget.description,
-              style: GoogleFonts.montserrat(
-                fontSize: isWide ? 15 : 12.5,
-                fontWeight: FontWeight.w500,
-                letterSpacing: isWide ? 1.0 : 0.6,
-                height: isWide ? 1.6 : 1.55,
-                color: AppStyles.lightWrods,
-              ),
+              style: AppStyles.body(isWide ? 16 : 14.5, color: AppStyles.inkSoft).copyWith(height: 1.7),
               softWrap: true,
             ),
           if (keywords.isNotEmpty) ...[
@@ -578,7 +644,8 @@ class _CustomCardState extends State<IndividualCard> {
             item[1].trim().isNotEmpty &&
             item[1] != 'Unknown' &&
             item[0] != 'Style Keywords' &&
-            item[0] != 'Description')
+            item[0] != 'Description' &&
+            item[0] != 'Starting Price')
         .map((item) {
       final label = item[0];
       final value = item[1];
@@ -624,11 +691,7 @@ class _CustomCardState extends State<IndividualCard> {
                       width: double.infinity,
                       fit: BoxFit.fitWidth,
                       errorBuilder: (context, error, stackTrace) {
-                        return Image.network(
-                          "https://picsum.photos/200/300",
-                          width: double.infinity,
-                          fit: BoxFit.fitWidth,
-                        );
+                        return _photoPlaceholder();
                       },
                     );
                   },
@@ -717,11 +780,7 @@ class _CustomCardState extends State<IndividualCard> {
                   ),
               ],
             )
-          : Image.network(
-              "https://picsum.photos/200/300",
-              width: double.infinity,
-              fit: BoxFit.fitWidth,
-            ),
+          : _photoPlaceholder(keyed: true),
     );
   }
 
@@ -735,76 +794,11 @@ class _CustomCardState extends State<IndividualCard> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(
-            top: 16.0,
-            left: 36.0,
-            right: 36.0,
-            bottom: 0.0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  widget.title,
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                  style: GoogleFonts.bodoniModa(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 2.0,
-                    color: const Color(0xFF7B3F61),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    iconSize: 32,
-                    icon: Icon(
-                      isHearted ? Icons.favorite : Icons.favorite_border,
-                      color: const Color(0xFF7B3F61),
-                    ),
-                    onPressed: () {
-                      if (widget.onHeartToggled != null) {
-                        widget.onHeartToggled!(!isHearted);
-                      }
-                    },
-                  ),
-                  IconButton(
-                    padding: EdgeInsets.zero,
-                    iconSize: 32,
-                    icon: Icon(
-                      isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                      color: const Color(0xFF7B3F61),
-                    ),
-                    onPressed: () {
-                      if (widget.onDiamondToggled != null) {
-                        widget.onDiamondToggled!(!isDiamonded);
-                      }
-                    },
-                  )
-                ],
-              )
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 36.0),
-          child: Container(
-            height: 1,
-            color: const Color(0xFFDCC7AA),
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 4),
+          child: _buildVendorHeader(appState, isHearted, isDiamonded, wide: false),
         ),
         Padding(
-          padding: const EdgeInsets.only(
-            top: 14.0,
-            left: 38.0,
-            right: 36.0,
-            bottom: 10.0,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -812,14 +806,7 @@ class _CustomCardState extends State<IndividualCard> {
               // Core facts and filter-derived specs share one card, so mobile
               // shows a single block of facts rather than a loose label/value
               // list followed by a second styled block.
-              VendorDetailsSection(
-                filterValues: widget.filterValues,
-                filterGroups:
-                    appState.categoryFilters[widget.category] ?? const [],
-                optionsByKey: appState.filterOptions,
-                leadingEntries: _coreSpecEntries(appState, details),
-                isWide: false,
-              ),
+              _buildVendorFacts(appState, details, images: widget.imageUrl, wide: false),
             ],
           ),
         ),
@@ -879,48 +866,6 @@ class _CustomCardState extends State<IndividualCard> {
             ),
           ),
         
-        // Add to Budget button (only if vendor is diamonded)
-        if (isDiamonded && (widget.vendor_price.isNotEmpty || widget.vendor_estimated_price.isNotEmpty))
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 36.0, vertical: 8.0),
-            child: OutlinedButton.icon(
-              onPressed: () {
-                final price = double.tryParse(
-                  widget.vendor_price.replaceAll(RegExp(r'[^\d.]'), ''),
-                ) ?? double.tryParse(
-                  widget.vendor_estimated_price.replaceAll(RegExp(r'[^\d.]'), ''),
-                );
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BudgetItemForm(
-                      prefillData: {
-                        'item_name': widget.title,
-                        'category': widget.category,
-                        'estimated_cost': price,
-                      },
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.account_balance_wallet_outlined,
-                  color: Color(0xFF7B3F61)),
-              label: Text(
-                'Add to Budget',
-                style: GoogleFonts.montserrat(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF7B3F61),
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF7B3F61)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-
         // Reviews Section
         _buildReviewsSection(context, appState),
       ],
@@ -961,14 +906,7 @@ class _CustomCardState extends State<IndividualCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Reviews',
-                  style: GoogleFonts.bodoniModa(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
-                    color: const Color(0xFF7B3F61),
-                  ),
+                Text('Reviews', style: AppStyles.display(24)),
                 ),
                 if (reviews.isNotEmpty)
                   Row(
@@ -988,6 +926,10 @@ class _CustomCardState extends State<IndividualCard> {
               ],
             ),
             const SizedBox(height: 20),
+            if (featuredReview(reviews) case final quote?) ...[
+              ReviewPullQuote(review: quote),
+              const SizedBox(height: 20),
+            ],
 
             // Leave a Review Button - only show if user is logged in
             if (appState.supabase.auth.currentUser != null && appState.supabase.auth.currentUser?.isAnonymous == false) ...[
@@ -1137,7 +1079,7 @@ class _CustomCardState extends State<IndividualCard> {
             return AlertDialog(
               title: Text(
                 'Leave a Review',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),

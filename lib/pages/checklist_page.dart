@@ -135,7 +135,7 @@ class _ChecklistPageState extends State<ChecklistPage>
         builder: (ctx) => AlertDialog(
           title: Text('Regenerate Checklist?',
               style:
-                  GoogleFonts.bodoniModa(color: const Color(0xFF7B3F61))),
+                  GoogleFonts.playfairDisplay(color: const Color(0xFF7B3F61))),
           content: Text(
             'Regenerating will replace all existing tasks. Custom tasks and notes will be lost.',
             style: GoogleFonts.montserrat(
@@ -187,7 +187,7 @@ class _ChecklistPageState extends State<ChecklistPage>
         builder: (_, setDialogState) => AlertDialog(
           title: Text('Add Task',
               style:
-                  GoogleFonts.bodoniModa(color: const Color(0xFF7B3F61))),
+                  GoogleFonts.playfairDisplay(color: const Color(0xFF7B3F61))),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

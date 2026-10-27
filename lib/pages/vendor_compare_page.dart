@@ -20,7 +20,7 @@ class VendorComparePage extends StatelessWidget {
         ),
         title: Text(
           'Compare Vendors',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),

@@ -58,7 +58,7 @@ class BudgetPage extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Set Total Budget',
-            style: GoogleFonts.bodoniModa(color: const Color(0xFF7B3F61))),
+            style: GoogleFonts.playfairDisplay(color: const Color(0xFF7B3F61))),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,

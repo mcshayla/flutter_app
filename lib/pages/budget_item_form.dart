@@ -93,7 +93,7 @@ class _BudgetItemFormState extends State<BudgetItemForm> {
         ),
         title: Text(
           _isEditing ? 'Edit Expense' : 'Add Expense',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),

@@ -342,7 +342,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
         ),
         title: Text(
           'Set Location',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),

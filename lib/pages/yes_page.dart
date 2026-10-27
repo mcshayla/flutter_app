@@ -57,10 +57,9 @@ class YesPage extends StatelessWidget {
                     (weddingProfile['partner_name_1'] ?? '').toString().isNotEmpty)
                   Text(
                     '${weddingProfile['partner_name_1']} & ${weddingProfile['partner_name_2']}',
-                    style: GoogleFonts.bodoniModa(
+                    style: GoogleFonts.playfairDisplay(
                       fontSize: 36,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 2.0,
                       color: const Color(0xFF7B3F61),
                     ),
                     textAlign: TextAlign.center,
@@ -77,10 +76,9 @@ class YesPage extends StatelessWidget {
                     },
                     child: Text(
                       "Your Wedding",
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 48,
                         fontWeight: FontWeight.w600,
-                        letterSpacing: 2.0,
                         color: const Color(0xFF7B3F61),
                       ),
                     ),
@@ -223,6 +221,9 @@ class YesPage extends StatelessWidget {
                                               vendor_id: vendor['vendor_id'],
                                               category: category,
                                               filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
+                                              startingPrice: vendor['starting_price'] as num?,
+                                              capacityMin: (vendor['capacity_min'] as num?)?.toInt(),
+                                              capacityMax: (vendor['capacity_max'] as num?)?.toInt(),
                                               title: vendor['vendor_name'] ?? "",
                                               description: vendor['vendor_description'] ?? "",
                                               style_keywords: vendor['style_keywords'] ?? "",
@@ -297,10 +298,9 @@ class YesPage extends StatelessWidget {
                                         padding: const EdgeInsets.all(20.0),
                                         child: Text(
                                           vendorName,
-                                          style: GoogleFonts.bodoniModa(
+                                          style: GoogleFonts.playfairDisplay(
                                             fontSize: 22,
                                             fontWeight: FontWeight.w600,
-                                            letterSpacing: 2.0,
                                           ),
                                           softWrap: true,
                                           overflow: TextOverflow.visible,
@@ -351,7 +351,7 @@ class YesPage extends StatelessWidget {
                                             backgroundColor: const Color(0xFFF8F5F0),
                                             title: Text(
                                               'Add to Budget?',
-                                              style: GoogleFonts.bodoniModa(
+                                              style: GoogleFonts.playfairDisplay(
                                                 color: const Color(0xFF7B3F61),
                                                 fontWeight: FontWeight.w600,
                                               ),

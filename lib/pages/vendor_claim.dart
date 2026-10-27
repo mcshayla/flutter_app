@@ -226,7 +226,7 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
         backgroundColor: Colors.transparent,
         title: Text(
           'Claim Your Business',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
             
@@ -240,7 +240,7 @@ class _VendorClaimPageState extends State<VendorClaimPage> {
           children: [
             Text(
               'Search for your business',
-              style: GoogleFonts.bodoniModa(
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF7B3F61),
@@ -561,7 +561,7 @@ class _VerifyOwnershipPageState extends State<_VerifyOwnershipPage> {
         backgroundColor: Colors.transparent,
         title: Text(
           _codeSent ? 'Enter Verification Code' : 'Verify Business Ownership',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -575,7 +575,7 @@ class _VerifyOwnershipPageState extends State<_VerifyOwnershipPage> {
             if (!_codeSent) ...[
               Text(
                 'Verify Business Ownership',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -641,7 +641,7 @@ class _VerifyOwnershipPageState extends State<_VerifyOwnershipPage> {
             ] else ...[
               Text(
                 'Enter Verification Code',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),

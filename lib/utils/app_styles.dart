@@ -59,6 +59,83 @@ class AppStyles {
 
   static final backButton = eyebrow(size: 11);
 
+  // ---- App theme ----
+  /// Material theme built from the brand, so stock widgets (back buttons,
+  /// dialogs, text fields, date pickers) match without per-screen styling.
+  static ThemeData theme() {
+    final scheme = ColorScheme.fromSeed(seedColor: plum).copyWith(
+      primary: plum,
+      onPrimary: Colors.white,
+      secondary: champagne,
+      onSecondary: plumInk,
+      surface: cream,
+      onSurface: ink,
+      onSurfaceVariant: inkSoft,
+      outline: goldLine,
+      outlineVariant: champagne,
+      error: error,
+      surfaceTint: Colors.transparent,
+    );
+    const square = RoundedRectangleBorder(borderRadius: BorderRadius.zero);
+    final text = GoogleFonts.montserratTextTheme().apply(bodyColor: ink, displayColor: ink);
+    return ThemeData(
+      colorScheme: scheme,
+      scaffoldBackgroundColor: cream,
+      textTheme: text,
+      appBarTheme: AppBarTheme(
+        backgroundColor: cream,
+        foregroundColor: plum,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        titleTextStyle: display(22),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: const WidgetStatePropertyAll(plum),
+          textStyle: WidgetStatePropertyAll(eyebrow(size: 11)),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: plum,
+          foregroundColor: Colors.white,
+          shape: square,
+          elevation: 0,
+          textStyle: eyebrow(size: 11, color: Colors.white),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: plumInk,
+          side: const BorderSide(color: plumInk),
+          shape: square,
+          textStyle: eyebrow(size: 11, color: plumInk),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        shape: square,
+        titleTextStyle: display(22),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.white, surfaceTintColor: Colors.transparent),
+      inputDecorationTheme: const InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: goldLine)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: goldLine)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.zero, borderSide: BorderSide(color: plum, width: 1.5)),
+        floatingLabelStyle: TextStyle(color: plum),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        fillColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? plumInk : Colors.white),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(color: plum, linearTrackColor: champagneLight),
+      snackBarTheme: SnackBarThemeData(backgroundColor: plumInk, contentTextStyle: body(13, color: Colors.white)),
+      dividerColor: champagne,
+    );
+  }
+
   // ---- Layout ----
   /// Desktop browsers and large tablets get side-by-side layouts.
   static bool isWide(double width) => width >= 900;

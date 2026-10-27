@@ -100,10 +100,9 @@ class _TutorialOverlayState extends State<TutorialOverlay> {
                 // Title
                 Text(
                   step.title,
-                  style: GoogleFonts.bodoniModa(
+                  style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 1.5,
                     color: const Color(0xFF7B3F61),
                   ),
                   textAlign: TextAlign.center,

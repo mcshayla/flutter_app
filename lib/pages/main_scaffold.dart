@@ -168,10 +168,9 @@ class _MainScaffoldState extends State<MainScaffold> {
       appBar: AppBar(
         title: Text(
           'easiYESt',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             fontSize: 36,
             fontWeight: FontWeight.w600,
-            letterSpacing: 2.0,
             color: const Color(0xFFDCC7AA),
           ),
         ),

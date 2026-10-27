@@ -44,7 +44,7 @@ class _EmptyLovedState extends StatelessWidget {
             Text(
               'Heart vendors to save them here',
               textAlign: TextAlign.center,
-              style: GoogleFonts.bodoniModa(
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 color: const Color(0xFF7B3F61),
                 fontWeight: FontWeight.w400,

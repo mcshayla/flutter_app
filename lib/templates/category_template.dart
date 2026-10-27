@@ -280,7 +280,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                   children: [
                     Text(
                       'Filter',
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF7B3F61),
@@ -779,6 +779,9 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                           builder:(_) => IndividualCard(
                             category: widget.categoryName,
                             filterValues: (item['filter_values'] as Map<String, dynamic>?) ?? const {},
+                            startingPrice: item['starting_price'] as num?,
+                            capacityMin: (item['capacity_min'] as num?)?.toInt(),
+                            capacityMax: (item['capacity_max'] as num?)?.toInt(),
                             vendor_id:item['vendor_id'],
                             title: item['vendor_name'] ?? "",
                             description: item['vendor_description'] ?? "",

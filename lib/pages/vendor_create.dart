@@ -376,7 +376,7 @@ setState(() {
         backgroundColor: Colors.transparent,
         title: Text(
           'Create Vendor Profile',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -393,7 +393,7 @@ setState(() {
           children: [
             Text(
               'Tell us about your business',
-              style: GoogleFonts.bodoniModa(
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF7B3F61),
@@ -882,7 +882,7 @@ DropdownButtonFormField<String>(
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.bodoniModa(
+      style: GoogleFonts.playfairDisplay(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF7B3F61),

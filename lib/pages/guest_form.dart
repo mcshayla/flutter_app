@@ -94,7 +94,7 @@ class _GuestFormState extends State<GuestForm> {
         ),
         title: Text(
           _isEditing ? 'Edit Guest' : 'Add Guest',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),

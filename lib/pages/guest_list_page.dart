@@ -98,7 +98,7 @@ class _GuestListPageState extends State<GuestListPage> {
             ),
             Text(
               'Dietary & Meal Info',
-              style: GoogleFonts.bodoniModa(
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF7B3F61),
@@ -144,7 +144,7 @@ class _GuestListPageState extends State<GuestListPage> {
                                     const Color(0xFF7B3F61).withOpacity(0.1),
                                 child: Text(
                                   name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                  style: GoogleFonts.bodoniModa(
+                                  style: GoogleFonts.playfairDisplay(
                                     fontSize: 13,
                                     color: const Color(0xFF7B3F61),
                                     fontWeight: FontWeight.w600,
