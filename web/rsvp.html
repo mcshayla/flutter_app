@@ -2,207 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="robots" content="noindex" />
   <title>RSVP – easiYESt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Montserrat', 'Segoe UI', sans-serif;
-      background: #F8F5F0;
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 40px 16px 60px;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 20px;
-      padding: 36px 32px;
-      width: 100%;
-      max-width: 480px;
-      box-shadow: 0 2px 24px rgba(123,63,97,0.08);
-    }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .logo span {
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 28px;
-      color: #7B3F61;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-
-    .tagline {
-      text-align: center;
-      font-size: 13px;
-      color: #6E6E6E;
-      margin-bottom: 28px;
-    }
-
-    h1 {
-      font-family: Georgia, serif;
-      font-size: 22px;
-      color: #7B3F61;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .field {
-      margin-bottom: 16px;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #7B3F61;
-      margin-bottom: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    textarea {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid #DCC7AA;
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: inherit;
-      color: #3E3E3E;
-      background: #fff;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    input:focus, textarea:focus {
-      border-color: #7B3F61;
-    }
-
-    textarea { resize: vertical; min-height: 80px; }
-
-    .name-row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .name-row .field { flex: 1; }
-
-    .checkbox-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .checkbox-row input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #7B3F61;
-      cursor: pointer;
-    }
-
-    .checkbox-row label {
-      font-size: 14px;
-      font-weight: 500;
-      text-transform: none;
-      letter-spacing: 0;
-      color: #3E3E3E;
-      cursor: pointer;
-      margin: 0;
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 14px;
-      background: #7B3F61;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s;
-    }
-
-    .submit-btn:hover { background: #6a3454; }
-    .submit-btn:disabled { background: #b08ea0; cursor: default; }
-
-    .error-msg {
-      background: #fdecea;
-      color: #c0392b;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      margin-bottom: 16px;
-    }
-
-    .success-screen {
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    .success-screen .icon {
-      font-size: 56px;
-      margin-bottom: 12px;
-    }
-
-    .success-screen h2 {
-      font-family: Georgia, serif;
-      font-size: 24px;
-      color: #7B3F61;
-      margin-bottom: 8px;
-    }
-
-    .success-screen p {
-      font-size: 14px;
-      color: #6E6E6E;
-      line-height: 1.6;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 48px 0;
-      color: #6E6E6E;
-      font-size: 14px;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 28px;
-      height: 28px;
-      border: 3px solid #DCC7AA;
-      border-top-color: #7B3F61;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
-    }
-
+    .error-msg { background: var(--blush); color: #8A2B2B; border-left: 2px solid #8A2B2B; padding: 10px 14px; font-size: 0.88rem; margin-bottom: 18px; }
+    .loading, .invalid-screen, .success-screen { text-align: center; padding: 28px 0 8px; color: var(--ink-soft); font-size: 0.92rem; }
+    .spinner { display: inline-block; width: 28px; height: 28px; border: 2px solid var(--champagne); border-top-color: var(--plum); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .invalid-screen {
-      text-align: center;
-      padding: 20px 0;
-      color: #6E6E6E;
-      font-size: 14px;
-    }
+    .state-title { font-family: var(--display); font-weight: 500; font-size: 1.6rem; color: var(--ink); margin: 14px 0 8px; }
+    .name-row { display: flex; gap: 12px; }
+    .name-row .field { flex: 1; min-width: 0; }
+    @media (max-width: 420px) { .name-row { flex-direction: column; gap: 0; } }
   </style>
 </head>
-<body>
-<div class="card">
-  <div class="logo"><span>easiYESt</span></div>
-  <div class="tagline">Wedding guest collection</div>
+<body class="form-page">
+  <header class="top">
+    <div class="top-inner" style="justify-content:center">
+      <a class="logo" href="/">easi<span>YES</span>t</a>
+    </div>
+  </header>
+<main>
+<div class="form-card">
+  <div style="text-align:center"><span class="eyebrow">Wedding guest list</span></div>
 
   <!-- Loading state -->
   <div id="loading" class="loading">
@@ -212,14 +39,13 @@
 
   <!-- Invalid link -->
   <div id="invalid" class="invalid-screen" style="display:none">
-    <div style="font-size:48px;margin-bottom:12px">🔗</div>
-    <h2 style="font-family:Georgia,serif;font-size:20px;color:#7B3F61;margin-bottom:8px">Link not found</h2>
+    <h2 class="state-title">Link not found</h2>
     <p>This RSVP link is invalid or has expired.<br>Please contact the couple for a new link.</p>
   </div>
 
   <!-- Form -->
   <div id="form-section" style="display:none">
-    <h1 id="couple-heading">You're Invited!</h1>
+    <h1 id="couple-heading" style="margin:10px 0 24px">You're Invited!</h1>
     <div id="error-msg" class="error-msg" style="display:none"></div>
 
     <form id="rsvp-form" onsubmit="submitForm(event)">
@@ -265,8 +91,7 @@
       <div class="field" id="field-plus_one" style="display:none">
         <label for="plus_one_count">How many additional guests are you bringing?</label>
         <input type="number" id="plus_one_count" name="plus_one_count"
-          min="0" max="10" value="0"
-          style="width:100%;padding:11px 14px;border:1.5px solid #DCC7AA;border-radius:10px;font-size:14px;font-family:inherit;color:#3E3E3E;" />
+          min="0" max="10" value="0" />
       </div>
 
       <div class="field" id="field-notes" style="display:none">
@@ -274,17 +99,23 @@
         <textarea id="notes" name="notes" placeholder="Anything you'd like the couple to know..."></textarea>
       </div>
 
-      <button type="submit" class="submit-btn" id="submit-btn">Send RSVP</button>
+      <button type="submit" class="btn btn-plum" id="submit-btn">Send RSVP</button>
     </form>
   </div>
 
   <!-- Success -->
   <div id="success" class="success-screen" style="display:none">
-    <div class="icon">💍</div>
-    <h2>You're on the list!</h2>
+    <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
+    <h2 class="state-title">You're on the list!</h2>
     <p>Thanks for submitting your details.<br>We can't wait to celebrate with you!</p>
   </div>
 </div>
+</main>
+  <footer>
+    <div class="foot">
+      <small>&copy; 2026 easiYESt &middot; <a href="/privacy" style="color:var(--champagne)">Privacy Policy</a></small>
+    </div>
+  </footer>
 
 <script>
   // ── CONFIG ────────────────────────────────────────────────────────────────
