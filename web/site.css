@@ -195,3 +195,50 @@ footer :focus-visible { outline-color: var(--champagne); }
 @media (prefers-reduced-motion: reduce) {
   .btn, .btn svg, .menu-btn span, .faq summary::after { transition: none !important; }
 }
+
+/* ---------- App pages (plan, and later loved / yes): small buttons, dialogs, toast ---------- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.btn-sm { padding: 10px 16px; font-size: 0.64rem; letter-spacing: 1.8px; gap: 8px; outline-offset: 3px; }
+.btn-sm svg { width: 14px; height: 14px; }
+.btn-sm:hover svg { transform: none; }
+.btn-danger { background: transparent; color: #8A2B2B; border: 1px solid #8A2B2B; }
+.btn-danger:hover { background: #8A2B2B; color: var(--white); }
+.btn:disabled { opacity: .55; cursor: default; }
+.text-btn { background: none; border: 0; padding: 0; font: inherit; font-size: 0.82rem; color: var(--plum); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.text-btn.is-danger { color: #8A2B2B; }
+
+dialog.sheet { border: 1px solid var(--champagne); outline: 1px solid var(--champagne); outline-offset: -8px; padding: 0; width: min(480px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); background: var(--white); color: var(--ink); }
+dialog.sheet-wide { width: min(640px, calc(100vw - 24px)); }
+dialog.sheet::backdrop { background: rgba(43,36,39,0.55); }
+.sheet-form { position: relative; padding: clamp(24px, 5vw, 36px); display: flex; flex-direction: column; }
+.sheet-form h2 { font-size: clamp(1.4rem, 3.5vw, 1.8rem); margin: 6px 40px 18px 0; overflow-wrap: anywhere; }
+.sheet-close { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; border: 0; background: none; font-size: 1.6rem; line-height: 1; color: var(--ink-soft); cursor: pointer; }
+.sheet-close:hover { color: var(--plum); }
+.sheet-lede { margin: -6px 0 18px; color: var(--ink-soft); font-size: 0.9rem; }
+.sheet-warn { margin: -6px 0 18px; padding: 10px 14px; background: var(--blush); border-left: 2px solid #8A2B2B; font-size: 0.86rem; }
+.sheet-sub { font-family: var(--display); font-weight: 500; font-size: 1.15rem; margin: 22px 0 12px; }
+.sheet-error { margin: 0 0 12px; padding: 10px 14px; background: var(--blush); color: #8A2B2B; border-left: 2px solid #8A2B2B; font-size: 0.86rem; }
+.sheet-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin: 4px 0 8px; }
+.sheet-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+.sheet-actions .btn-danger { margin-right: auto; }
+.sheet input:not([type=checkbox]), .sheet select, .sheet textarea {
+  width: 100%; padding: 11px 13px; border: 1px solid var(--gold-line); border-radius: 0; background: var(--cream);
+  font: inherit; font-size: 0.95rem; color: var(--ink); min-height: 44px;
+}
+.sheet input:focus, .sheet select:focus, .sheet textarea:focus { outline: none; border-color: var(--plum); background: var(--white); box-shadow: 0 0 0 1px var(--plum); }
+.sheet textarea { resize: vertical; min-height: 80px; }
+.sheet .field { margin-bottom: 14px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+@media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+.checks { border: 0; padding: 0; margin: 4px 0 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 4px 14px; }
+.checks legend { font-size: 0.64rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--plum-ink); margin-bottom: 8px; }
+.checks label, .check-line { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; padding: 6px 0; cursor: pointer; }
+.checks-tools { grid-column: 1 / -1; margin: 0 0 4px; font-size: 0.82rem; color: var(--ink-soft); }
+.check-line { margin-bottom: 12px; }
+.sheet input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--plum); flex-shrink: 0; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 100; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+  background: var(--night); color: var(--white); padding: 14px 22px; font-size: 0.86rem; max-width: calc(100vw - 32px); border: 1px solid rgba(220,199,170,0.4);
+  transition: opacity .25s, transform .25s; }
+.toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }

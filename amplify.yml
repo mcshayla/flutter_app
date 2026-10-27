@@ -36,6 +36,8 @@ frontend:
         - cp public/app/vendorRegistration.html public/
         - cp public/app/resetPassword.html public/
         - cp public/app/site.css public/
+        - cp public/app/plan.html public/
+        - cp -r public/app/js public/
         - cp public/app/favicon.png public/
         - cp -r public/app/icons public/
         - cp -r public/app/images public/
