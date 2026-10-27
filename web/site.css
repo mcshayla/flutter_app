@@ -187,9 +187,12 @@ footer :focus-visible { outline-color: var(--champagne); }
 .form-card .btn:disabled { opacity: .55; cursor: default; }
 @media (max-width: 960px) { .tiles, .tiles.four { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .tiles, .tiles.four { grid-template-columns: 1fr; } }
-@media (max-width: 760px) {
+/* Five header links need about 960px; below that they move into the menu. */
+@media (max-width: 960px) {
   .top nav { display: none; }
   .menu-btn { display: block; }
+}
+@media (max-width: 760px) {
   .split { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {

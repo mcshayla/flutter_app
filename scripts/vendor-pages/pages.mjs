@@ -162,20 +162,20 @@ function layout({ title, description, path, image, body, ld = [], noindex = fals
     <div class="top-inner">
       <a class="logo" href="/">easi<span>YES</span>t</a>
       <nav aria-label="Main">
-        <a href="/vendors/" aria-current="${path.startsWith('/vendors/') ? 'page' : 'false'}">Vendors</a>
-        <a href="/vendorRegistration">For Vendors</a>
+        <a href="/vendors/" aria-current="page">Find Vendors</a>
+        <a href="/plan.html">Planning Tools</a>
         <a href="/blog/">Blog</a>
+        <a href="/vendorRegistration">List Your Business</a>
         <a href="/plan.html" data-account>Log In</a>
-        <a class="btn btn-solid" href="/plan.html">Begin Planning</a>
       </nav>
       <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
     </div>
     <div class="mobile-menu" id="mobile-menu" hidden>
-      <a href="/vendors/">Vendors</a>
-      <a href="/vendorRegistration">For Vendors</a>
+      <a href="/vendors/" aria-current="page">Find Vendors</a>
+      <a href="/plan.html">Planning Tools</a>
       <a href="/blog/">Blog</a>
+      <a href="/vendorRegistration">List Your Business</a>
       <a href="/plan.html" data-account>Log In</a>
-      <a class="btn btn-solid" href="/plan.html">Begin Planning</a>
     </div>
   </header>
   <main>
@@ -186,11 +186,11 @@ ${body}
       <a class="logo" href="/">easi<span>YES</span>t</a>
       <div class="rule" aria-hidden="true"><i></i>${ICONS.heart}<i></i></div>
       <nav aria-label="Footer">
-        <a href="/vendors/">Vendors</a>
-        <a href="/plan.html">Plan</a>
+        <a href="/vendors/">Find Vendors</a>
+        <a href="/plan.html">Planning Tools</a>
         <a href="/for-couples">For Couples</a>
         <a href="/utah-weddings">Utah Guide</a>
-        <a href="/vendorRegistration">For Vendors</a>
+        <a href="/vendorRegistration">List Your Business</a>
         <a href="/blog/">Blog</a>
         <a href="/privacy">Privacy Policy</a>
       </nav>

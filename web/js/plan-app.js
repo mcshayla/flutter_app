@@ -106,7 +106,7 @@ function render() {
 }
 
 function renderAccount() {
-  const label = state.user ? 'Log out' : 'Log in';
+  const label = state.user ? 'Log Out' : 'Log In';
   document.querySelectorAll('[data-account]').forEach(el => { el.textContent = label; });
 }
 
