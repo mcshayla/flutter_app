@@ -392,3 +392,36 @@ export function sitemapWithPages(baseXml, paths, lastmod) {
   const entries = paths.map(p => `  <url><loc>${esc(`${SITE}${p}`)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>${p === '/vendors/' ? '0.9' : '0.7'}</priority></url>`).join('\n');
   return baseXml.replace(/\s*<\/urlset>\s*$/, `\n\n  <!-- Vendor pages, generated at deploy by scripts/vendor-pages/build.mjs -->\n${entries}\n</urlset>\n`);
 }
+
+// ---------------------------------------------------------------- vendor index
+
+/**
+ * /vendors/index.json: a small directory of every published vendor, so the
+ * Loved, YES and Compare pages can show cards and link to vendor pages
+ * without querying the database. groups: [{ category, entries }].
+ */
+export function vendorIndex(groups, reviewsByVendor = {}) {
+  const vendors = {};
+  for (const { category: cat, entries } of groups) {
+    for (const { vendor: v, slug } of entries) {
+      const rated = (reviewsByVendor[v.vendor_id] ?? []).filter(r => Number(r.rating) > 0);
+      vendors[v.vendor_id] = {
+        id: v.vendor_id,
+        name: v.vendor_name,
+        category: cat.name,
+        url: vendorPath(cat, slug),
+        image: images(v)[0] ?? null,
+        location: String(v.vendor_location ?? '').trim() || null,
+        price: glancePrice(v.starting_price, v.vendor_price),
+        amount: v.starting_price ?? parseMoney(v.vendor_price),
+        keywords: keywords(v),
+        email: String(v.contact_email ?? '').trim() || null,
+        phone: String(v.contact_phone ?? '').trim() || null,
+        website: safeUrl(v.website_url),
+        rating: rated.length ? Math.round((rated.reduce((s, r) => s + Number(r.rating), 0) / rated.length) * 10) / 10 : null,
+        reviews: rated.length,
+      };
+    }
+  }
+  return { categories: groups.map(({ category: c }) => ({ name: c.name, plural: c.plural, slug: c.slug })), vendors };
+}

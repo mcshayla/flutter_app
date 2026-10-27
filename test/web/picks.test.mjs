@@ -74,3 +74,33 @@ test('budget category for a vendor type matches the app budget list', () => {
   assert.equal(budgetCategoryFor('Invitations '), 'Invitations');
   assert.equal(budgetCategoryFor('Guest Experience'), 'Other');
 });
+
+test('booked: local keeps it, and unYES clears it', async () => {
+  const storage = memoryStorage();
+  const p = createLocalPicks(storage);
+  await p.setYes('v1', 'Venue', true);
+  await p.setBooked('v1', true);
+  assert.deepEqual([...(await createLocalPicks(storage).load()).booked], ['v1']);
+  await p.setYes('v1', 'Venue', false);
+  assert.deepEqual([...(await p.load()).booked], []);
+});
+
+test('booked: remote updates the YES row and the vendor booking count like the app', async () => {
+  const db = fakeSupabase({ user_diamonds: [{ user_id: 'u1', vendor_id: 'v1', category: 'Venue', is_booked: false }] });
+  const p = createRemotePicks(db, 'u1');
+  await p.setBooked('v1', true);
+  assert.equal(db.tables.user_diamonds[0].is_booked, true);
+  assert.deepEqual([...(await p.load()).booked], ['v1']);
+  assert.deepEqual(db.rpcCalls, [['toggle_vendor_booking', { vendor_uuid: 'v1', increment: true }]]);
+  await p.setBooked('v1', false);
+  assert.deepEqual(db.rpcCalls[1], ['toggle_vendor_booking', { vendor_uuid: 'v1', increment: false }]);
+});
+
+test('moving picks carries booked YES vendors', async () => {
+  const local = createLocalPicks(memoryStorage());
+  await local.setYes('v2', 'DJ', true);
+  await local.setBooked('v2', true);
+  const db = fakeSupabase({});
+  await movePicksToAccount(local, createRemotePicks(db, 'u1'));
+  assert.equal(db.tables.user_diamonds[0].is_booked, true);
+});

@@ -214,3 +214,22 @@ test('header: Find Vendors, Planning Tools, Blog, List Your Business, Log In, an
   assert.match(html, /<nav aria-label="Footer">\s*<a href="\/vendors\/">Find Vendors<\/a>\s*<a href="\/plan.html">Planning Tools<\/a>/);
   assert.doesNotMatch(html, />For Vendors</);
 });
+
+test('vendor index JSON: what the Loved and YES pages need, keyed by id', () => {
+  const idx = P.vendorIndex([
+    { category: P.categoryInfo('Venue'), entries: [{ vendor: { ...venue, starting_price: 3200 }, slug: 'barn-and-orchard' }] },
+  ], { 'v-1': [{ rating: 5 }, { rating: 4 }] });
+  assert.deepEqual(idx.categories, [{ name: 'Venue', plural: 'Venues', slug: 'venues' }]);
+  const v = idx.vendors['v-1'];
+  assert.equal(v.name, 'Barn & <Orchard>');
+  assert.equal(v.url, '/vendors/venues/barn-and-orchard/');
+  assert.equal(v.image, 'https://x.supabase.co/a.jpg');
+  assert.equal(v.price, '$3,200');
+  assert.equal(v.amount, 3200);
+  assert.equal(v.location, 'Santaquin, Utah');
+  assert.deepEqual(v.keywords, ['Rustic', 'Elegant']);
+  assert.equal(v.rating, 4.5);
+  assert.equal(v.reviews, 2);
+  assert.equal(v.email, 'hi@thebarn.com');
+  assert.equal(v.website, 'https://thebarn.com/');
+});

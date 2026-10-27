@@ -56,5 +56,11 @@ export function fakeSupabase(seed, { failOn } = {}) {
     return builder;
   }
 
-  return { from, tables };
+  const rpcCalls = [];
+  async function rpc(name, params) {
+    rpcCalls.push([name, params]);
+    return failOn === name ? { data: null, error: { message: `${name} failed` } } : { data: null, error: null };
+  }
+
+  return { from, rpc, rpcCalls, tables };
 }
