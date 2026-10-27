@@ -907,7 +907,6 @@ class _CustomCardState extends State<IndividualCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Reviews', style: AppStyles.display(24)),
-                ),
                 if (reviews.isNotEmpty)
                   Row(
                     children: [
