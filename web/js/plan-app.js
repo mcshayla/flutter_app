@@ -4,6 +4,7 @@
 
 import { getClient, currentUser, openAuthDialog, signOut } from './auth.js';
 import { createLocalStore, createRemoteStore, moveLocalToAccount } from './plan-store.js';
+import { createLocalPicks, createRemotePicks, movePicksToAccount } from './picks.js';
 import { renderCountdown, renderChecklist, renderGuests, renderBudget, renderSaveBanner, esc } from './plan-view.js';
 import { buildChecklist, parseDate, parseMoney, mealInfo, guestsToCsv, RSVP_STATUSES, rsvpLabel } from './plan-logic.js';
 import { openDialog, confirmDialog, toast, field } from './dialog.js';
@@ -15,6 +16,7 @@ const RSVP_FIELDS = { email: 'Email address', phone: 'Phone number', address: 'M
 
 const $ = sel => document.querySelector(sel);
 const local = createLocalStore(safeStorage());
+const localPicks = createLocalPicks(safeStorage());
 
 const state = {
   user: null,
@@ -55,6 +57,7 @@ async function start() {
 async function useAccount(user, { quiet = false } = {}) {
   state.user = user;
   state.store = user ? createRemoteStore(getClient(), user.id) : local;
+  if (user && localPicks.hasData()) await movePicksToAccount(localPicks, createRemotePicks(getClient(), user.id));
   if (user && local.hasData()) {
     const moved = await moveLocalToAccount(local, state.store);
     const parts = [moved.tasks && `${moved.tasks} tasks`, moved.guests && `${moved.guests} guests`, moved.budgetItems && `${moved.budgetItems} expenses`].filter(Boolean);

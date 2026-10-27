@@ -32,7 +32,8 @@ export function fakeSupabase(seed, { failOn } = {}) {
         hit.forEach(r => Object.assign(r, q.payload));
         data = q.returning ? hit.map(r => ({ ...r })) : null;
       } else if (q.op === 'upsert') {
-        const existing = tables[table].find(r => r[q.conflict] === q.payload[q.conflict]);
+        const keys = String(q.conflict).split(',');
+        const existing = tables[table].find(r => keys.every(k => r[k] === q.payload[k]));
         if (existing) Object.assign(existing, q.payload);
         else tables[table].push({ ...q.payload });
       } else if (q.op === 'delete') {

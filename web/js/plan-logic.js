@@ -237,3 +237,11 @@ export function guestsToCsv(guests) {
   ].map(cell).join(','));
   return [head.join(','), ...rows].join('\r\n') + '\r\n';
 }
+
+// Vendor type -> the budget's category list (the app's budget_item_form.dart).
+const BUDGET_CATEGORY = {
+  venue: 'Venue', catering: 'Catering', photographer: 'Photography', 'photo & video': 'Photography', videographer: 'Videography',
+  florist: 'Flowers', dj: 'Music', 'ensembles + soloists': 'Music', attire: 'Attire', invitations: 'Invitations',
+  'event decor & rental': 'Decor', transportation: 'Transportation', cake: 'Cake', beauty: 'Hair & Makeup',
+};
+export const budgetCategoryFor = vendorCategory => BUDGET_CATEGORY[String(vendorCategory ?? '').trim().toLowerCase()] ?? 'Other';

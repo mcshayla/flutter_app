@@ -44,6 +44,10 @@ frontend:
         - cp -r public/app/blog public/
         - cp public/app/robots.txt public/
         - cp public/app/sitemap.xml public/
+        - cp public/app/vendors.css public/
+        # Vendor pages and the full sitemap, built from live Supabase data.
+        - node --version
+        - node scripts/vendor-pages/build.mjs public web/sitemap.xml
   artifacts:
     baseDirectory: public
     files:
