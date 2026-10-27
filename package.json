@@ -1,0 +1,9 @@
+{
+  "name": "easiyest-website",
+  "private": true,
+  "type": "module",
+  "description": "Tests for the plain HTML website in web/. The Flutter app has its own tests (flutter test).",
+  "scripts": {
+    "test": "node --test \"test/web/*.test.mjs\""
+  }
+}
