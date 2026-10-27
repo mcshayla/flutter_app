@@ -276,19 +276,14 @@ class YesPage extends StatelessWidget {
                                           supabaseThumb(
                                             ((vendor['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                                                 ? (vendor['image_url'] as List<dynamic>)[0].toString()
-                                                : "https://picsum.photos/200/300",
+                                                : '',
                                             width: 200,
                                           ),
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
                                           errorBuilder: (context, error, stackTrace) {
-                                            return Image.network(
-                                              "https://picsum.photos/200/300",
-                                              width: 100,
-                                              height: 100,
-                                              fit: BoxFit.cover,
-                                            );
+                                            return Container(width: 100, height: 100, color: AppStyles.blush, child: const Icon(Icons.photo_camera_outlined, color: AppStyles.rose));
                                           },
                                         ),
                                       ),

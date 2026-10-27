@@ -1,3 +1,4 @@
+import '../utils/category_names.dart';
 import 'package:flutter/material.dart';
 import '../widgets/card.dart';
 import '../appstate.dart';
@@ -271,7 +272,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
                 ),
@@ -366,7 +367,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                       backgroundColor: const Color(0xFF7B3F61),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.zero),
                     ),
                     child: Text(
                       totalSelected == 0
@@ -409,18 +410,41 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
         return Scaffold(
           body: Column( 
             children: [
-              if (Navigator.canPop(context))
-                Row( 
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.arrow_back),
-                      label: widget.showOnlyLoved ?
-                        Text("My Loved $capCategoryName", style: AppStyles.backButton) : Text(capCategoryName, style: AppStyles.backButton)
+              Container(
+                width: double.infinity,
+                color: AppStyles.cream,
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: AppStyles.maxContentWidth),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (Navigator.canPop(context))
+                          TextButton.icon(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 36)),
+                            icon: const Icon(Icons.chevron_left, size: 18),
+                            label: Text(widget.showOnlyLoved ? 'MY LOVED' : 'ALL VENDORS', style: AppStyles.eyebrow(size: 10)),
+                          ),
+                        Text(
+                          widget.showOnlyLoved
+                              ? 'Loved ${categoryDisplayName(capCategoryName)}'
+                              : categoryDisplayName(capCategoryName),
+                          style: AppStyles.display(30),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(vendorCountLabel(capCategoryName, filteredList.length),
+                            style: AppStyles.body(13, color: AppStyles.inkSoft)),
+                      ],
                     ),
-                  ]
+                    ),
+                  ),
                 ),
-              
+              ),
+
               // Filter Section
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
@@ -439,6 +463,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: selectedState,
                         decoration: InputDecoration(
                           labelText: 'State',
@@ -447,15 +472,15 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                             color: const Color(0xFF7B3F61),
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFF7B3F61)),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -499,6 +524,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: selectedCounty,
                         decoration: InputDecoration(
                           labelText: 'County',
@@ -507,15 +533,15 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                             color: const Color(0xFF7B3F61),
                           ),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFFDCC7AA)),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.zero,
                             borderSide: const BorderSide(color: Color(0xFF7B3F61)),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -579,7 +605,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
+                                borderRadius: BorderRadius.zero),
                           ),
                         ),
                       if (filters.isNotEmpty)
@@ -613,7 +639,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 8),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
+                                borderRadius: BorderRadius.zero),
                           ),
                         ),
                       OutlinedButton.icon(
@@ -641,7 +667,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20)),
+                              borderRadius: BorderRadius.zero),
                         ),
                       ),
                     ],
@@ -699,7 +725,7 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.zero),
                         ),
                         child: Text('Compare',
                             style: GoogleFonts.montserrat(fontSize: 13)),
@@ -718,19 +744,25 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                   ),
                 ),
               ): 
-            Expanded( 
+            Expanded(
               child: Center(
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1000),
+                  constraints: const BoxConstraints(maxWidth: AppStyles.maxContentWidth),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: GridView.builder( 
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: LayoutBuilder(builder: (context, box) {
+                      final cols = box.maxWidth < 600 ? 1 : box.maxWidth < 950 ? 2 : 3;
+                      const gap = 24.0;
+                      final tileW = (box.maxWidth - gap * (cols - 1)) / cols;
+                      // Photo at 16:10, plus room for city, name and two lines.
+                      final tileH = tileW * 0.625 + 112;
+                      return GridView.builder(
                 itemCount: filteredList.length,
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 300,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 0.9,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: cols,
+                crossAxisSpacing: gap,
+                mainAxisSpacing: 28,
+                childAspectRatio: tileW / tileH,
                 ),
                 itemBuilder:(context, index) {
                   final item = filteredList[index];
@@ -747,7 +779,8 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                     description: item['vendor_description'] ?? "",
                     imageUrl: ((item['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                         ? (item['image_url'] as List<dynamic>)[0].toString()
-                        : "https://picsum.photos/200/300",
+                        : '',
+                    subtitle: item['vendor_location'] as String? ?? '',
                     isHearted: appState.lovedVendorUUIDsCategorizedMap[widget.categoryName]?.contains(item['vendor_id']) ?? false,
                     onHeartToggled: (hearted) {
                       appState.toggleHeart(item['vendor_id'], hearted);
@@ -857,7 +890,8 @@ class _CategoryPageTemplateState extends State<CategoryPageTemplate> {
                   );
                 });
                 },
-              )))
+              );
+                    })))
             )
             )
             ]

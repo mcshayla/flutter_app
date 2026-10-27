@@ -45,6 +45,16 @@ void main() {
     expect(wide, isEmpty);
   });
 
+  test('no screen fills in a random stock photo for a vendor', () {
+    final offenders = Directory('lib')
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.dart') && f.readAsStringSync().contains('picsum.photos'))
+        .map((f) => f.path)
+        .toList();
+    expect(offenders, isEmpty, reason: 'Show a brand placeholder; a stock photo misrepresents the vendor');
+  });
+
   group('app theme', () {
     final theme = AppStyles.theme();
 

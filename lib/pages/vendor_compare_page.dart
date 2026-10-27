@@ -72,7 +72,7 @@ class VendorComparePage extends StatelessWidget {
                                             supabaseThumb(
                                               ((v['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                                                   ? (v['image_url'] as List<dynamic>)[0].toString()
-                                                  : 'https://picsum.photos/100/100',
+                                                  : '',
                                               width: 100,
                                             ),
                                             width: 44,
