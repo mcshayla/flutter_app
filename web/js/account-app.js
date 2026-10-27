@@ -93,7 +93,7 @@ function renderAccountPage() {
         </div>
       </div></section>
       <div class="account-wrap">${links}${wedding}
-        <p class="vendor-login">Are you a wedding vendor? <a href="/app">Log in to your vendor dashboard</a></p>
+        <p class="vendor-login">Are you a wedding vendor? <a href="/vendor.html">Log in to your vendor dashboard</a></p>
       </div>`;
   }
 
@@ -111,7 +111,7 @@ function renderAccountPage() {
           <button type="button" class="btn btn-line btn-sm" data-action="log-out">Log out</button>
         </div>
       </section>
-      <p class="vendor-login">Are you a wedding vendor? <a href="/app">Go to your vendor dashboard</a></p>
+      <p class="vendor-login">Are you a wedding vendor? <a href="/vendor.html">Go to your vendor dashboard</a></p>
       <section class="account-danger">
         <button type="button" class="text-btn is-danger" data-action="delete-account">Delete my account</button>
       </section>

@@ -107,3 +107,39 @@ test('maskEmail', () => {
   assert.equal(V.maskEmail('ab@x.co'), 'a*@x.co');
   assert.equal(V.maskEmail(''), '');
 });
+
+test('listing form: every field the app collects, prefilled and escaped', () => {
+  const vendor = {
+    vendor_name: 'Bloom "Studio"', vendor_category: 'Venue', vendor_description: 'Hi <there>', starting_price: 900,
+    vendor_state: ['Utah'], vendor_county: ['Utah County'], social_media_links: ['https://instagram.com/bloom'],
+    filter_values: { venue_type: ['barn'] }, image_url: ['https://x/a.jpg'],
+  };
+  const groups = [{ key: 'venue_type', label: 'Venue Type', multi: true, options: [{ value: 'barn', label: 'Barns' }, { value: 'garden', label: 'Gardens' }] }];
+  const html = V.renderListingForm({ vendor, categories: ['Venue', 'DJ'], groups, isNew: false });
+  for (const name of ['vendor_name', 'vendor_description', 'style_keywords', 'vendor_price', 'starting_price', 'capacity_min', 'capacity_max', 'guest_capacity', 'vendor_location', 'address', 'contact_email', 'contact_phone', 'website_url', 'link_instagram', 'link_facebook', 'link_other']) {
+    assert.match(html, new RegExp(`name="${name}"`), name);
+  }
+  assert.match(html, /value="Bloom &quot;Studio&quot;"/);
+  assert.match(html, />Hi &lt;there&gt;<\/textarea>/);
+  assert.match(html, /name="state" value="Utah" checked/);
+  assert.match(html, /name="county" value="Utah County" checked/);
+  assert.match(html, /name="filter:venue_type" value="barn" checked/);
+  assert.match(html, /name="filter:venue_type" value="garden">/);
+  assert.match(html, /value="https:\/\/instagram\.com\/bloom"/);
+  assert.match(html, /data-remove-photo="0"/);
+  assert.match(html, /type="file" name="photos" accept="image\/\*" multiple/);
+  assert.doesNotMatch(html, /name="vendor_category"/); // category is fixed once listed, like the app
+  const fresh = V.renderListingForm({ vendor: {}, categories: ['Venue', 'DJ'], groups: [], isNew: true });
+  assert.match(fresh, /<select[^>]*name="vendor_category"[^>]*required/);
+});
+
+test('readListingForm turns form data back into a payload', () => {
+  const fd = new FormData();
+  for (const [k, v] of [['vendor_name', 'Bloom'], ['starting_price', '1200'], ['link_instagram', 'instagram.com/x'], ['state', 'Utah'], ['county', 'Salt Lake County'], ['filter:style', 'boho'], ['filter:style', 'modern']]) fd.append(k, v);
+  const p = V.vendorPayload(V.readListingForm(fd));
+  assert.equal(p.vendor_name, 'Bloom');
+  assert.equal(p.starting_price, 1200);
+  assert.deepEqual(p.social_media_links, ['instagram.com/x']);
+  assert.deepEqual(p.vendor_county, ['Salt Lake County']);
+  assert.deepEqual(p.filter_values, { style: ['boho', 'modern'] });
+});

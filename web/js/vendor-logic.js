@@ -5,6 +5,7 @@
 
 import { esc } from './plan-view.js';
 import { formatMoney } from './plan-logic.js';
+import { field } from './dialog.js';
 
 export const US_STATES = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'Any'];
 export const UTAH_COUNTIES = ['Beaver County', 'Box Elder County', 'Cache County', 'Carbon County', 'Daggett County', 'Davis County', 'Duchesne County', 'Emery County', 'Garfield County', 'Grand County', 'Iron County', 'Juab County', 'Kane County', 'Millard County', 'Morgan County', 'Piute County', 'Rich County', 'Salt Lake County', 'San Juan County', 'Sanpete County', 'Sevier County', 'Summit County', 'Tooele County', 'Uintah County', 'Utah County', 'Wasatch County', 'Washington County', 'Wayne County', 'Weber County', 'Any'];
@@ -170,3 +171,80 @@ export function renderClaimResults(results) {
 }
 
 export const moneyLabel = n => (n == null ? '' : formatMoney(n));
+
+// ---------------------------------------------------------------- listing form
+
+
+const checks = (name, values, chosen, { label = v => v } = {}) =>
+  values.map(v => `<label><input type="checkbox" name="${esc(name)}" value="${esc(v)}"${chosen.includes(v) ? ' checked' : ''}> ${esc(label(v))}</label>`).join('');
+
+/** The create / edit listing form. Category can only be picked when creating, like the app. */
+export function renderListingForm({ vendor: v, categories, groups, isNew }) {
+  const links = linksByKind(v.social_media_links);
+  const states = v.vendor_state ?? [];
+  const counties = v.vendor_county ?? [];
+  const answers = v.filter_values ?? {};
+  const photos = v.image_url ?? [];
+  const num = x => (x == null ? '' : String(x));
+  return `<form class="listing-form" novalidate>
+    <section class="form-section">
+      <h2>The basics</h2>
+      ${field('vendor_name', 'Business name', { value: v.vendor_name ?? '', required: true })}
+      ${isNew ? field('vendor_category', 'What do you offer?', { type: 'select', required: true, value: v.vendor_category ?? '', options: [['', 'Choose a vendor type'], ...categories.map(c => [c, c])] }) : `<p class="muted">Vendor type: <b>${esc(v.vendor_category ?? '')}</b></p>`}
+      ${field('vendor_description', 'Description', { type: 'textarea', value: v.vendor_description ?? '', attrs: 'rows="7" placeholder="What makes you different? Who do you love working with?"' })}
+      ${field('style_keywords', 'Style words', { value: v.style_keywords ?? '', attrs: 'placeholder="Rustic, Elegant, Mountain Views"' })}
+    </section>
+
+    <section class="form-section">
+      <h2>Photos</h2>
+      <p class="muted">The first photo leads your page. We resize photos for fast loading.</p>
+      ${photos.length ? `<ul class="photo-grid">${photos.map((src, i) => `<li><img src="${esc(src)}" alt="Photo ${i + 1}"><button type="button" class="photo-remove" data-remove-photo="${i}" aria-label="Remove photo ${i + 1}">&times;</button></li>`).join('')}</ul>` : ''}
+      <div class="field"><label for="f-photos">Add photos</label><input id="f-photos" type="file" name="photos" accept="image/*" multiple></div>
+      <ul class="photo-grid photo-new" id="new-photos"></ul>
+    </section>
+
+    <section class="form-section">
+      <h2>Pricing &amp; capacity</h2>
+      <div class="field-row">${field('starting_price', 'Starting price ($)', { value: num(v.starting_price), attrs: 'inputmode="numeric" placeholder="3200"' })}${field('vendor_price', 'Pricing details', { value: v.vendor_price ?? '', attrs: 'placeholder="Packages from $3,200"' })}</div>
+      <div class="field-row">${field('capacity_min', 'Fewest guests', { value: num(v.capacity_min), attrs: 'inputmode="numeric"' })}${field('capacity_max', 'Most guests', { value: num(v.capacity_max), attrs: 'inputmode="numeric"' })}</div>
+      ${field('guest_capacity', 'Capacity notes', { value: v.guest_capacity ?? '', attrs: 'placeholder="150 seated, 300 standing"' })}
+    </section>
+
+    ${groups.length ? `<section class="form-section">
+      <h2>Search filters</h2>
+      <p class="muted">Couples filter by these. Vendors who leave them blank don't show up when a couple uses that filter.</p>
+      ${groups.map(g => `<fieldset class="checks"><legend>${esc(g.label)}</legend>${g.options.map(o => `<label><input type="checkbox" name="filter:${esc(g.key)}" value="${esc(o.value)}"${(answers[g.key] ?? []).map(String).includes(o.value) ? ' checked' : ''}> ${esc(o.label)}</label>`).join('')}</fieldset>`).join('')}
+    </section>` : ''}
+
+    <section class="form-section">
+      <h2>Where you work</h2>
+      <div class="field-row">${field('vendor_location', 'City', { value: v.vendor_location ?? '', attrs: 'placeholder="Salt Lake City"' })}${field('address', 'Address', { value: v.address ?? '', attrs: 'placeholder="Optional"' })}</div>
+      <details class="area"${states.length ? '' : ' open'}><summary>States you serve${states.length ? `: ${esc(states.join(', '))}` : ''}</summary><fieldset class="checks">${checks('state', US_STATES, states)}</fieldset></details>
+      <details class="area"><summary>Utah counties you serve${counties.length ? `: ${esc(counties.join(', '))}` : ''}</summary><fieldset class="checks">${checks('county', UTAH_COUNTIES, counties)}</fieldset></details>
+    </section>
+
+    <section class="form-section">
+      <h2>Contact</h2>
+      <div class="field-row">${field('contact_email', 'Email', { type: 'email', value: v.contact_email ?? '' })}${field('contact_phone', 'Phone', { type: 'tel', value: v.contact_phone ?? '' })}</div>
+      ${field('website_url', 'Website', { value: v.website_url ?? '', attrs: 'placeholder="yourbusiness.com"' })}
+      <div class="field-row">${Object.entries(LINK_LABELS).map(([k, label]) => field(`link_${k}`, label, { value: links[k] ?? '', attrs: k === 'other' ? 'placeholder="Separate with commas"' : '' })).join('')}</div>
+    </section>
+
+    <p class="sheet-error" role="alert" hidden></p>
+    <div class="form-actions">
+      <button type="button" class="btn btn-line" data-action="cancel-edit">Cancel</button>
+      <button type="submit" class="btn btn-plum">${isNew ? 'Create my listing' : 'Save changes'}</button>
+    </div>
+  </form>`;
+}
+
+/** FormData from the listing form -> the shape vendorPayload expects. */
+export function readListingForm(fd) {
+  const out = { links: {}, filters: {}, states: fd.getAll('state'), counties: fd.getAll('county') };
+  for (const [k, v] of fd.entries()) {
+    if (k.startsWith('link_')) out.links[k.slice(5)] = v;
+    else if (k.startsWith('filter:')) (out.filters[k.slice(7)] ??= []).push(v);
+    else if (!['state', 'county', 'photos'].includes(k)) out[k] = v;
+  }
+  return out;
+}
