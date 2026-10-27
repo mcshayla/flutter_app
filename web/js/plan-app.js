@@ -2,7 +2,7 @@
 // the right store. Works logged out (saved in this browser) and logged in
 // (saved to the couple's account, shared with the phone app).
 
-import { getClient, currentUser, openAuthDialog, signOut } from './auth.js';
+import { getClient, currentUser, openAuthDialog, paintAccountLinks, handleAccountClick } from './auth.js';
 import { createLocalStore, createRemoteStore, moveLocalToAccount } from './plan-store.js';
 import { createLocalPicks, createRemotePicks, movePicksToAccount } from './picks.js';
 import { renderCountdown, renderChecklist, renderGuests, renderBudget, renderSaveBanner, esc } from './plan-view.js';
@@ -106,8 +106,7 @@ function render() {
 }
 
 function renderAccount() {
-  const label = state.user ? 'Log Out' : 'Log In';
-  document.querySelectorAll('[data-account]').forEach(el => { el.textContent = label; });
+  paintAccountLinks(state.user);
 }
 
 function setTab(tab, focus = false) {
@@ -139,10 +138,7 @@ function bindChrome() {
       e.preventDefault();
       ACTIONS[el.dataset.action](el);
     }
-    if (e.target.closest('[data-account]')) {
-      e.preventDefault();
-      if (state.user) signOut(); else openAuthDialog('log-in');
-    }
+    handleAccountClick(e);
   });
 
   $('#panel').addEventListener('input', e => {

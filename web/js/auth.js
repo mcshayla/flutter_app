@@ -96,3 +96,23 @@ async function forgotPassword(prefill) {
 }
 
 export const signOut = () => getClient().auth.signOut();
+
+/**
+ * The header's account link: "Log In" opens the login dialog when logged
+ * out; "Account" goes to /account.html when logged in.
+ */
+export function paintAccountLinks(user) {
+  document.querySelectorAll('[data-account]').forEach(a => {
+    a.textContent = user ? 'Account' : 'Log In';
+    a.setAttribute('href', '/account.html');
+    a.dataset.loggedIn = user ? 'true' : 'false';
+  });
+}
+
+export function handleAccountClick(e) {
+  const a = e.target.closest('[data-account]');
+  if (!a || a.dataset.loggedIn === 'true') return false;
+  e.preventDefault();
+  openAuthDialog('log-in');
+  return true;
+}

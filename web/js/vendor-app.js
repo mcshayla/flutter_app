@@ -1,11 +1,11 @@
 // Interactive bits of the generated vendor pages (/vendors/...): the menu,
-// Log in / Log out, Love and YES buttons, and "Add to budget" on a YES.
+// the account link, Love and YES buttons, and "Add to budget" on a YES.
 // The pages are complete without this script; it only adds the buttons' state.
 
-import { getClient, currentUser, openAuthDialog, signOut } from './auth.js';
+import { getClient, currentUser, paintAccountLinks, handleAccountClick } from './auth.js';
 import { createLocalPicks, createRemotePicks, movePicksToAccount } from './picks.js';
 import { createLocalStore, createRemoteStore, moveLocalToAccount } from './plan-store.js';
-import { budgetCategoryFor } from './plan-logic.js';
+import { addVendorToBudget } from './budget.js';
 import { toast } from './dialog.js';
 
 const storage = (() => { try { return window.localStorage; } catch { return { getItem: () => null, setItem() { throw new Error('blocked'); }, removeItem() {} }; } })();
@@ -40,7 +40,7 @@ function paint() {
     const btn = note.querySelector('[data-add-budget]');
     note.hidden = yes[btn.dataset.category] !== article.dataset.vendorId;
   }
-  document.querySelectorAll('[data-account]').forEach(a => { a.textContent = state.user ? 'Log Out' : 'Log In'; });
+  paintAccountLinks(state.user);
 }
 
 async function togglePick(b) {
@@ -69,25 +69,8 @@ async function togglePick(b) {
   }
 }
 
-async function addToBudget(b) {
-  const store = state.user ? createRemoteStore(getClient(), state.user.id) : localPlan;
-  const amount = Number(b.dataset.budgetAmount);
-  try {
-    await store.addBudgetItem({
-      item_name: b.dataset.budgetName,
-      category: budgetCategoryFor(b.dataset.category),
-      estimated_cost: Number.isFinite(amount) ? amount : 0,
-      actual_cost: null,
-      vendor_id: b.dataset.vendorId,
-      is_paid: false,
-      notes: '',
-    });
-    b.textContent = 'Added to budget';
-    b.disabled = true;
-    toast('Added to your budget. You\'ll find it under Plan, then Budget.');
-  } catch (err) {
-    toast(`That didn't save. ${err.message}`);
-  }
+function addToBudget(b) {
+  return addVendorToBudget(state.user ? createRemoteStore(getClient(), state.user.id) : localPlan, b);
 }
 
 document.addEventListener('click', e => {
@@ -95,10 +78,7 @@ document.addEventListener('click', e => {
   if (pick) { e.preventDefault(); togglePick(pick); return; }
   const budget = e.target.closest('[data-add-budget]');
   if (budget) { e.preventDefault(); addToBudget(budget); return; }
-  if (e.target.closest('[data-account]')) {
-    e.preventDefault();
-    if (state.user) signOut(); else openAuthDialog('log-in');
-  }
+  handleAccountClick(e);
 });
 
 const mb = document.getElementById('menu-btn'), mm = document.getElementById('mobile-menu');

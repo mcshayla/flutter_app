@@ -27,6 +27,9 @@
     .countdown:hover .countdown-edit { color: var(--plum); }
     .countdown:focus-visible { outline-offset: -4px; }
 
+    .plan-links { display: flex; justify-content: center; gap: 12px; background: var(--blush); padding: 0 var(--gutter-r) 16px var(--gutter-l); margin-top: -4px; font-size: 0.66rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-line); }
+    .plan-links a { color: var(--plum); text-underline-offset: 3px; }
+
     /* Tabs */
     .tabbar { background: var(--white); border-bottom: 1px solid var(--champagne); position: sticky; top: 0; z-index: 10; }
     .tabs { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); }
@@ -157,7 +160,7 @@
         <a href="/plan.html" aria-current="page">Planning Tools</a>
         <a href="/blog/">Blog</a>
         <a href="/vendorRegistration">List Your Business</a>
-        <a href="#" data-account>Log In</a>
+        <a href="/account.html" data-account>Log In</a>
       </nav>
       <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span><span></span></button>
     </div>
@@ -166,13 +169,14 @@
       <a href="/plan.html" aria-current="page">Planning Tools</a>
       <a href="/blog/">Blog</a>
       <a href="/vendorRegistration">List Your Business</a>
-      <a href="#" data-account>Log In</a>
+      <a href="/account.html" data-account>Log In</a>
     </div>
   </header>
 
   <main>
     <h1 class="sr-only">Your wedding plan</h1>
     <div id="countdown"></div>
+    <nav class="plan-links" aria-label="Your vendors"><a href="/loved.html">Loved vendors</a><span aria-hidden="true">·</span><a href="/yes.html">Your YES list</a></nav>
     <div class="tabbar">
       <div class="tabs" id="tabs" role="tablist" aria-label="Plan">
         <button type="button" role="tab" id="tab-checklist" data-tab="checklist" aria-controls="panel">Checklist</button>

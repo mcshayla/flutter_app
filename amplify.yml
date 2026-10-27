@@ -37,6 +37,7 @@ frontend:
         - cp public/app/resetPassword.html public/
         - cp public/app/site.css public/
         - cp public/app/plan.html public/
+        - cp public/app/loved.html public/app/yes.html public/app/account.html public/app/account.css public/
         - cp -r public/app/js public/
         - cp public/app/favicon.png public/
         - cp -r public/app/icons public/
