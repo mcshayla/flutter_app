@@ -43,11 +43,23 @@ async function pageUrlFor(id) {
 
 // ---------------------------------------------------------------- screens
 
+/**
+ * The List Your Business page links here with ?start=create or ?start=claim.
+ * Once the vendor is logged in (and has no listing yet), open that step
+ * straight away instead of making them pick again. Only the first time.
+ */
+function openChosenStart() {
+  const start = new URLSearchParams(location.search).get('start');
+  if (start !== 'create' && start !== 'claim') return;
+  history.replaceState(null, '', location.pathname);
+  ACTIONS[start]();
+}
+
 async function show() {
   paintAccountLinks(state.user);
   if (!state.user) return showLoggedOut();
   const profile = await run(db().from('vendor_profiles').select('vendor_id').eq('user_id', state.user.id).maybeSingle());
-  if (!profile) { state.vendor = null; main.innerHTML = renderStart(); return; }
+  if (!profile) { state.vendor = null; main.innerHTML = renderStart(); openChosenStart(); return; }
   state.vendor = await run(db().from('vendors').select('*').eq('vendor_id', profile.vendor_id).single());
   return showDashboard();
 }

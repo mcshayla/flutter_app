@@ -23,25 +23,35 @@
     .vr-hero h1 { color: var(--white); }
     .vr-hero h1 em { color: var(--champagne); }
     .vr-hero p { margin: 0; color: rgba(255,255,255,0.88); max-width: 44ch; }
-    .vr-actions { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; justify-content: center; margin-top: 10px; }
-    .vr-link { color: var(--champagne-light); font-size: 0.86rem; text-decoration: underline; text-underline-offset: 4px; }
-    .vr-link:hover { color: var(--white); }
+    .vr-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: min(640px, 100%); margin-top: 14px; }
+    .vr-choice { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 22px 22px; background: var(--cream); color: var(--ink);
+      text-decoration: none; outline: 1px solid var(--champagne); outline-offset: 4px; transition: background .2s, transform .2s; }
+    .vr-choice:hover { background: var(--white); transform: translateY(-2px); }
+    .vr-choice:focus-visible { outline: 2px solid var(--champagne-light); outline-offset: 4px; }
+    .vr-choice .eyebrow { color: var(--plum); }
+    .vr-choice b { font-family: var(--display); font-weight: 500; font-size: 1.45rem; color: var(--plum-ink); }
+    .vr-choice small { font-size: 0.84rem; color: var(--ink-soft); line-height: 1.45; }
+    .vr-go { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.66rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--plum); }
+    .vr-go svg { width: 14px; height: 14px; }
     .vr-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--champagne); border-bottom: 1px solid var(--champagne); }
     .vr-point { background: var(--cream); text-align: center; padding: clamp(36px, 5vw, 56px) 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .vr-point svg { width: 30px; height: 30px; color: var(--plum); margin-bottom: 4px; }
     .vr-point h2 { font-size: 1.35rem; }
     .vr-point p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
     .vr-photos { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--plum-deep); position: relative; }
+    .vr-photos figure { margin: 0; position: relative; }
     .vr-photos img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
-    .vr-photos-cap { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); margin: 0; padding: 10px 20px; background: var(--plum);
-      color: var(--white); font-family: var(--display); font-style: italic; font-size: 1.05rem; white-space: nowrap; outline: 1px solid var(--gold-line); outline-offset: 3px; }
+    .vr-photos figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 16px 12px; background: linear-gradient(transparent, rgba(43,36,39,0.62));
+      color: rgba(255,255,255,0.86); font-size: 0.7rem; letter-spacing: 0.5px; }
+    .vr-photos figcaption a { color: var(--white); text-decoration: underline; text-underline-offset: 3px; }
     .vr-devices { display: flex; flex-wrap: wrap; gap: 10px 26px; justify-content: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 2.4px; text-transform: uppercase; color: var(--champagne-light) !important; }
     .vr-devices span { display: inline-flex; align-items: center; gap: 8px; }
     .vr-devices svg { width: 18px; height: 18px; }
     @media (max-width: 720px) {
       .vr-points { grid-template-columns: 1fr; }
       .vr-photos { grid-template-columns: 1fr 1fr; }
-      .vr-photos img:last-of-type { display: none; }
+      .vr-photos figure:last-of-type { display: none; }
+      .vr-choices { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -73,9 +83,19 @@
         <span class="eyebrow">For Utah wedding vendors</span>
         <h1>Get found by couples <em>planning right now</em></h1>
         <p>A beautiful listing, fair visibility, and real numbers on who loves your work.</p>
-        <div class="vr-actions">
-          <a class="btn btn-solid" href="/vendor.html">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
-          <a class="vr-link" href="/vendor.html">Already listed? Claim it</a>
+        <div class="vr-choices">
+          <a class="vr-choice" href="/vendor.html?start=create">
+            <span class="eyebrow">New to easiYESt</span>
+            <b>List my business</b>
+            <small>Add your photos, prices and details.</small>
+            <span class="vr-go">Get started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></span>
+          </a>
+          <a class="vr-choice" href="/vendor.html?start=claim">
+            <span class="eyebrow">Already listed</span>
+            <b>Claim my business</b>
+            <small>Confirm it's yours with a code sent to its email.</small>
+            <span class="vr-go">Find my listing <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></span>
+          </a>
         </div>
         <!-- Pricing hidden while vendor listings are free. Put it back when payment turns on.
         <span class="vr-note">$20/month &middot; 14 day free trial &middot; Cancel anytime</span>
@@ -102,10 +122,12 @@
     </section>
 
     <section class="vr-photos" aria-label="Photos from easiYESt vendors">
-      <img src="/images/card-sand-and-sun-floral.jpg" alt="Draped ceremony aisle with white chairs" loading="lazy" decoding="async">
-      <img src="/images/card-simply-sophie.jpg" alt="Bride holding a white bouquet, showing her ring" loading="lazy" decoding="async">
-      <img src="/images/card-still-rooted.jpg" alt="Candlelit reception table with white florals" loading="lazy" decoding="async">
-      <p class="vr-photos-cap">Your work, front and center.</p>
+      <figure><img src="/images/vr-sunnyside-urban-farm.jpg" alt="Couple kissing in golden desert light, the bride holding a bouquet" loading="lazy" decoding="async">
+        <figcaption>Photo: <a href="/vendors/florists/sunnyside-urban-farm/">Sunnyside Urban Farm</a></figcaption></figure>
+      <figure><img src="/images/vr-florals-by-annelise.jpg" alt="Pink and white floral arch in front of tall windows" loading="lazy" decoding="async">
+        <figcaption>Photo: <a href="/vendors/florists/florals-by-annelise/">Florals by Annelise</a></figcaption></figure>
+      <figure><img src="/images/vr-ryann-kristena-events.jpg" alt="Bride holding a white and black bouquet" loading="lazy" decoding="async">
+        <figcaption>Photo: <a href="/vendors/wedding-planning/ryann-kristena-events/">Ryann Kristena Events</a></figcaption></figure>
     </section>
 
     <section class="section blush">
@@ -125,7 +147,7 @@
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>iPhone</span>
           <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Android</span>
         </p>
-        <a class="btn btn-solid" href="/vendor.html">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
+        <a class="btn btn-solid" href="/vendor.html?start=create">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
       </div>
     </section>
   </main>
