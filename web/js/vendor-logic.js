@@ -14,6 +14,22 @@ export const servesUtah = states => states.includes('Utah') || states.includes('
 /** Same folder name the app uses for a vendor's photos (image_utils.dart). */
 export const storageFolder = name => String(name ?? '').replace(/[^a-zA-Z0-9 _-]/g, '_').trim();
 
+// ---------------------------------------------------------------- claiming
+
+/**
+ * Called while logged in as the business email (just confirmed with a code).
+ * The server checks that email and hands back a one-use ticket; then the
+ * vendor's own login goes back and the ticket claims the listing for them.
+ */
+export async function claimListing(client, vendorId, original) {
+  const start = await client.rpc('start_vendor_claim', { target_vendor: vendorId });
+  await client.auth.setSession({ access_token: original.access_token, refresh_token: original.refresh_token });
+  if (start.error) throw new Error(start.error.message);
+  const finish = await client.rpc('finish_vendor_claim', { claim_ticket: start.data });
+  if (finish.error) throw new Error(finish.error.message);
+  return finish.data;
+}
+
 // ---------------------------------------------------------------- links
 
 const LINK_KINDS = [

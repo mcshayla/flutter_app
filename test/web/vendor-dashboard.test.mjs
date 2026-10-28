@@ -143,3 +143,33 @@ test('readListingForm turns form data back into a payload', () => {
   assert.deepEqual(p.vendor_county, ['Salt Lake County']);
   assert.deepEqual(p.filter_values, { style: ['boho', 'modern'] });
 });
+
+// A client that records the claim steps in order.
+function claimClient({ startError } = {}) {
+  const steps = [];
+  return {
+    steps,
+    auth: { setSession: async s => { steps.push(['setSession', s.access_token]); return { error: null }; } },
+    rpc: async (name, params) => {
+      steps.push([name, params]);
+      if (name === 'start_vendor_claim') return startError ? { data: null, error: { message: startError } } : { data: 'ticket-1', error: null };
+      return { data: params.claim_ticket === 'ticket-1' ? 'v1' : null, error: null };
+    },
+  };
+}
+
+test('claiming: get a ticket as the business email, put the vendor login back, then claim with the ticket', async () => {
+  const client = claimClient();
+  await V.claimListing(client, 'v1', { access_token: 'mine', refresh_token: 'r' });
+  assert.deepEqual(client.steps, [
+    ['start_vendor_claim', { target_vendor: 'v1' }],
+    ['setSession', 'mine'],
+    ['finish_vendor_claim', { claim_ticket: 'ticket-1' }],
+  ]);
+});
+
+test('claiming: when the server refuses, the vendor login still comes back and nothing is claimed', async () => {
+  const client = claimClient({ startError: 'That listing has already been claimed.' });
+  await assert.rejects(V.claimListing(client, 'v1', { access_token: 'mine', refresh_token: 'r' }), /already been claimed/);
+  assert.deepEqual(client.steps.map(s => s[0]), ['start_vendor_claim', 'setSession']);
+});

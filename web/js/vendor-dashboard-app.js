@@ -6,7 +6,7 @@
 
 import { getClient, currentUser, openAuthDialog, signOut, paintAccountLinks, handleAccountClick } from './auth.js';
 import {
-  renderDashboard, renderStart, renderClaimResults, renderListingForm, readListingForm, vendorPayload, filterGroups, storageFolder,
+  renderDashboard, renderStart, renderClaimResults, claimListing, renderListingForm, readListingForm, vendorPayload, filterGroups, storageFolder,
 } from './vendor-logic.js';
 import { openDialog, toast, field, showError } from './dialog.js';
 import { esc } from './plan-view.js';
@@ -227,8 +227,9 @@ document.addEventListener('click', async e => {
 }, true);
 
 /**
- * Same check as the app (vendor_claim.dart): send a one-time code to the
- * listing's contact email, then put the vendor's own session back and claim.
+ * Send a one-time code to the listing's contact email. Once it's entered, the
+ * server checks that email itself (claimListing), so a claim can't be faked
+ * from the browser.
  */
 async function verifyAndClaim(vendor) {
   const auth = db().auth;
@@ -263,9 +264,12 @@ async function verifyAndClaim(vendor) {
         e.preventDefault();
         const { error } = await auth.verifyOtp({ email: r.email, token: new FormData(form).get('code').trim(), type: 'email' });
         if (error) { ui.error('That code didn\'t work. Check the newest email and try again.'); return; }
-        // Put the vendor's own login back so the claim belongs to their account.
-        if (original) await auth.setSession({ access_token: original.access_token, refresh_token: original.refresh_token });
-        ui.finish({ action: 'ok' });
+        try {
+          await claimListing(db(), vendor.vendor_id, original);
+          ui.finish({ action: 'ok' });
+        } catch (err) {
+          ui.error(`We couldn't claim it. ${err.message}`);
+        }
       }, { capture: true });
     },
   });
@@ -275,14 +279,8 @@ async function verifyAndClaim(vendor) {
     if (original && (await auth.getSession()).data.session?.user.id !== original.user.id) await auth.setSession({ access_token: original.access_token, refresh_token: original.refresh_token });
     return;
   }
-  try {
-    await run(db().from('vendors').update({ vendor_user_id: state.user.id, is_claimed: true, claimed_at: new Date().toISOString() }).eq('vendor_id', vendor.vendor_id));
-    await run(db().from('vendor_profiles').insert({ user_id: state.user.id, vendor_id: vendor.vendor_id, business_name: vendor.vendor_name }));
-    toast(`${vendor.vendor_name} is yours. Welcome to easiYESt!`);
-    await show();
-  } catch (err) {
-    toast(`We couldn't claim it. ${err.message}`);
-  }
+  toast(`${vendor.vendor_name} is yours. Welcome to easiYESt!`);
+  await show();
 }
 
 // ---------------------------------------------------------------- events
