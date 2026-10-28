@@ -1,5 +1,6 @@
 // vendor_create.dart
 import 'package:flutter/material.dart';
+import '../widgets/social_photo_consent.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +33,7 @@ class _VendorCreatePageState extends State<VendorCreatePage> {
   final supabase = Supabase.instance.client;
   final _picker = ImagePicker();
   bool _isLoading = false;
+  bool _allowSocialPhotos = true;
 
   // Controllers
   final _businessNameController = TextEditingController();
@@ -305,6 +307,7 @@ setState(() {
         'website_url': _websiteController.text.trim(),
         'style_keywords': _styleKeywordsController.text.trim(),
         'social_media_links': _collectSocialMediaLinks(),
+        'allow_social_photos': _allowSocialPhotos,
         'vendor_state': selectedStates,
         'vendor_county':
             servesUtah(selectedStates) ? selectedCounties : <String>[],
@@ -755,7 +758,12 @@ DropdownButtonFormField<String>(
                   );
                 },
               ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 4),
+            SocialPhotoConsent(
+              value: _allowSocialPhotos,
+              onChanged: (v) => setState(() => _allowSocialPhotos = v),
+            ),
+            const SizedBox(height: 28),
 
             ElevatedButton(
               onPressed: _isLoading ? null : _createVendor,

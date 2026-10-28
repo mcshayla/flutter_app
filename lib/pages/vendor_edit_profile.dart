@@ -1,5 +1,6 @@
 // vendor_edit_profile.dart
 import 'package:flutter/material.dart';
+import '../widgets/social_photo_consent.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +33,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   final supabase = Supabase.instance.client;
   final _picker = ImagePicker();
   bool _isLoading = false;
+  late bool _allowSocialPhotos;
 
   // Controllers
   late TextEditingController _nameController;
@@ -87,6 +89,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   @override
   void initState() {
     super.initState();
+    _allowSocialPhotos = initialSocialPhotoConsent(widget.vendorData['allow_social_photos']);
     _initializeControllers();
     _loadSocialMediaLinks();
     _loadStateAndCounty();
@@ -451,6 +454,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
             servesUtah(selectedStates) ? selectedCounties : <String>[],
         'image_url': allImageUrls,
         'filter_values': _filterValues,
+        'allow_social_photos': _allowSocialPhotos,
       };
       if (_pickedLat != null) updates['latitude'] = _pickedLat;
       if (_pickedLng != null) updates['longitude'] = _pickedLng;
@@ -911,7 +915,11 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
               const SizedBox(height: 16),
             ],
 
-            const SizedBox(height: 32),
+            SocialPhotoConsent(
+              value: _allowSocialPhotos,
+              onChanged: (v) => setState(() => _allowSocialPhotos = v),
+            ),
+            const SizedBox(height: 28),
 
             // Save Button
             ElevatedButton(
