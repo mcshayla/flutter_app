@@ -87,6 +87,8 @@ export function vendorPayload(f) {
     vendor_state: states,
     vendor_county: servesUtah(states) ? (f.counties ?? []) : [],
     filter_values: filters,
+    // An unchecked box isn't in the form data at all.
+    allow_social_photos: f.allow_social_photos === 'on' || f.allow_social_photos === true,
   };
 }
 
@@ -217,6 +219,7 @@ export function renderListingForm({ vendor: v, categories, groups, isNew }) {
       ${photos.length ? `<ul class="photo-grid">${photos.map((src, i) => `<li><img src="${esc(src)}" alt="Photo ${i + 1}"><button type="button" class="photo-remove" data-remove-photo="${i}" aria-label="Remove photo ${i + 1}">&times;</button></li>`).join('')}</ul>` : ''}
       <div class="field"><label for="f-photos">Add photos</label><input id="f-photos" type="file" name="photos" accept="image/*" multiple></div>
       <ul class="photo-grid photo-new" id="new-photos"></ul>
+      <label class="check-line"><input type="checkbox" name="allow_social_photos"${v.allow_social_photos === false ? '' : ' checked'}> These photos can appear on easiYESt's social media, with credit to your business.</label>
     </section>
 
     <section class="form-section">

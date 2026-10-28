@@ -173,3 +173,18 @@ test('claiming: when the server refuses, the vendor login still comes back and n
   await assert.rejects(V.claimListing(client, 'v1', { access_token: 'mine', refresh_token: 'r' }), /already been claimed/);
   assert.deepEqual(client.steps.map(s => s[0]), ['start_vendor_claim', 'setSession']);
 });
+
+test('social media photo permission: checked by default, saved either way', () => {
+  const box = html => /<input[^>]*name="allow_social_photos"[^>]*>/.exec(html)?.[0];
+  const fresh = box(V.renderListingForm({ vendor: {}, categories: ['DJ'], groups: [], isNew: true }));
+  assert.ok(fresh, 'checkbox is in the photos section');
+  assert.match(fresh, /checked/);
+  assert.match(box(V.renderListingForm({ vendor: { allow_social_photos: null }, categories: ['DJ'], groups: [], isNew: false })), /checked/, 'not asked yet: checked');
+  assert.doesNotMatch(box(V.renderListingForm({ vendor: { allow_social_photos: false }, categories: ['DJ'], groups: [], isNew: false })), /checked/, 'said no: stays unchecked');
+  assert.match(text(V.renderListingForm({ vendor: {}, categories: ['DJ'], groups: [], isNew: true })), /easiYESt's social media/);
+
+  const yes = new URLSearchParams('vendor_name=X&allow_social_photos=on');
+  assert.equal(V.vendorPayload(V.readListingForm(yes)).allow_social_photos, true);
+  const no = new URLSearchParams('vendor_name=X');
+  assert.equal(V.vendorPayload(V.readListingForm(no)).allow_social_photos, false);
+});
