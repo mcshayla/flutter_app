@@ -205,10 +205,10 @@ test('long price text shows as a normal detail, not a big number', () => {
   assert.match(P.renderVendorPage(venue, ctx), /class="fact fact-big"><b>\$3,200<\/b><small>Starting price/);
 });
 
-test('header: Find Vendors, Planning Tools, Blog, List Your Business, Log In, and no gold button', () => {
+test('header: Find Vendors, Planning Tools, List Your Business, Log In (Blog hidden for now), and no gold button', () => {
   const html = P.renderIndexPage([]);
   const nav = /<nav aria-label="Main">([\s\S]*?)<\/nav>/.exec(html)[1];
-  assert.deepEqual([...nav.matchAll(/>([^<]+)<\/a>/g)].map(m => m[1]), ['Find Vendors', 'Planning Tools', 'Blog', 'List Your Business', 'Log In']);
+  assert.deepEqual([...nav.matchAll(/>([^<]+)<\/a>/g)].map(m => m[1]), ['Find Vendors', 'Planning Tools', 'List Your Business', 'Log In']);
   assert.match(nav, /href="\/vendors\/" aria-current="page"/);
   assert.doesNotMatch(/<header[\s\S]*?<\/header>/.exec(html)[0], /btn-solid/);
   assert.match(html, /<nav aria-label="Footer">\s*<a href="\/vendors\/">Find Vendors<\/a>\s*<a href="\/plan.html">Planning Tools<\/a>/);

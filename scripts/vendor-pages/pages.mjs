@@ -166,7 +166,6 @@ function layout({ title, description, path, image, body, ld = [], noindex = fals
       <nav aria-label="Main">
         <a href="/vendors/" aria-current="page">Find Vendors</a>
         <a href="/plan.html">Planning Tools</a>
-        <a href="/blog/">Blog</a>
         <a href="/vendorRegistration">List Your Business</a>
         <a href="/account.html" data-account>Log In</a>
       </nav>
@@ -175,7 +174,6 @@ function layout({ title, description, path, image, body, ld = [], noindex = fals
     <div class="mobile-menu" id="mobile-menu" hidden>
       <a href="/vendors/" aria-current="page">Find Vendors</a>
       <a href="/plan.html">Planning Tools</a>
-      <a href="/blog/">Blog</a>
       <a href="/vendorRegistration">List Your Business</a>
       <a href="/account.html" data-account>Log In</a>
     </div>
