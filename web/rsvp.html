@@ -19,6 +19,16 @@
     .name-row { display: flex; gap: 12px; }
     .name-row .field { flex: 1; min-width: 0; }
     @media (max-width: 420px) { .name-row { flex-direction: column; gap: 0; } }
+    .attend { border: 0; margin: 4px 0 20px; padding: 0; }
+    .attend legend { font-size: 0.64rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--plum-ink); margin-bottom: 9px; padding: 0; }
+    .attend-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .attend label { position: relative; cursor: pointer; }
+    .attend input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+    .attend span { display: block; text-align: center; padding: 14px 10px; border: 1px solid var(--gold-line); background: var(--cream);
+      font-family: var(--display); font-size: 1.05rem; color: var(--ink); transition: background .15s, color .15s, border-color .15s; }
+    .attend input:checked + span { background: var(--plum); border-color: var(--plum); color: var(--white); }
+    .attend input:focus-visible + span { outline: 2px solid var(--plum); outline-offset: 2px; }
+    @media (max-width: 420px) { .attend-choices { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body class="form-page">
@@ -59,6 +69,14 @@
           <input type="text" id="last_name" name="last_name" placeholder="Smith" />
         </div>
       </div>
+
+      <fieldset class="attend">
+        <legend>Will you be there? *</legend>
+        <div class="attend-choices">
+          <label><input type="radio" name="attending" value="yes" required><span>Joyfully accepts</span></label>
+          <label><input type="radio" name="attending" value="no"><span>Regretfully declines</span></label>
+        </div>
+      </fieldset>
 
       <div class="field" id="field-email" style="display:none">
         <label for="email">Email</label>
@@ -106,8 +124,8 @@
   <!-- Success -->
   <div id="success" class="success-screen" style="display:none">
     <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
-    <h2 class="state-title">You're on the list!</h2>
-    <p>Thanks for submitting your details.<br>We can't wait to celebrate with you!</p>
+    <h2 class="state-title" id="success-title">You're on the list!</h2>
+    <p id="success-text">Thanks for submitting your details.<br>We can't wait to celebrate with you!</p>
   </div>
 </div>
 </main>
@@ -164,14 +182,23 @@
     }
   }
 
+  const attending = () => document.querySelector('input[name="attending"]:checked')?.value ?? null
+
+  // Meal, diet and extra guests only matter for guests who are coming.
+  const COMING_ONLY = ['dietary', 'meal', 'plus_one']
+
   function applyFields() {
     const map = { email: 'field-email', phone: 'field-phone', address: 'field-address',
                   dietary: 'field-dietary', meal: 'field-meal', notes: 'field-notes',
                   plus_one: 'field-plus_one' }
+    const declining = attending() === 'no'
     for (const [key, elId] of Object.entries(map)) {
-      document.getElementById(elId).style.display = fieldsEnabled[key] ? '' : 'none'
+      const on = fieldsEnabled[key] && !(declining && COMING_ONLY.includes(key))
+      document.getElementById(elId).style.display = on ? '' : 'none'
     }
   }
+
+  document.querySelectorAll('input[name="attending"]').forEach(r => r.addEventListener('change', applyFields))
 
   async function submitForm(e) {
     e.preventDefault()
@@ -185,6 +212,7 @@
       token,
       first_name: document.getElementById('first_name').value,
       last_name:  document.getElementById('last_name').value,
+      attending:  attending(),
     }
 
     if (fieldsEnabled.email)    payload.email                = document.getElementById('email').value
@@ -206,6 +234,10 @@
       const result = await res.json()
 
       if (result.success) {
+        if (payload.attending === 'no') {
+          document.getElementById('success-title').textContent = 'Thanks for letting them know'
+          document.getElementById('success-text').textContent = "You'll be missed!"
+        }
         show('success')
       } else {
         errEl.textContent = result.error ?? 'Something went wrong. Please try again.'

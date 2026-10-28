@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { guestFromRsvp } from './rsvp-response.js'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,28 +39,8 @@ Deno.serve(async (req) => {
       return json({ error: 'Invalid or expired link' }, 404)
     }
 
-    const fields = (config.fields_enabled ?? {}) as Record<string, boolean>
-
-    // Build guest record — only include fields that were enabled in the link config
-    const guest: Record<string, unknown> = {
-      user_id: config.user_id,
-      first_name: formData.first_name.trim(),
-      last_name: (formData.last_name ?? '').trim(),
-      rsvp_status: 'invited',
-      group_name: config.group_name ?? '',
-    }
-
-    if (fields['email'])    guest['email']                = (formData.email ?? '').trim()
-    if (fields['phone'])    guest['phone']                = (formData.phone ?? '').trim()
-    if (fields['address'])  guest['address']              = (formData.address ?? '').trim()
-    if (fields['dietary'])  guest['dietary_restrictions'] = (formData.dietary_restrictions ?? '').trim()
-    if (fields['meal'])     guest['meal_preference']      = (formData.meal_preference ?? '').trim()
-    if (fields['notes'])    guest['notes']                = (formData.notes ?? '').trim()
-    if (fields['plus_one']) {
-      const count = Math.max(0, parseInt(formData.plus_one_count ?? '0', 10) || 0)
-      guest['plus_one_count'] = count
-      guest['plus_one_allowed'] = count > 0
-    }
+    // Attending or not, plus only the fields enabled in the link config.
+    const guest = guestFromRsvp(config, formData)
 
     const { error: insertError } = await supabase.from('guests').insert(guest)
 
