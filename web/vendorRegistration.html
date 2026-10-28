@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>List Your Wedding Business in Utah | easiYESt</title>
-  <meta name="description" content="Grow your wedding business with real connections. easiYESt puts Utah wedding vendors in front of engaged couples actively planning their big day — fair visibility, no pay-to-win listings.">
+  <meta name="description" content="List your wedding business on easiYESt and get found by Utah couples planning right now. Fair visibility, no pay-to-win, and real numbers on who loves your work. Web, iPhone and Android.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.easiyest.com/vendorRegistration">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -13,6 +13,37 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/site.css">
+  <style>
+    /* List Your Business: plum hero, three short points, a photo strip. */
+    .vr-hero { background: var(--plum); color: var(--white); text-align: center; position: relative;
+      padding: clamp(72px, 11vw, 128px) var(--gutter-r) clamp(72px, 11vw, 128px) var(--gutter-l); }
+    .vr-hero::before { content: ""; position: absolute; inset: 14px; border: 1px solid rgba(220,199,170,0.38); pointer-events: none; }
+    .vr-hero-inner { position: relative; max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+    .vr-hero .eyebrow { color: var(--champagne-light); }
+    .vr-hero h1 { color: var(--white); }
+    .vr-hero h1 em { color: var(--champagne); }
+    .vr-hero p { margin: 0; color: rgba(255,255,255,0.88); max-width: 44ch; }
+    .vr-actions { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; justify-content: center; margin-top: 10px; }
+    .vr-link { color: var(--champagne-light); font-size: 0.86rem; text-decoration: underline; text-underline-offset: 4px; }
+    .vr-link:hover { color: var(--white); }
+    .vr-points { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--champagne); border-bottom: 1px solid var(--champagne); }
+    .vr-point { background: var(--cream); text-align: center; padding: clamp(36px, 5vw, 56px) 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .vr-point svg { width: 30px; height: 30px; color: var(--plum); margin-bottom: 4px; }
+    .vr-point h2 { font-size: 1.35rem; }
+    .vr-point p { margin: 0; color: var(--ink-soft); font-size: 0.92rem; }
+    .vr-photos { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--plum-deep); position: relative; }
+    .vr-photos img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
+    .vr-photos-cap { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); margin: 0; padding: 10px 20px; background: var(--plum);
+      color: var(--white); font-family: var(--display); font-style: italic; font-size: 1.05rem; white-space: nowrap; outline: 1px solid var(--gold-line); outline-offset: 3px; }
+    .vr-devices { display: flex; flex-wrap: wrap; gap: 10px 26px; justify-content: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 2.4px; text-transform: uppercase; color: var(--champagne-light) !important; }
+    .vr-devices span { display: inline-flex; align-items: center; gap: 8px; }
+    .vr-devices svg { width: 18px; height: 18px; }
+    @media (max-width: 720px) {
+      .vr-points { grid-template-columns: 1fr; }
+      .vr-photos { grid-template-columns: 1fr 1fr; }
+      .vr-photos img:last-of-type { display: none; }
+    }
+  </style>
 </head>
 <body>
   <header class="top">
@@ -36,49 +67,45 @@
     </div>
   </header>
 
-  <main>
-    <section class="intro">
-      <div class="intro-inner">
-        <span class="eyebrow">For wedding vendors</span>
-        <h1>Grow your wedding business with <em>real connections</em></h1>
-        <div class="rule" aria-hidden="true"><i></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg><i></i></div>
-        <p>Don't just book more weddings — build lasting relationships with engaged couples actively searching for your services.</p>
-        <a class="btn btn-plum" href="/vendor.html">Get started today <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
+  <main class="vr">
+    <section class="vr-hero">
+      <div class="vr-hero-inner">
+        <span class="eyebrow">For Utah wedding vendors</span>
+        <h1>Get found by couples <em>planning right now</em></h1>
+        <p>A beautiful listing, fair visibility, and real numbers on who loves your work.</p>
+        <div class="vr-actions">
+          <a class="btn btn-solid" href="/vendor.html">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
+          <a class="vr-link" href="/vendor.html">Already listed? Claim it</a>
+        </div>
         <!-- Pricing hidden while vendor listings are free. Put it back when payment turns on.
-        <span class="note">$20/month &middot; 14 day free trial &middot; Cancel anytime</span>
+        <span class="vr-note">$20/month &middot; 14 day free trial &middot; Cancel anytime</span>
         -->
       </div>
     </section>
 
-    <section class="section">
-      <div class="wrap">
-        <!-- Back to class="tiles four" when the Simple pricing tile returns. -->
-        <div class="tiles">
-          <div class="tile" style="text-align:center"><h3>Built for</h3><p>Wedding vendors</p></div>
-          <div class="tile" style="text-align:center"><h3>Local focus</h3><p>Utah County &amp; nearby</p></div>
-          <div class="tile" style="text-align:center"><h3>Mobile app</h3><p>Available on iOS</p></div>
-          <!-- <div class="tile" style="text-align:center"><h3>Simple pricing</h3><p>$20/mo or $200/yr</p></div> -->
-        </div>
+    <section class="vr-points" aria-label="Why easiYESt">
+      <div class="vr-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
+        <h2>Local couples</h2>
+        <p>Only Utah couples, actively planning.</p>
+      </div>
+      <div class="vr-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 7h14M5 7l-3 7a3.5 3.5 0 0 0 6 0zM19 7l-3 7a3.5 3.5 0 0 0 6 0zM8 21h8"/></svg>
+        <h2>Fair visibility</h2>
+        <p>No pay-to-win. Everyone gets seen.</p>
+      </div>
+      <div class="vr-point">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <h2>Real numbers</h2>
+        <p>See who views, loves and says YES.</p>
       </div>
     </section>
 
-    <section class="section alt">
-      <div class="wrap">
-        <div class="section-head">
-          <span class="eyebrow">Why easiYESt</span>
-          <h2>The platform built for <em>wedding professionals</em></h2>
-        </div>
-        <div class="tiles">
-          <div class="tile"><span class="num">i.</span><h3>Showcase your work</h3><p>Make the best first impression with a stunning storefront and build trust with couples searching for their perfect vendor.</p></div>
-          <div class="tile"><span class="num">ii.</span><h3>Local discovery</h3><p>Be seen by couples actively planning weddings in Utah County. easiYESt focuses on local discovery — so your business reaches the right people, not a national audience you'll never book.</p></div>
-          <div class="tile"><span class="num">iii.</span><h3>Fair vendor visibility</h3><p>No pay-to-win listings. Vendor profiles rotate so everyone gets real visibility, giving small and growing businesses a fair chance to be discovered.</p></div>
-          <div class="tile"><span class="num">iv.</span><h3>High-intent leads</h3><p>Fewer vendors and a local-only audience means couples browsing easiYESt are serious about booking — leading to higher-quality inquiries, not wasted clicks.</p></div>
-          <!-- Hidden while listings are free. When it returns, renumber Marketing tools to vi. and drop its wide-last class.
-          <div class="tile"><span class="num">v.</span><h3>Affordable, no-risk pricing</h3><p>Just $20/month — 14 day free trial, and cancel anytime. No paying thousands for a spot at the top of a list that buries you the moment you stop paying.</p></div>
-          -->
-          <div class="tile wide-last"><span class="num">v.</span><h3>Marketing tools</h3><p>Supercharge your marketing with visibility on our platform to expand your SEO reach, promote your business, and stand out from competitors.</p></div>
-        </div>
-      </div>
+    <section class="vr-photos" aria-label="Photos from easiYESt vendors">
+      <img src="/images/card-sand-and-sun-floral.jpg" alt="Draped ceremony aisle with white chairs" loading="lazy" decoding="async">
+      <img src="/images/card-simply-sophie.jpg" alt="Bride holding a white bouquet, showing her ring" loading="lazy" decoding="async">
+      <img src="/images/card-still-rooted.jpg" alt="Candlelit reception table with white florals" loading="lazy" decoding="async">
+      <p class="vr-photos-cap">Your work, front and center.</p>
     </section>
 
     <section class="section blush">
@@ -92,10 +119,13 @@
 
     <section class="band">
       <div class="band-inner">
-        <span class="eyebrow">Join easiYESt</span>
-        <h2>Ready to grow your <em>wedding business?</em></h2>
-        <p>Connect with engaged couples who are actively planning their weddings. Showcase your work and be part of a platform designed for local vendors.</p>
-        <a class="btn btn-solid" href="/vendor.html">Get started today <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
+        <h2>Ready when <em>you are</em></h2>
+        <p class="vr-devices">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1"/><path d="M8 20h8M12 16v4"/></svg>Web</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>iPhone</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Android</span>
+        </p>
+        <a class="btn btn-solid" href="/vendor.html">List your business <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg></a>
       </div>
     </section>
   </main>

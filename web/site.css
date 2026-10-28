@@ -107,8 +107,6 @@ h2 { font-family: var(--display); font-weight: 500; font-size: clamp(1.6rem, 3vw
 /* Numbered feature tiles */
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--champagne); border: 1px solid var(--champagne); }
 .tiles.four { grid-template-columns: repeat(4, 1fr); }
-/* A last tile that fills the row when the count leaves a gap (5 tiles in 3 or 2 columns). */
-@media (min-width: 561px) { .tile.wide-last { grid-column: span 2; } }
 .tile { background: var(--cream); padding: 32px 28px; display: flex; flex-direction: column; gap: 10px; }
 .section.alt .tile { background: var(--white); }
 .tile .num { font-family: var(--display); font-style: italic; color: var(--plum); font-size: 1rem; }
