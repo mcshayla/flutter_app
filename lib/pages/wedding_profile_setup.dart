@@ -154,7 +154,7 @@ class _WeddingProfileSetupState extends State<WeddingProfileSetup> {
         ),
         title: Text(
           'Your Wedding',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -170,7 +170,7 @@ class _WeddingProfileSetupState extends State<WeddingProfileSetup> {
               children: [
                 Text(
                   'Tell us about your big day',
-                  style: GoogleFonts.bodoniModa(
+                  style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF7B3F61),

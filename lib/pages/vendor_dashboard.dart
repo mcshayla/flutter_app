@@ -211,7 +211,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
           backgroundColor: Colors.transparent,
           title: Text(
             'Vendor Dashboard',
-            style: GoogleFonts.bodoniModa(
+            style: GoogleFonts.playfairDisplay(
               color: const Color(0xFF7B3F61),
               fontWeight: FontWeight.w600,
             ),
@@ -237,7 +237,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
         backgroundColor: Colors.transparent,
         title: Text(
           'Vendor Dashboard',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -258,7 +258,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
               // Welcome Section
               Text(
                 'Welcome, ${vendorData!['vendor_name']}!',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 28,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -349,7 +349,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
       children: [
         Text(
           value,
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             fontSize: 24,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF7B3F61),
@@ -370,7 +370,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.bodoniModa(
+      style: GoogleFonts.playfairDisplay(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF7B3F61),

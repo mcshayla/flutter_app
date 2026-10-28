@@ -496,7 +496,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
         backgroundColor: Colors.transparent,
         title: Text(
           'Edit Profile',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -1040,7 +1040,7 @@ class _VendorEditProfileState extends State<VendorEditProfile> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.bodoniModa(
+      style: GoogleFonts.playfairDisplay(
         fontSize: 20,
         fontWeight: FontWeight.w600,
         color: const Color(0xFF7B3F61),

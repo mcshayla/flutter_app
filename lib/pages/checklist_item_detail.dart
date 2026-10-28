@@ -48,7 +48,7 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
         ),
         title: Text(
           'Task Details',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -103,7 +103,7 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
                 Expanded(
                   child: Text(
                     widget.item['title'] ?? '',
-                    style: GoogleFonts.bodoniModa(
+                    style: GoogleFonts.playfairDisplay(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF7B3F61),
@@ -183,7 +183,7 @@ class _ChecklistItemDetailState extends State<ChecklistItemDetail> {
             // Notes
             Text(
               'Notes',
-              style: GoogleFonts.bodoniModa(
+              style: GoogleFonts.playfairDisplay(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF7B3F61),

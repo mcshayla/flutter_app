@@ -1,8 +1,7 @@
-import 'dart:ui';
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../utils/app_styles.dart';
+import '../utils/category_names.dart';
+import '../widgets/stationery.dart';
 import '../templates/category_template.dart';
 import '../appstate.dart';
 import '../utils/image_utils.dart';
@@ -47,8 +46,9 @@ class CategoryLanding extends StatelessWidget {
   const CategoryLanding({required this.categories, this.isLovedPage = false, super.key});
 
   int _columnCount(double width) {
-    if (width >= 1200) return 4;
-    if (width >= 800) return 3;
+    if (width >= 1200) return 5;
+    if (width >= 900) return 4;
+    if (width >= 600) return 3;
     return 2;
   }
 
@@ -57,74 +57,69 @@ class CategoryLanding extends StatelessWidget {
     final categoryNames = categories.keys.toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F5F0),
+      backgroundColor: AppStyles.cream,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final colCount = _columnCount(constraints.maxWidth);
           final isMobile = constraints.maxWidth < 600;
           final hPad = isMobile ? 16.0 : 32.0;
 
-          return Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: Column(
-                children: [
-                  if (kIsWeb && !isLovedPage)
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(hPad, 32, hPad, 8),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Plan your wedding the easiest way!',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.bodoniModa(
-                              fontSize: 28,
-                              color: const Color(0xFF7B3F61),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 1.2,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Find, save, and organize hand-picked local vendors',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 16,
-                              color: const Color(0xFF6E6E6E),
-                              fontWeight: FontWeight.w400,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
+          return CustomScrollView(
+            slivers: [
+              if (!isLovedPage)
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppStyles.blush,
+                    padding: EdgeInsets.fromLTRB(hPad, isMobile ? 28 : 44, hPad, isMobile ? 26 : 40),
+                    child: Column(children: [
+                      const Eyebrow('Explore'),
+                      const SizedBox(height: 8),
+                      Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: 'Plan your ', style: AppStyles.display(isMobile ? 28 : 38)),
+                          TextSpan(text: 'Utah wedding', style: AppStyles.display(isMobile ? 28 : 38, color: AppStyles.plum, italic: true)),
+                        ]),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(hPad, isMobile ? 20 : 12, hPad, isMobile ? 16 : 32),
+                      const SizedBox(height: 12),
+                      const HeartRule(width: 200),
+                      const SizedBox(height: 12),
+                      Text('Loved, local, handpicked vendors.',
+                          textAlign: TextAlign.center, style: AppStyles.body(isMobile ? 14 : 16, color: AppStyles.inkSoft)),
+                    ]),
+                  ),
+                ),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(hPad, isMobile ? 24 : 40, hPad, 40),
+                sliver: SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: AppStyles.maxContentWidth),
                       child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: categoryNames.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: colCount,
-                          childAspectRatio: isMobile ? 1.0 : 1.2,
-                          crossAxisSpacing: isMobile ? 12.0 : 20.0,
-                          mainAxisSpacing: isMobile ? 12.0 : 20.0,
+                          // Arch (4:5) plus room for the label underneath.
+                          childAspectRatio: 0.66,
+                          crossAxisSpacing: isMobile ? 14 : 28,
+                          mainAxisSpacing: isMobile ? 18 : 32,
                         ),
                         itemBuilder: (context, index) {
                           final name = categoryNames[index];
-                          final vendors = categories[name] ?? [];
                           return _CategoryCard(
                             categoryName: name,
-                            imageUrl: _extractImageUrl(vendors),
+                            imageUrl: _extractImageUrl(categories[name] ?? const []),
                             showOnlyLoved: isLovedPage,
                           );
                         },
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           );
         },
       ),
@@ -133,6 +128,8 @@ class CategoryLanding extends StatelessWidget {
 }
 
 
+/// An arched photo with the category name underneath, like the website's
+/// cards. The photo stays sharp; the label never sits on top of it.
 class _CategoryCard extends StatefulWidget {
   final String categoryName;
   final String? imageUrl;
@@ -149,91 +146,62 @@ class _CategoryCardState extends State<_CategoryCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => CategoryPageTemplate(
-              categoryName: widget.categoryName,
-              showOnlyLoved: widget.showOnlyLoved,
-            ),
-          ));
-        },
-        child: AnimatedScale(
-          scale: _isHovered ? 1.04 : 1.0,
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOut,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Background image or gradient fallback
-                if (widget.imageUrl != null)
-                  Image.network(
-                    supabaseThumb(widget.imageUrl!, width: 600),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _GradientBackground(),
-                  )
-                else
-                  _GradientBackground(),
-
-                // Blur layer (only when image present)
-                if (widget.imageUrl != null)
-                  ClipRect(
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                      child: const SizedBox.expand(),
+    final label = categoryDisplayName(widget.categoryName);
+    return Semantics(
+      button: true,
+      label: label,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => CategoryPageTemplate(
+                categoryName: widget.categoryName,
+                showOnlyLoved: widget.showOnlyLoved,
+              ),
+            ));
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: AnimatedSlide(
+                  offset: Offset(0, _isHovered ? -0.02 : 0),
+                  duration: const Duration(milliseconds: 220),
+                  child: Container(
+                    // Hairline rose ring around the arch, offset by a cream gap.
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(999)),
+                      border: Border.all(color: _isHovered ? AppStyles.plum : AppStyles.rose),
                     ),
-                  ),
-
-                // Dark overlay
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  color: Colors.black.withOpacity(_isHovered ? 0.35 : 0.52),
-                ),
-
-                // Category name
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: AutoSizeText(
-                      widget.categoryName,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      minFontSize: 14,
-                      style: GoogleFonts.bodoniModa(
-                        fontSize: 22,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.8,
-                        height: 1.3,
-                        shadows: [
-                          const Shadow(
-                            blurRadius: 2,
-                            color: Colors.black,
-                            offset: Offset(0, 1),
-                          ),
-                          const Shadow(
-                            blurRadius: 12,
-                            color: Colors.black87,
-                            offset: Offset(0, 0),
-                          ),
-                          const Shadow(
-                            blurRadius: 24,
-                            color: Colors.black54,
-                            offset: Offset(0, 0),
-                          ),
-                        ],
-                      ),
+                    child: ClipRRect(
+                      key: ValueKey('category-arch-${widget.categoryName}'),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(999)),
+                      child: widget.imageUrl != null
+                          ? Image.network(
+                              supabaseThumb(widget.imageUrl!, width: 600),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const _GradientBackground(),
+                            )
+                          : const _GradientBackground(),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  style: AppStyles.display(17),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -243,19 +211,19 @@ class _CategoryCardState extends State<_CategoryCard> {
 
 
 class _GradientBackground extends StatelessWidget {
+  const _GradientBackground();
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
+    return const DecoratedBox(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF7B3F61),
-            Color(0xFFDCC7AA),
-          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppStyles.rose, AppStyles.plum],
         ),
       ),
+      child: SizedBox.expand(),
     );
   }
 }

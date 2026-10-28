@@ -20,7 +20,7 @@ class VendorComparePage extends StatelessWidget {
         ),
         title: Text(
           'Compare Vendors',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -72,7 +72,7 @@ class VendorComparePage extends StatelessWidget {
                                             supabaseThumb(
                                               ((v['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                                                   ? (v['image_url'] as List<dynamic>)[0].toString()
-                                                  : 'https://picsum.photos/100/100',
+                                                  : '',
                                               width: 100,
                                             ),
                                             width: 44,

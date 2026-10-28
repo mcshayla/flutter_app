@@ -81,7 +81,7 @@ class _VendorSuccessPageState extends State<VendorSuccessPage> {
               const SizedBox(height: 24),
               Text(
                 'Payment Successful!',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),

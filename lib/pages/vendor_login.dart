@@ -140,7 +140,7 @@ class _VendorLoginState extends State<VendorLogin> {
                   children: [
                     Text(
                       'Vendor Login',
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 32,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF7B3F61),

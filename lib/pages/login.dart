@@ -274,10 +274,9 @@ class _LoginSignupState extends State<LoginSignup> {
               child: widget.redirect == LoginRedirect.home ?
               Center(child:Text(
                 'easiYESt',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 54,
-                  fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
-                  letterSpacing: 1.8, // A little spacing for elegance
+                  fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact // A little spacing for elegance
                   color: const Color(0xFFDCC7AA),
                 ),
               ),): null ),

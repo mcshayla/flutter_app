@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../utils/app_styles.dart';
 import '../utils/image_utils.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+/// A vendor in a list: a wide photo with Love and YES on it, then the city,
+/// the name in Playfair and a two-line description.
 class CustomCard extends StatefulWidget {
-
   final String title;
   final String description;
   final String imageUrl;
+
+  /// Shown in small capitals above the name, usually the vendor's city.
+  final String subtitle;
   final VoidCallback? onTap;
   final bool isHearted;
   final bool isDiamonded;
@@ -15,149 +18,113 @@ class CustomCard extends StatefulWidget {
   final Function(bool)? onDiamondToggled;
 
   const CustomCard({
-    required this.title, required this.description, required this.imageUrl, this.onTap, required this.isHearted, required this.isDiamonded, this.onHeartToggled, this.onDiamondToggled, super.key //the super key being the id from the database for the venue or whatever
+    required this.title,
+    required this.description,
+    required this.imageUrl,
+    this.subtitle = '',
+    this.onTap,
+    required this.isHearted,
+    required this.isDiamonded,
+    this.onHeartToggled,
+    this.onDiamondToggled,
+    super.key,
   });
 
   @override
   State<CustomCard> createState() => _CustomCardState();
-
 }
 
 class _CustomCardState extends State<CustomCard> {
+  bool _hover = false;
+
+  Widget _placeholder({bool keyed = false}) => DecoratedBox(
+        key: keyed ? const ValueKey('card-photo-placeholder') : null,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppStyles.blush, AppStyles.champagneLight],
+          ),
+        ),
+        child: const Center(child: Icon(Icons.photo_camera_outlined, color: AppStyles.rose)),
+      );
+
+  Widget _chip(IconData icon, VoidCallback onTap, String label) => Semantics(
+        button: true,
+        label: label,
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.92),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(7),
+              child: Icon(icon, size: 18, color: AppStyles.plum),
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
-    const double cardWidth = 200;
-    const double cardHeight = 240;
-
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Container(
-        width: cardWidth,
-        height: cardHeight,
-        margin: EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8F5F0),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 4,
-              offset: Offset(2,2),
-            )
+    final hasImage = widget.imageUrl.trim().isNotEmpty;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hover = true),
+      onExit: (_) => setState(() => _hover = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Stack(fit: StackFit.expand, children: [
+                ClipRect(
+                  child: AnimatedScale(
+                    scale: _hover ? 1.03 : 1,
+                    duration: const Duration(milliseconds: 400),
+                    child: hasImage
+                        ? Image.network(
+                            supabaseThumb(widget.imageUrl, width: 700),
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.medium,
+                            errorBuilder: (_, __, ___) => _placeholder(),
+                          )
+                        : _placeholder(keyed: true),
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    _chip(widget.isHearted ? Icons.favorite : Icons.favorite_border,
+                        () => widget.onHeartToggled?.call(!widget.isHearted), widget.isHearted ? 'Loved' : 'Love'),
+                    const SizedBox(width: 6),
+                    _chip(widget.isDiamonded ? Icons.diamond : Icons.diamond_outlined,
+                        () => widget.onDiamondToggled?.call(!widget.isDiamonded), 'YES'),
+                  ]),
+                ),
+              ]),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 4),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                if (widget.subtitle.trim().isNotEmpty && widget.subtitle != 'Unknown')
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Text(widget.subtitle.trim().toUpperCase(),
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: AppStyles.eyebrow(size: 9)),
+                  ),
+                Text(widget.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppStyles.display(18)),
+                if (widget.description.trim().isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(widget.description,
+                      maxLines: 2, overflow: TextOverflow.ellipsis, style: AppStyles.body(12.5, color: AppStyles.inkSoft)),
+                ],
+              ]),
+            ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded( 
-                child: Stack (
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    supabaseThumb(widget.imageUrl),
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.medium,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.network(
-                        "https://picsum.photos/200/300",
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        filterQuality: FilterQuality.medium,
-                        // Last resort: if the placeholder host is unreachable
-                        // too (offline, or a sandboxed test), show a local
-                        // stand-in rather than letting the image error escape.
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: double.infinity,
-                            color: const Color(0xFFDCC7AA),
-                            child: const Center(
-                              child: Icon(
-                                Icons.photo_outlined,
-                                color: Color(0xFF7B3F61),
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }
-                  ),
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.85),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              widget.onHeartToggled?.call(!widget.isHearted);
-                            },
-                            child: Icon(
-                              widget.isHearted ? Icons.favorite : Icons.favorite_border,
-                              size: 20,
-                              color: const Color(0xFF7B3F61),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          GestureDetector(
-                            onTap: () {
-                              widget.onDiamondToggled?.call(!widget.isDiamonded);
-                            },
-                            child: Icon(
-                              widget.isDiamonded ? Icons.diamond : Icons.diamond_outlined,
-                              size: 20,
-                              color: const Color(0xFF7B3F61),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  ],
-              ),
-              ),
-            Container(
-                height: 84,
-                padding: EdgeInsets.all(12),
-                // child: Stack(
-                  // children: [
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                            // Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF3E3E3E)), overflow: TextOverflow.ellipsis),
-                            Text(widget.title, style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ), overflow: TextOverflow.ellipsis),
-                            SizedBox(height: 4),
-                            // Text(widget.description, overflow: TextOverflow.ellipsis, style: TextStyle(color: Color(0xFF6E6E6E)))
-                            Text(
-                              widget.description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.montserrat(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 1,
-                                color: Color(0xFF6E6E6E)
-                              ),
-                            )
-
-                          ],
-                    ),   
-              ),
-            ],
-          ),
         ),
       ),
     );

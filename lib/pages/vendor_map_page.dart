@@ -131,7 +131,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
 
               Text(
                 (vendor['vendor_name'] as String?) ?? '',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -188,6 +188,9 @@ class _VendorMapPageState extends State<VendorMapPage> {
                         builder: (_) => IndividualCard(
                           category: category,
                           filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
+                          startingPrice: vendor['starting_price'] as num?,
+                          capacityMin: (vendor['capacity_min'] as num?)?.toInt(),
+                          capacityMax: (vendor['capacity_max'] as num?)?.toInt(),
                           vendor_id: vendorId,
                           title: (vendor['vendor_name'] as String?) ?? '',
                           description:
@@ -295,7 +298,7 @@ class _VendorMapPageState extends State<VendorMapPage> {
         ),
         title: Text(
           widget.categoryName,
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),

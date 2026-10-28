@@ -40,7 +40,7 @@ Future<List<String>?> showCategorySelectionSheet(
               ),
               Text(
                 isRegenerate ? 'Regenerate Checklist' : 'Build Your Checklist',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),

@@ -143,7 +143,7 @@ class _AISearchPageState extends State<AISearchPage> {
                         description: vendor['vendor_description'] ?? "",
                         imageUrl: ((vendor['image_url'] as List<dynamic>?)?.isNotEmpty ?? false)
                             ? (vendor['image_url'] as List<dynamic>)[0].toString()
-                            : "https://picsum.photos/200/300",
+                            : '',
                         isHearted: appState.lovedVendorUUIDsCategorizedMap[category?.capitalize()]?.contains(vendor['vendor_id']) ?? false,
                         onHeartToggled: (hearted) {
                           appState.toggleHeart(vendor['vendor_id'], hearted);
@@ -160,6 +160,9 @@ class _AISearchPageState extends State<AISearchPage> {
                                       vendor_id: vendor['vendor_id'],
                                       category: category ?? "",
                                       filterValues: (vendor['filter_values'] as Map<String, dynamic>?) ?? const {},
+                                      startingPrice: vendor['starting_price'] as num?,
+                                      capacityMin: (vendor['capacity_min'] as num?)?.toInt(),
+                                      capacityMax: (vendor['capacity_max'] as num?)?.toInt(),
                                       imageUrl: (vendor['image_url'] as List<dynamic>?)
                                           ?.whereType<String>()
                                           .toList() ?? [],

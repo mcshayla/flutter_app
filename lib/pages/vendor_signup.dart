@@ -139,7 +139,7 @@ class _VendorSignupState extends State<VendorSignup> {
               ),
               title: Text(
                 'Account Already Exists',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -297,7 +297,7 @@ class _VendorSignupState extends State<VendorSignup> {
                   children: [
                     Text(
                       'Vendor Sign Up',
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 32,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF7B3F61),

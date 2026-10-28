@@ -98,7 +98,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
         automaticallyImplyLeading: false,
         title: Text(
           'Choose Your Plan',
-          style: GoogleFonts.bodoniModa(
+          style: GoogleFonts.playfairDisplay(
             color: const Color(0xFF7B3F61),
             fontWeight: FontWeight.w600,
           ),
@@ -112,7 +112,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
             children: [
               Text(
                 'Select a subscription plan',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 28,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -173,7 +173,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
               // Promo code section
               Text(
                 'Have a promo code?',
-                style: GoogleFonts.bodoniModa(
+                style: GoogleFonts.playfairDisplay(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF7B3F61),
@@ -298,7 +298,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.bodoniModa(
+                  style: GoogleFonts.playfairDisplay(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF7B3F61),
@@ -311,7 +311,7 @@ class _VendorSubscriptionPageState extends State<VendorSubscriptionPage> {
                   children: [
                     Text(
                       price,
-                      style: GoogleFonts.bodoniModa(
+                      style: GoogleFonts.playfairDisplay(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF7B3F61),

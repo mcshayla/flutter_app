@@ -179,10 +179,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 : _isValidUsername(data)
                                   ? (data['username'] as String).capitalize()
                                   : 'User', 
-                                style: GoogleFonts.bodoniModa(
+                                style: GoogleFonts.playfairDisplay(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w600, // Medium to Semi-Bold for impact
-                                letterSpacing: 2.0,
                             )),
                             const SizedBox(height: 12),
                             Text(data['email'] ?? '', style: GoogleFonts.montserrat(
