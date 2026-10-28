@@ -134,7 +134,9 @@ export function featuredReview(reviews) {
 
 const jsonLd = obj => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
 
-function layout({ title, description, path, image, body, ld = [], noindex = false }) {
+const jsonData = (id, obj) => `<script type="application/json" id="${id}">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
+
+function layout({ title, description, path, image, body, ld = [], noindex = false, scripts = '' }) {
   const url = `${SITE}${path}`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -198,7 +200,7 @@ ${body}
     </div>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-  <script type="module" src="/js/vendor-app.js"></script>
+  <script type="module" src="/js/vendor-app.js"></script>${scripts}
 </body>
 </html>
 `;
@@ -330,7 +332,7 @@ function vendorCard({ vendor: v, slug }, cat) {
   const img = images(v)[0];
   const price = glancePrice(v.starting_price, v.vendor_price);
   const location = String(v.vendor_location ?? '').trim();
-  return `<li class="vcard">
+  return `<li class="vcard" data-vid="${esc(v.vendor_id)}">
     <a class="vcard-link" href="${vendorPath(cat, slug)}">
       <span class="vcard-photo">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : photoPlaceholder(v.vendor_name)}</span>
       ${location ? `<span class="vcard-place">${PICK_ICONS.pin}${esc(location)}</span>` : ''}
@@ -341,7 +343,26 @@ function vendorCard({ vendor: v, slug }, cat) {
   </li>`;
 }
 
-export function renderCategoryPage(cat, entries) {
+/**
+ * What /js/category-filters.js needs to filter this page in the browser:
+ * each vendor's area, answers, price and capacity, and this type's questions.
+ */
+export function filterData(cat, entries, { filters = [], options = [] } = {}) {
+  const defs = filters.filter(f => String(f.category_name).trim() === cat.name);
+  const keys = new Set(defs.map(d => d.filter_key));
+  return {
+    category: cat.name,
+    noun: [cat.one, cat.many],
+    vendors: entries.map(({ vendor: v }) => ({
+      id: v.vendor_id, state: v.vendor_state ?? null, county: v.vendor_county ?? null, f: v.filter_values ?? {},
+      price: typeof v.starting_price === 'number' ? v.starting_price : null, cmin: v.capacity_min ?? null, cmax: v.capacity_max ?? null,
+    })),
+    defs,
+    options: options.filter(o => keys.has(o.filter_key)),
+  };
+}
+
+export function renderCategoryPage(cat, entries, filterSource = {}) {
   const path = `/vendors/${cat.slug}/`;
   const ld = {
     '@context': 'https://schema.org', '@type': 'ItemList', name: `Utah wedding ${cat.plural.toLowerCase()}`,
@@ -356,12 +377,21 @@ export function renderCategoryPage(cat, entries) {
     </div>
   </section>
   <section class="section vlist-section">
-    <ul class="vlist">${entries.map(e => vendorCard(e, cat)).join('')}</ul>
-  </section>`;
+    <div class="vbrowse">
+      <aside class="vfilters" id="vfilters" aria-label="Filters" hidden></aside>
+      <div class="vresults">
+        <div class="vtoolbar" id="vtoolbar" hidden></div>
+        <ul class="vlist">${entries.map(e => vendorCard(e, cat)).join('')}</ul>
+        <div class="vnone" id="vnone" hidden></div>
+      </div>
+    </div>
+  </section>
+  ${jsonData('filter-data', filterData(cat, entries, filterSource))}`;
   return layout({
     title: `Utah Wedding ${cat.plural} | easiYESt`,
     description: `Browse ${countLabel(cat, entries.length)} for Utah weddings. Compare prices, photos and reviews, and save your favorites on easiYESt.`,
     path, image: entries.map(e => images(e.vendor)[0]).find(Boolean), body, ld: [ld],
+    scripts: '\n  <script type="module" src="/js/category-filters.js"></script>',
   });
 }
 

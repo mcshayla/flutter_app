@@ -233,3 +233,30 @@ test('vendor index JSON: what the Loved and YES pages need, keyed by id', () => 
   assert.equal(v.email, 'hi@thebarn.com');
   assert.equal(v.website, 'https://thebarn.com/');
 });
+
+test('category page carries what the filters need: each vendor\'s answers and the type\'s questions', () => {
+  const filters = [
+    { category_name: 'Venue', filter_key: 'venue_type', filter_label: 'Venue Type', filter_type: 'chips', display_order: 1 },
+    { category_name: 'Venue', filter_key: 'starting_price', filter_label: 'Starting price', filter_type: 'range', range_min: 0, range_max: 20000, range_step: 500, display_order: 2 },
+    { category_name: 'DJ', filter_key: 'dj_services', filter_label: 'Services', filter_type: 'chips', display_order: 1 },
+  ];
+  const options = [{ filter_key: 'venue_type', option_value: 'barn', option_label: 'Barns', display_order: 1 }];
+  const html = P.renderCategoryPage(P.categoryInfo('Venue'), [
+    { vendor: { vendor_id: 'v-1', vendor_name: 'Barn </script>', vendor_category: 'Venue', vendor_state: ['Utah'], vendor_county: ['Utah County'], filter_values: { venue_type: ['barn'] }, starting_price: 3200, capacity_min: 50, capacity_max: 250, image_url: [] }, slug: 'barn' },
+  ], { filters, options });
+  assert.match(html, /<li class="vcard" data-vid="v-1">/);
+  assert.match(html, /id="vfilters"/);
+  assert.match(html, /<script type="module" src="\/js\/category-filters.js"><\/script>/);
+  const json = /<script type="application\/json" id="filter-data">(.*?)<\/script>/s.exec(html)[1];
+  const data = JSON.parse(json);
+  assert.deepEqual(data.vendors, [{ id: 'v-1', state: ['Utah'], county: ['Utah County'], f: { venue_type: ['barn'] }, price: 3200, cmin: 50, cmax: 250 }]);
+  assert.deepEqual(data.defs.map(d => d.filter_key), ['venue_type', 'starting_price']);
+  assert.deepEqual(data.options, options);
+  assert.doesNotMatch(json, /<\/script>/i);
+});
+
+test('category page with no filter data still works (no panel data, list as before)', () => {
+  const html = P.renderCategoryPage(P.categoryInfo('DJ'), [{ vendor: { vendor_id: 'd', vendor_name: 'Beat', vendor_category: 'DJ', image_url: [] }, slug: 'beat' }]);
+  assert.match(html, /data-vid="d"/);
+  assert.match(html, /"defs":\[\]/);
+});

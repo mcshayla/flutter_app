@@ -130,3 +130,54 @@ main { flex: 1; }
   .type-arch img, .vcard-photo img, .pick { transition: none; }
   .pick.is-shimmer::after { display: none; }
 }
+
+/* ---------------------------------------------------------------- filters
+   Category pages: a sidebar on desktop, a full-screen sheet on phones.
+   /js/category-filters.js fills #vfilters and #vtoolbar. */
+.vbrowse { max-width: 1140px; margin: 0 auto; }
+.vbrowse.has-filters { display: grid; grid-template-columns: 250px 1fr; gap: 40px; align-items: start; }
+.vbrowse.has-filters .vlist { max-width: none; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.vresults { min-width: 0; }
+.vfilters { position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto; padding-right: 6px; }
+.vf-head { display: none; }
+.vf-head h2 { font-family: var(--display); font-weight: 500; font-size: 1.5rem; margin: 0; color: var(--plum-ink); }
+.vf-close { background: none; border: 0; font-size: 1.8rem; line-height: 1; color: var(--plum-ink); cursor: pointer; padding: 4px 8px; }
+.vf-group { border: 0; border-top: 1px solid var(--champagne); margin: 0; padding: 18px 0 16px; min-width: 0; }
+.vf-group:first-of-type { border-top: 0; padding-top: 0; }
+.vf-group legend { float: left; width: 100%; padding: 0; margin-bottom: 12px; font-size: 0.66rem; font-weight: 600; letter-spacing: 2.4px; text-transform: uppercase; color: var(--plum); }
+.vf-field { margin-bottom: 10px; clear: both; }
+.vf-field label { display: block; font-size: 0.74rem; color: var(--ink-soft); margin-bottom: 5px; }
+.vf-field select, .vf-field input { width: 100%; padding: 10px 12px; border: 1px solid var(--gold-line); border-radius: 0; background: var(--cream); font: inherit; font-size: 0.88rem; color: var(--ink); }
+.vf-field select:focus, .vf-field input:focus { outline: none; border-color: var(--plum); background: var(--white); box-shadow: 0 0 0 1px var(--plum); }
+.vf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; clear: both; }
+.vf-sub { clear: both; margin: 8px 0 8px; font-size: 0.72rem; font-style: italic; font-family: var(--display); color: var(--ink-soft); }
+.vf-chips { clear: both; display: flex; flex-wrap: wrap; gap: 7px; }
+.vf-chip { position: relative; cursor: pointer; }
+.vf-chip input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.vf-chip span { display: inline-block; padding: 7px 12px; border: 1px solid var(--champagne); background: var(--white); font-size: 0.78rem; color: var(--ink); transition: background .15s, border-color .15s, color .15s; }
+.vf-chip:hover span { border-color: var(--gold-line); }
+.vf-chip input:checked + span { background: var(--plum); border-color: var(--plum); color: var(--white); }
+.vf-chip input:focus-visible + span { outline: 2px solid var(--plum); outline-offset: 2px; }
+.vf-note { font-size: 0.74rem; line-height: 1.5; color: var(--ink-soft); margin: 4px 0 16px; }
+.vf-foot { display: flex; gap: 10px; padding-top: 6px; }
+.vf-done { display: none; }
+
+.vtoolbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; min-height: 40px; }
+.vf-open { display: none; }
+.vf-badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--plum); color: var(--white); font-size: 0.66rem; letter-spacing: 0; }
+.vf-count { margin: 0; font-size: 0.84rem; color: var(--ink-soft); }
+.vf-clear { background: none; border: 0; padding: 0; font: inherit; font-size: 0.8rem; color: var(--plum); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.vnone { text-align: center; padding: 48px 16px; border: 1px solid var(--champagne); background: var(--cream); }
+.vnone p { font-family: var(--display); font-size: 1.2rem; color: var(--plum-ink); margin: 0 0 16px; }
+
+@media (max-width: 960px) {
+  .vbrowse.has-filters { display: block; }
+  .vf-open { display: inline-flex; }
+  .vfilters { position: fixed; inset: 0; z-index: 60; max-height: none; top: 0; background: var(--white); padding: 20px 20px 0; overflow-y: auto; display: none; }
+  .vf-is-open .vfilters { display: block; }
+  .vf-is-open { overflow: hidden; }
+  .vf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .vf-foot { position: sticky; bottom: 0; background: var(--white); padding: 14px 0 max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--champagne); margin-top: 8px; }
+  .vf-foot .btn { flex: 1; justify-content: center; }
+  .vf-done { display: inline-flex; }
+}

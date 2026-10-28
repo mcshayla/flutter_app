@@ -13,7 +13,7 @@ import { SUPABASE_URL, SUPABASE_ANON } from '../../web/js/supabase-config.js';
 import { categoryInfo, isPublic, assignSlugs, renderVendorPage, renderCategoryPage, renderIndexPage, sitemapWithPages, vendorIndex } from './pages.mjs';
 
 const VENDOR_COLUMNS = [
-  'vendor_id', 'vendor_name', 'vendor_category', 'vendor_description', 'vendor_location', 'vendor_price', 'starting_price',
+  'vendor_id', 'vendor_name', 'vendor_category', 'vendor_state', 'vendor_county', 'vendor_description', 'vendor_location', 'vendor_price', 'starting_price',
   'website_url', 'contact_email', 'contact_phone', 'image_url', 'address', 'style_keywords', 'social_media_links',
   'latitude', 'longitude', 'filter_values', 'capacity_min', 'capacity_max', 'is_listed', 'created_at',
 ].join(',');
@@ -70,7 +70,7 @@ async function main() {
     const entries = byCategory.get(name).sort((a, b) =>
       Number(!a.vendor.image_url?.length) - Number(!b.vendor.image_url?.length) || a.vendor.vendor_name.localeCompare(b.vendor.vendor_name));
     const catFilters = filters.filter(f => String(f.category_name).trim() === name);
-    await write(join(outDir, 'vendors', cat.slug, 'index.html'), renderCategoryPage(cat, entries));
+    await write(join(outDir, 'vendors', cat.slug, 'index.html'), renderCategoryPage(cat, entries, { filters, options }));
     paths.push(`/vendors/${cat.slug}/`);
     for (const e of entries) {
       const html = renderVendorPage(e.vendor, { category: cat, slug: e.slug, filters: catFilters, optionsByKey, reviews: reviewsByVendor[e.vendor.vendor_id] ?? [] });
