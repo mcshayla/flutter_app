@@ -30,7 +30,10 @@ class _RsvpLinkSheetState extends State<_RsvpLinkSheet> {
   final _labelController = TextEditingController();
   final _groupController = TextEditingController();
 
+  // 'attending' adds "Will you be there?"; without it the link just collects
+  // details and guests save as Not sent (submit-rsvp/rsvp-response.js).
   final Map<String, bool> _fields = {
+    'attending': false,
     'email': false,
     'phone': false,
     'address': true,
@@ -41,6 +44,7 @@ class _RsvpLinkSheetState extends State<_RsvpLinkSheet> {
   };
 
   final Map<String, String> _fieldLabels = {
+    'attending': 'Will you be there? (RSVP)',
     'email': 'Email address',
     'phone': 'Phone number',
     'address': 'Mailing address',

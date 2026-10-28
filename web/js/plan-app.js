@@ -12,7 +12,8 @@ import { openDialog, confirmDialog, toast, field } from './dialog.js';
 const TABS = ['checklist', 'guests', 'budget'];
 // Same list as the app's budget form (lib/pages/budget_item_form.dart).
 const EXPENSE_CATEGORIES = ['Venue', 'Catering', 'Photography', 'Videography', 'Flowers', 'Music', 'Attire', 'Invitations', 'Decor', 'Transportation', 'Favors', 'Cake', 'Hair & Makeup', 'Officiant', 'Other'];
-const RSVP_FIELDS = { email: 'Email address', phone: 'Phone number', address: 'Mailing address', dietary: 'Dietary restrictions', meal: 'Meal preference', notes: 'Notes / message', plus_one: 'Additional guest count' };
+// attending adds "Will you be there?"; without it guests save as Not sent.
+const RSVP_FIELDS = { attending: 'Will you be there? (RSVP)', email: 'Email address', phone: 'Phone number', address: 'Mailing address', dietary: 'Dietary restrictions', meal: 'Meal preference', notes: 'Notes / message', plus_one: 'Additional guest count' };
 
 const $ = sel => document.querySelector(sel);
 const local = createLocalStore(safeStorage());

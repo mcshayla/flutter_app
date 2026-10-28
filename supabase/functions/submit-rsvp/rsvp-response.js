@@ -7,13 +7,14 @@ const STATUS = { yes: 'accepted', no: 'declined' }
 /**
  * config: the guest_link_configs row (user_id, group_name, fields_enabled).
  * form: what the guest sent. Only the fields the couple turned on are saved.
- * A form without an answer (an old copy of the page) saves as 'invited',
- * which the guest list shows as Waiting.
+ * Most links just collect addresses before invitations go out, so guests
+ * save as 'not_sent'. Only a link with the "Will you be there?" question
+ * turned on (fields_enabled.attending) saves Attending / Not attending.
  */
 export function guestFromRsvp(config, form) {
   const fields = config.fields_enabled ?? {}
   const text = key => String(form[key] ?? '').trim()
-  const status = STATUS[form.attending] ?? 'invited'
+  const status = (fields.attending && STATUS[form.attending]) || 'not_sent'
   const declined = status === 'declined'
 
   const guest = {

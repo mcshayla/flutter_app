@@ -70,10 +70,10 @@
         </div>
       </div>
 
-      <fieldset class="attend">
+      <fieldset class="attend" id="field-attending" style="display:none">
         <legend>Will you be there? *</legend>
         <div class="attend-choices">
-          <label><input type="radio" name="attending" value="yes" required><span>Joyfully accepts</span></label>
+          <label><input type="radio" name="attending" value="yes"><span>Joyfully accepts</span></label>
           <label><input type="radio" name="attending" value="no"><span>Regretfully declines</span></label>
         </div>
       </fieldset>
@@ -117,7 +117,7 @@
         <textarea id="notes" name="notes" placeholder="Anything you'd like the couple to know..."></textarea>
       </div>
 
-      <button type="submit" class="btn btn-plum" id="submit-btn">Send RSVP</button>
+      <button type="submit" class="btn btn-plum" id="submit-btn">Send</button>
     </form>
   </div>
 
@@ -144,6 +144,7 @@
 
   let token = null
   let fieldsEnabled = {}
+  let submitLabel = 'Send'
 
   function show(id) {
     ['loading', 'invalid', 'form-section', 'success'].forEach(s => {
@@ -191,7 +192,13 @@
     const map = { email: 'field-email', phone: 'field-phone', address: 'field-address',
                   dietary: 'field-dietary', meal: 'field-meal', notes: 'field-notes',
                   plus_one: 'field-plus_one' }
-    const declining = attending() === 'no'
+    // "Will you be there?" only on links where the couple asks it.
+    const asking = !!fieldsEnabled.attending
+    document.getElementById('field-attending').style.display = asking ? '' : 'none'
+    document.querySelector('input[name="attending"]').required = asking
+    submitLabel = asking ? 'Send RSVP' : 'Send'
+    document.getElementById('submit-btn').textContent = submitLabel
+    const declining = asking && attending() === 'no'
     for (const [key, elId] of Object.entries(map)) {
       const on = fieldsEnabled[key] && !(declining && COMING_ONLY.includes(key))
       document.getElementById(elId).style.display = on ? '' : 'none'
@@ -212,7 +219,7 @@
       token,
       first_name: document.getElementById('first_name').value,
       last_name:  document.getElementById('last_name').value,
-      attending:  attending(),
+      attending:  fieldsEnabled.attending ? attending() : null,
     }
 
     if (fieldsEnabled.email)    payload.email                = document.getElementById('email').value
@@ -243,13 +250,13 @@
         errEl.textContent = result.error ?? 'Something went wrong. Please try again.'
         errEl.style.display = ''
         btn.disabled = false
-        btn.textContent = 'Send RSVP'
+        btn.textContent = submitLabel
       }
     } catch (err) {
       errEl.textContent = 'Network error. Please check your connection and try again.'
       errEl.style.display = ''
       btn.disabled = false
-      btn.textContent = 'Send RSVP'
+      btn.textContent = submitLabel
     }
   }
 
