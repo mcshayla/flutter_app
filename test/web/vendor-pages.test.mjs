@@ -134,7 +134,7 @@ test('vendor page: content', () => {
   const html = P.renderVendorPage(venue, ctx);
   const t = text(html);
   assert.match(t, /Venue · Santaquin, Utah/);
-  assert.match(t, /Rustic Elegant/);
+  assert.match(t, /Rustic · Elegant/);
   assert.match(t, /\$3,200 Starting price/);
   assert.match(html, /<p>A timber barn\.<\/p>\s*<p>Hand-built with care\.<\/p>/);
   assert.match(html, /data-pick="love" data-vendor-id="v-1" data-category="Venue"/);
@@ -148,6 +148,28 @@ test('vendor page: content', () => {
   assert.equal((html.match(/class="mosaic-img/g) || []).length, 3);
   assert.match(html, /href="\/vendors\/venues\/"/);
   assert.match(html, /data-budget-name="Barn &amp; &lt;Orchard&gt;" data-budget-amount="3200"/);
+});
+
+test('style words read as plain text, not as more buttons', () => {
+  const html = P.renderVendorPage(venue, ctx);
+  assert.match(html, /<p class="keywords">Rustic · Elegant<\/p>/);
+  assert.doesNotMatch(html, /<ul class="keywords">/);
+});
+
+test('photos sit in a strip across the top with arrow buttons', () => {
+  const html = P.renderVendorPage(venue, ctx);
+  // The strip comes before the name, so it can span the page on desktop.
+  assert.ok(html.indexOf('class="gallery"') < html.indexOf('<h1>'));
+  assert.match(html, /<div class="gallery" data-count="4">/);
+  assert.match(html, /<button type="button" class="gallery-btn gallery-prev" aria-label="Previous photos" data-gallery-prev disabled>/);
+  assert.match(html, /<button type="button" class="gallery-btn gallery-next" aria-label="Next photos" data-gallery-next>/);
+  assert.match(html, /<script type="module" src="\/js\/gallery.js"><\/script>/);
+});
+
+test('one photo needs no arrows', () => {
+  const html = P.renderVendorPage({ ...venue, image_url: ['https://x.supabase.co/a.jpg'] }, ctx);
+  assert.match(html, /<div class="gallery" data-count="1">/);
+  assert.doesNotMatch(html, /gallery-btn/);
 });
 
 test('vendor page leaves out what a vendor has not filled in', () => {
@@ -253,6 +275,18 @@ test('category page carries what the filters need: each vendor\'s answers and th
   assert.deepEqual(data.defs.map(d => d.filter_key), ['venue_type', 'starting_price']);
   assert.deepEqual(data.options, options);
   assert.doesNotMatch(json, /<\/script>/i);
+});
+
+test('category page gives the map each vendor\'s saved coordinates, and nothing for vendors without them', () => {
+  const html = P.renderCategoryPage(P.categoryInfo('Venue'), [
+    { vendor: { ...venue, vendor_id: 'pinned', latitude: 40.23, longitude: -111.66 }, slug: 'a' },
+    { vendor: { ...venue, vendor_id: 'unpinned', latitude: null, longitude: null }, slug: 'b' },
+  ]);
+  const data = JSON.parse(/<script type="application\/json" id="filter-data">(.*?)<\/script>/s.exec(html)[1]);
+  assert.equal(data.vendors[0].lat, 40.23);
+  assert.equal(data.vendors[0].lng, -111.66);
+  assert.equal('lat' in data.vendors[1], false);
+  assert.match(html, /<div class="vmap" id="vmap" hidden><\/div>/);
 });
 
 test('category page with no filter data still works (no panel data, list as before)', () => {

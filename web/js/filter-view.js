@@ -49,11 +49,20 @@ export function renderPanel(fs, sel, areas) {
 
 const plural = (noun, n) => (n === 1 ? noun[0] : noun[1]);
 
-export function renderToolbar({ shown, total, active, noun }) {
+export function renderToolbar({ shown, total, active, noun, hasMap = false, mapOpen = false }) {
+  const narrowed = active || mapOpen;
   return `<button type="button" class="btn btn-line btn-sm vf-open" data-vf="open" aria-controls="vfilters">Filters${active ? ` <b class="vf-badge">${active}</b>` : ''}</button>
-    <p class="vf-count" aria-live="polite">${active ? `Showing ${shown} of ${total} ${plural(noun, total)}` : `${total} ${plural(noun, total)}`}</p>
+    ${hasMap ? `<button type="button" class="btn btn-line btn-sm vf-map" data-vf="map" aria-pressed="${mapOpen}">${mapOpen ? 'Hide map' : 'Map'}</button>` : ''}
+    <p class="vf-count" aria-live="polite">${narrowed ? `Showing ${shown} of ${total} ${plural(noun, total)}${mapOpen ? ' in the map area' : ''}` : `${total} ${plural(noun, total)}`}</p>
     ${active ? '<button type="button" class="vf-clear" data-vf="clear">Clear all</button>' : ''}`;
 }
+
+const pinCard = ({ name, url, location, image }) =>
+  `<a class="pin-card" href="${esc(url)}">${image ? `<img src="${esc(image)}" alt="">` : ''}<span><b>${esc(name)}</b>${location ? `<small>${esc(location)}</small>` : ''}</span></a>`;
+
+/** What a map pin shows when tapped: a small card per vendor at that spot. */
+export const renderPinPopup = vendors =>
+  (Array.isArray(vendors) ? `<div class="pin-list">${vendors.map(pinCard).join('')}</div>` : pinCard(vendors));
 
 export const renderNone = noun => `<p>No ${esc(noun[1])} match these filters.</p><button type="button" class="btn btn-line btn-sm" data-vf="clear">Clear filters</button>`;
 

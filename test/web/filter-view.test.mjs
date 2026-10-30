@@ -46,6 +46,30 @@ test('toolbar: how many show, and how many filters are on', () => {
   assert.doesNotMatch(plain, /Clear all/);
 });
 
+test('toolbar: a Map button when vendors have pins, pressed while the map is open', () => {
+  const noun = ['venue', 'venues'];
+  assert.doesNotMatch(V.renderToolbar({ shown: 4, total: 4, active: 0, noun }), /data-vf="map"/);
+  assert.match(V.renderToolbar({ shown: 4, total: 4, active: 0, noun, hasMap: true }), /<button type="button" class="btn btn-line btn-sm vf-map" data-vf="map" aria-pressed="false">/);
+  const open = V.renderToolbar({ shown: 2, total: 4, active: 0, noun, hasMap: true, mapOpen: true });
+  assert.match(open, /aria-pressed="true"/);
+  assert.match(text(open), /Showing 2 of 4 venues in the map area/);
+});
+
+test('map pin popup: name, place and a link to the vendor, escaped', () => {
+  const html = V.renderPinPopup({ name: 'Barn & <Orchard>', url: '/vendors/venues/barn/', location: 'Santaquin', image: 'https://x/a.jpg' });
+  assert.match(html, /<a class="pin-card" href="\/vendors\/venues\/barn\/">/);
+  assert.match(html, /<img src="https:\/\/x\/a\.jpg" alt="">/);
+  assert.match(html, /<b>Barn &amp; &lt;Orchard&gt;<\/b>/);
+  assert.match(text(html), /Santaquin/);
+  assert.doesNotMatch(V.renderPinPopup({ name: 'Quiet', url: '/q/', location: '', image: null }), /<img|<small>/);
+});
+
+test('a shared pin lists every vendor there', () => {
+  const html = V.renderPinPopup([{ name: 'One', url: '/1/', location: 'Orem', image: null }, { name: 'Two', url: '/2/', location: 'Orem', image: null }]);
+  assert.equal((html.match(/class="pin-card"/g) || []).length, 2);
+  assert.match(html, /^<div class="pin-list">/);
+});
+
 test('nothing matches: say so and offer to clear', () => {
   assert.match(text(V.renderNone(['venue', 'venues'])), /No venues match these filters\. Clear filters/);
 });

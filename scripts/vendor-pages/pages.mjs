@@ -282,14 +282,17 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/vendors/">Vendors</a><span aria-hidden="true">/</span><a href="/vendors/${cat.slug}/">${esc(cat.plural)}</a></nav>
   <article class="vendor" data-vendor-id="${esc(v.vendor_id)}">
     <div class="vendor-top">
-      <div class="gallery">
-        ${imgs.length ? `<div class="gallery-track" tabindex="0" aria-label="Photos of ${esc(v.vendor_name)}">${imgs.map((src, i) => `<img src="${esc(src)}" alt="${esc(v.vendor_name)}, photo ${i + 1} of ${imgs.length}" ${i ? 'loading="lazy" ' : 'fetchpriority="high" '}decoding="async">`).join('')}</div>${imgs.length > 1 ? `<span class="gallery-count">${imgs.length} photos</span>` : ''}` : photoPlaceholder(v.vendor_name)}
+      <div class="gallery" data-count="${imgs.length}">
+        ${imgs.length ? `<div class="gallery-track" tabindex="0" aria-label="Photos of ${esc(v.vendor_name)}">${imgs.map((src, i) => `<img src="${esc(src)}" alt="${esc(v.vendor_name)}, photo ${i + 1} of ${imgs.length}" ${i ? 'loading="lazy" ' : 'fetchpriority="high" '}decoding="async">`).join('')}</div>${imgs.length > 1 ? `
+        <button type="button" class="gallery-btn gallery-prev" aria-label="Previous photos" data-gallery-prev disabled>${PICK_ICONS.back}</button>
+        <button type="button" class="gallery-btn gallery-next" aria-label="Next photos" data-gallery-next>${PICK_ICONS.back}</button>
+        <span class="gallery-count">${imgs.length} photos</span>` : ''}` : photoPlaceholder(v.vendor_name)}
       </div>
       <div class="vendor-head">
         <span class="eyebrow">${esc([cat.name, location].filter(Boolean).join(' · '))}</span>
         <h1>${esc(v.vendor_name)}</h1>
         ${avg != null ? `<p class="rating">${PICK_ICONS.star}<span>${avg} · ${rated.length} review${rated.length === 1 ? '' : 's'}</span></p>` : ''}
-        ${kw.length ? `<ul class="keywords">${kw.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}
+        ${kw.length ? `<p class="keywords">${kw.map(esc).join(' · ')}</p>` : ''}
         <div class="picks">
           ${pickButtons(v, cat)}
           ${website ? `<a class="pick" href="${esc(website)}" rel="noopener" target="_blank">${PICK_ICONS.web}<span>Website</span></a>` : ''}
@@ -320,6 +323,7 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
   return layout({
     title: `${v.vendor_name} – ${cat.name}${location ? ` in ${location}` : ' in Utah'} | easiYESt`,
     description, path, image: imgs[0], body, ld: [ld, crumbs],
+    scripts: imgs.length > 1 ? '\n  <script type="module" src="/js/gallery.js"></script>' : '',
   });
 }
 
@@ -353,6 +357,7 @@ export function filterData(cat, entries, { filters = [], options = [] } = {}) {
     vendors: entries.map(({ vendor: v }) => ({
       id: v.vendor_id, state: v.vendor_state ?? null, county: v.vendor_county ?? null, f: v.filter_values ?? {},
       price: typeof v.starting_price === 'number' ? v.starting_price : null, cmin: v.capacity_min ?? null, cmax: v.capacity_max ?? null,
+      ...(typeof v.latitude === 'number' && typeof v.longitude === 'number' ? { lat: v.latitude, lng: v.longitude } : {}),
     })),
     defs,
     options: options.filter(o => keys.has(o.filter_key)),
@@ -378,6 +383,7 @@ export function renderCategoryPage(cat, entries, filterSource = {}) {
       <aside class="vfilters" id="vfilters" aria-label="Filters" hidden></aside>
       <div class="vresults">
         <div class="vtoolbar" id="vtoolbar" hidden></div>
+        <div class="vmap" id="vmap" hidden></div>
         <ul class="vlist">${entries.map(e => vendorCard(e, cat)).join('')}</ul>
         <div class="vnone" id="vnone" hidden></div>
       </div>

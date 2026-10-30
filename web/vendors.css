@@ -45,22 +45,40 @@ main { flex: 1; }
 
 /* ---------- Vendor page ---------- */
 .vendor { max-width: 1140px; margin: 0 auto; padding: 18px var(--gutter-r) clamp(56px, 8vw, 96px) var(--gutter-l); }
-.vendor-top { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
-@media (max-width: 860px) { .vendor-top { grid-template-columns: 1fr; } }
+.vendor-top { display: grid; gap: clamp(28px, 4vw, 48px); }
 
-.gallery { position: relative; aspect-ratio: 4 / 3; border: 1px solid var(--champagne); outline: 1px solid var(--champagne); outline-offset: 6px; background: var(--blush); }
-.gallery-track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* Desktop: a strip across the page, three photos in view. Phones: one at a time. */
+.gallery { --per-view: 3; --gap: 6px; position: relative; height: clamp(300px, 34vw, 440px); border: 1px solid var(--champagne); outline: 1px solid var(--champagne); outline-offset: 6px; background: var(--blush); }
+.gallery[data-count="1"] { --per-view: 1; }
+.gallery[data-count="2"] { --per-view: 2; }
+.gallery-track { display: flex; gap: var(--gap); height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .gallery-track::-webkit-scrollbar { display: none; }
-.gallery-track img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+.gallery-track img { flex: 0 0 calc((100% - (var(--per-view) - 1) * var(--gap)) / var(--per-view)); width: 0; height: 100%; object-fit: cover; scroll-snap-align: start; }
 .gallery-track:focus-visible { outline-offset: -4px; }
+@media (max-width: 860px) { .gallery { --per-view: 1; --gap: 0px; height: auto; aspect-ratio: 4 / 3; } }
 .gallery-count { position: absolute; right: 12px; bottom: 12px; background: rgba(43,36,39,0.72); color: var(--white); font-size: 0.62rem; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase; padding: 6px 10px; pointer-events: none; }
+.gallery-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; cursor: pointer;
+  background: rgba(255,255,255,0.94); color: var(--plum-ink); border: 1px solid var(--champagne); box-shadow: 0 2px 12px rgba(43,36,39,0.18); transition: opacity .2s, background .2s; }
+.gallery-btn svg { width: 20px; height: 20px; }
+.gallery-btn:hover { background: var(--white); border-color: var(--plum); }
+.gallery-btn:disabled { opacity: 0; pointer-events: none; }
+.gallery-prev { left: 12px; }
+.gallery-next { right: 12px; }
+.gallery-next svg { transform: scaleX(-1); }
+@media (max-width: 520px) { .gallery-btn { width: 40px; height: 40px; } .gallery-prev { left: 8px; } .gallery-next { right: 8px; } }
 
 .vendor-head { display: flex; flex-direction: column; gap: 12px; }
+/* Desktop: name, words and buttons on the left; the at-a-glance facts beside them. */
+@media (min-width: 861px) {
+  .vendor-head { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 64px); row-gap: 12px; align-content: start; }
+  .vendor-head > * { grid-column: 1; }
+  .vendor-head > .facts { grid-column: 2; grid-row: 1 / span 8; align-self: start; margin-top: 0; }
+}
 .vendor-head h1 { font-size: clamp(2rem, 4.2vw, 2.9rem); overflow-wrap: anywhere; }
 .rating { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; font-size: 0.86rem; color: var(--ink-soft); }
 .rating svg { width: 16px; height: 16px; color: var(--plum); }
-.keywords { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.keywords li { border: 1px solid var(--gold-line); padding: 5px 12px; font-size: 0.64rem; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--plum-ink); background: var(--white); }
+/* Descriptive words, not controls: plain italic text, nothing boxed like the buttons. */
+.keywords { margin: -2px 0 0; font-family: var(--display); font-style: italic; font-size: 1.02rem; line-height: 1.5; color: var(--ink-soft); }
 
 .picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin-top: 6px; }
 .pick { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 10px 14px; cursor: pointer; text-decoration: none;
@@ -138,6 +156,22 @@ main { flex: 1; }
 .vbrowse.has-filters { display: grid; grid-template-columns: 250px 1fr; gap: 40px; align-items: start; }
 .vbrowse.has-filters .vlist { max-width: none; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
 .vresults { min-width: 0; }
+
+/* Map on a category page: opens above the list; the list follows the map's view. */
+.vmap { height: clamp(320px, 46vh, 460px); margin-bottom: 32px; border: 1px solid var(--champagne); outline: 1px solid var(--champagne); outline-offset: 6px; background: var(--blush); z-index: 0; }
+.vmap[hidden] { display: none; }
+.vmap.leaflet-container { font-family: var(--body); }
+.vmap-error { margin: 0; padding: 24px; color: var(--ink-soft); }
+.vf-map[aria-pressed="true"] { background: var(--plum); border-color: var(--plum); color: var(--white); }
+.vpin span { display: block; width: 26px; height: 26px; background: var(--plum); border: 2px solid var(--white); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); box-shadow: 0 2px 8px rgba(43,36,39,0.35); }
+.vmap .leaflet-popup-content-wrapper { border-radius: 0; padding: 0; }
+.vmap .leaflet-popup-content { margin: 0; }
+.pin-list { max-height: 260px; overflow-y: auto; }
+.pin-list .pin-card + .pin-card { border-top: 1px solid var(--blush); }
+.pin-card { display: flex; gap: 10px; align-items: center; padding: 8px 12px 8px 8px; min-width: 200px; color: var(--ink); text-decoration: none; }
+.pin-card img { width: 56px; height: 56px; object-fit: cover; flex-shrink: 0; }
+.pin-card b { display: block; font-family: var(--display); font-weight: 500; font-size: 1rem; color: var(--plum-ink); }
+.pin-card small { display: block; margin-top: 2px; font-size: 0.74rem; color: var(--ink-soft); }
 .vfilters { position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow-y: auto; padding-right: 6px; }
 .vf-head { display: none; }
 .vf-head h2 { font-family: var(--display); font-weight: 500; font-size: 1.5rem; margin: 0; color: var(--plum-ink); }

@@ -52,9 +52,32 @@ export function matchesGuests(v, guests) {
   return (v.cmin ?? 0) <= guests && guests <= (v.cmax ?? Infinity);
 }
 
+const hasPin = v => typeof v.lat === 'number' && typeof v.lng === 'number';
+
+/** Vendors with saved coordinates, the only ones the map can place. */
+export const mapPins = vendors => vendors.filter(hasPin);
+
+/** One pin per spot: vendors placed at their town share its coordinates. */
+export function pinSpots(vendors) {
+  const spots = new Map();
+  for (const v of mapPins(vendors)) {
+    const key = `${v.lat},${v.lng}`;
+    if (!spots.has(key)) spots.set(key, { lat: v.lat, lng: v.lng, ids: [] });
+    spots.get(key).ids.push(v.id);
+  }
+  return [...spots.values()];
+}
+
+/** While the map is open, only vendors pinned inside it. `area` is { south, west, north, east }. */
+export function matchesMapArea(v, area) {
+  if (!area) return true;
+  return hasPin(v) && v.lat >= area.south && v.lat <= area.north && v.lng >= area.west && v.lng <= area.east;
+}
+
+/** `s.mapArea` narrows the list like a filter but isn't counted as one: closing the map clears it. */
 export function filterVendors(vendors, s) {
-  if (isEmpty(s)) return vendors;
-  return vendors.filter(v => matchesRegion(v, s.state, s.county) && matchesTags(v, s.tags) && matchesPrice(v, s.price) && matchesGuests(v, s.guests));
+  if (isEmpty(s) && !s.mapArea) return vendors;
+  return vendors.filter(v => matchesRegion(v, s.state, s.county) && matchesTags(v, s.tags) && matchesPrice(v, s.price) && matchesGuests(v, s.guests) && matchesMapArea(v, s.mapArea));
 }
 
 const selectable = column => asList(column).map(x => x.trim()).filter(x => x && x !== ANYWHERE);

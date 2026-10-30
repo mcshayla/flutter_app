@@ -18,6 +18,38 @@ test('area: a county matches vendors who serve it, and "Any" serves everywhere',
   assert.deepEqual(ids(F.filterVendors(all, { ...F.emptySelection(), state: 'Utah' })), ['a', 'b', 'c']);
 });
 
+// Roughly Utah County, and pins inside and outside it.
+const utahCounty = { south: 39.8, west: -112.2, north: 40.5, east: -111.4 };
+const provo = { id: 'p', lat: 40.23, lng: -111.66, f: {} };
+const logan = { id: 'l', lat: 41.73, lng: -111.83, f: {} };
+const unpinned = { id: 'u', lat: null, lng: null, f: {} };
+
+test('map area: only vendors pinned inside the map show', () => {
+  assert.equal(F.matchesMapArea(provo, utahCounty), true);
+  assert.equal(F.matchesMapArea(logan, utahCounty), false);
+  assert.equal(F.matchesMapArea(unpinned, utahCounty), false);
+  assert.equal(F.matchesMapArea(unpinned, null), true, 'no map open: no limit');
+  assert.deepEqual(ids(F.filterVendors([provo, logan, unpinned], { ...F.emptySelection(), mapArea: utahCounty })), ['p']);
+});
+
+test('map area combines with the other filters but is not counted as one', () => {
+  const cheap = { ...provo, id: 'c', price: 1000 };
+  const pricey = { ...provo, id: 'x', price: 9000 };
+  const sel = { ...F.emptySelection(), price: { min: 0, max: 5000 }, mapArea: utahCounty };
+  assert.deepEqual(ids(F.filterVendors([cheap, pricey, logan], sel)), ['c']);
+  assert.equal(F.activeCount(sel), 1);
+});
+
+test('map pins: vendors with both coordinates', () => {
+  assert.deepEqual(ids(F.mapPins([provo, logan, unpinned, { id: 'h', lat: 40.1, lng: null }])), ['p', 'l']);
+});
+
+test('map pins: vendors in the same spot share one pin', () => {
+  const orem = { lat: 40.29816, lng: -111.69443, f: {} };
+  const spots = F.pinSpots([{ ...orem, id: 'a' }, provo, { ...orem, id: 'b' }]);
+  assert.deepEqual(spots.map(s => [s.lat, s.lng, s.ids]), [[40.29816, -111.69443, ['a', 'b']], [40.23, -111.66, ['p']]]);
+});
+
 test('area: a vendor with no area listed is left out once an area is chosen', () => {
   const blank = { id: 'd', state: null, county: null, f: {} };
   assert.deepEqual(ids(F.filterVendors([blank], { ...F.emptySelection(), county: 'Utah County' })), []);
