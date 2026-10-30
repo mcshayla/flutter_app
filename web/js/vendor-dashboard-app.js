@@ -10,6 +10,7 @@ import {
 } from './vendor-logic.js';
 import { openDialog, toast, field, showError } from './dialog.js';
 import { esc } from './plan-view.js';
+import { wirePin } from './vendor-pin-map.js';
 
 const main = document.getElementById('content');
 const db = () => getClient();
@@ -109,6 +110,7 @@ async function showForm(isNew) {
     paintNewPhotos();
   });
   form.addEventListener('submit', e => { e.preventDefault(); saveListing(form, isNew); });
+  wirePin(form, v);
   window.scrollTo(0, 0);
 }
 

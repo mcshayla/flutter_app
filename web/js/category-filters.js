@@ -5,6 +5,7 @@
 
 import { filtersFor, filterVendors, availableStates, availableCounties, activeCount, toQuery, fromQuery, mapPins, pinSpots } from './vendor-filter.js';
 import { renderPanel, renderToolbar, renderNone, readPanel, renderPinPopup } from './filter-view.js';
+import { loadLeaflet, TILES, TILE_OPTIONS, pinIcon } from './leaflet-loader.js';
 
 const data = JSON.parse(document.getElementById('filter-data')?.textContent ?? 'null');
 const panel = document.getElementById('vfilters');
@@ -12,16 +13,6 @@ const toolbar = document.getElementById('vtoolbar');
 const none = document.getElementById('vnone');
 const mapBox = document.getElementById('vmap');
 const cards = new Map([...document.querySelectorAll('.vlist > .vcard[data-vid]')].map(li => [li.dataset.vid, li]));
-
-// Leaflet is only fetched the first time someone opens the map, so the list
-// itself loads as fast as before.
-const LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
-let leaflet;
-const loadLeaflet = () => (leaflet ??= new Promise((resolve, reject) => {
-  const css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `${LEAFLET}leaflet.min.css` });
-  const js = Object.assign(document.createElement('script'), { src: `${LEAFLET}leaflet.min.js`, onload: () => resolve(window.L), onerror: reject });
-  document.head.append(css, js);
-}));
 
 /** The popup's details, read from the vendor's card already on the page. */
 function cardInfo(li) {
@@ -62,10 +53,8 @@ if (data && panel && toolbar && cards.size) {
       const L = await loadLeaflet();
       if (!map) {
         map = L.map(mapBox, { scrollWheelZoom: false });
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map);
-        const icon = L.divIcon({ className: 'vpin', html: '<span></span>', iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -24] });
+        L.tileLayer(TILES, TILE_OPTIONS).addTo(map);
+        const icon = pinIcon(L);
         for (const spot of pinSpots(pins)) {
           const here = spot.ids.map(id => cardInfo(cards.get(id)));
           L.marker([spot.lat, spot.lng], { icon, title: here.map(c => c.name).join(', ') })

@@ -6,6 +6,7 @@
 import { esc } from './plan-view.js';
 import { formatMoney } from './plan-logic.js';
 import { field } from './dialog.js';
+import { pinFields, pinStatus } from './vendor-pin.js';
 
 export const US_STATES = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'Any'];
 export const UTAH_COUNTIES = ['Beaver County', 'Box Elder County', 'Cache County', 'Carbon County', 'Daggett County', 'Davis County', 'Duchesne County', 'Emery County', 'Garfield County', 'Grand County', 'Iron County', 'Juab County', 'Kane County', 'Millard County', 'Morgan County', 'Piute County', 'Rich County', 'Salt Lake County', 'San Juan County', 'Sanpete County', 'Sevier County', 'Summit County', 'Tooele County', 'Uintah County', 'Utah County', 'Wasatch County', 'Washington County', 'Wayne County', 'Weber County', 'Any'];
@@ -89,6 +90,7 @@ export function vendorPayload(f) {
     filter_values: filters,
     // An unchecked box isn't in the form data at all.
     allow_social_photos: f.allow_social_photos === 'on' || f.allow_social_photos === true,
+    ...pinFields(f),
   };
 }
 
@@ -238,6 +240,14 @@ export function renderListingForm({ vendor: v, categories, groups, isNew }) {
     <section class="form-section">
       <h2>Where you work</h2>
       <div class="field-row">${field('vendor_location', 'City', { value: v.vendor_location ?? '', attrs: 'placeholder="Salt Lake City"' })}${field('address', 'Address', { value: v.address ?? '', attrs: 'placeholder="Optional"' })}</div>
+      <div class="pin-box">
+        <h3>On the map</h3>
+        <p class="muted">Couples can browse vendors on a map. Venues are pinned at their address; everyone else at their town.</p>
+        <input type="hidden" name="latitude" value="${num(v.latitude)}"><input type="hidden" name="longitude" value="${num(v.longitude)}"><input type="hidden" name="pin_cleared" value="">
+        <p class="pin-status" id="pin-status" aria-live="polite">${pinStatus(v.latitude != null && v.longitude != null ? { lat: v.latitude, lng: v.longitude } : null)}</p>
+        <div class="pin-actions"><button type="button" class="btn btn-line btn-sm" data-action="pin-adjust">Adjust pin</button><button type="button" class="text-btn" data-action="pin-remove"${v.latitude != null && v.longitude != null ? '' : ' hidden'}>Remove my pin</button></div>
+        <div class="pin-map" id="pin-map" hidden></div>
+      </div>
       <details class="area"${states.length ? '' : ' open'}><summary>States you serve${states.length ? `: ${esc(states.join(', '))}` : ''}</summary><fieldset class="checks">${checks('state', US_STATES, states)}</fieldset></details>
       <details class="area"><summary>Utah counties you serve${counties.length ? `: ${esc(counties.join(', '))}` : ''}</summary><fieldset class="checks">${checks('county', UTAH_COUNTIES, counties)}</fieldset></details>
     </section>

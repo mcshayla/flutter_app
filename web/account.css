@@ -130,6 +130,17 @@
 .area { border-top: 1px solid #EFE7DC; padding: 12px 0; }
 .area summary { cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--plum-ink); min-height: 32px; }
 .area .checks { margin-top: 12px; }
+
+/* Listing form: where the vendor shows on the map. */
+.pin-box { border-top: 1px solid #EFE7DC; padding: 16px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.pin-box h3 { margin: 0; font-size: 1.05rem; }
+.pin-box .muted { margin: 0; }
+.pin-status { margin: 0; font-size: 0.9rem; color: var(--plum-ink); }
+.pin-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.pin-map { align-self: stretch; height: 300px; border: 1px solid var(--champagne); background: var(--blush); z-index: 0; }
+.pin-map[hidden] { display: none; }
+.pin-map.leaflet-container { font-family: var(--body); }
+.pin-tip { font-size: 0.82rem; }
 .photo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .photo-grid:empty { display: none; }
 .photo-grid li { position: relative; aspect-ratio: 1; background: var(--blush); }
