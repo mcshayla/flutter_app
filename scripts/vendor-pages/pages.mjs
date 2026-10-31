@@ -10,6 +10,8 @@ import { formatMoney, parseMoney } from '../../web/js/plan-logic.js';
 import { esc, ICONS } from '../../web/js/plan-view.js';
 
 export const SITE = 'https://www.easiyest.com';
+/** Shared-link picture for pages listing many vendors, so no one vendor is featured. */
+const SHARE_COLLAGE = `${SITE}/images/share-collage.jpg`;
 
 // ---------------------------------------------------------------- names
 
@@ -393,7 +395,7 @@ export function renderCategoryPage(cat, entries, filterSource = {}) {
   return layout({
     title: `Utah Wedding ${cat.plural} | easiYESt`,
     description: `Browse ${countLabel(cat, entries.length)} for Utah weddings. Compare prices, photos and reviews, and save your favorites on easiYESt.`,
-    path, image: entries.map(e => images(e.vendor)[0]).find(Boolean), body, ld: [ld],
+    path, image: SHARE_COLLAGE, body, ld: [ld],
     scripts: '\n  <script type="module" src="/js/category-filters.js"></script>',
   });
 }
@@ -415,7 +417,7 @@ export function renderIndexPage(groups) {
   return layout({
     title: 'Utah Wedding Vendors – Venues, Photographers, Florists & More | easiYESt',
     description: 'Find Utah wedding vendors in one place: venues, photographers, caterers, florists, DJs and more, with photos, prices and reviews.',
-    path: '/vendors/', image: groups.find(g => g.cover)?.cover, body,
+    path: '/vendors/', image: SHARE_COLLAGE, body,
   });
 }
 

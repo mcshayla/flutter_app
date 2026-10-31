@@ -211,6 +211,13 @@ test('index page shows each vendor type with a count and cover photo', () => {
   assert.match(html, /src="https:\/\/x\/a\.jpg"/);
 });
 
+test('vendor list pages share the collage, not one vendor\'s photo; a vendor page shares its own', () => {
+  const collage = /<meta property="og:image" content="https:\/\/www\.easiyest\.com\/images\/share-collage\.jpg">/;
+  assert.match(P.renderIndexPage([{ category: P.categoryInfo('Venue'), count: 1, cover: 'https://x/a.jpg' }]), collage);
+  assert.match(P.renderCategoryPage(P.categoryInfo('Venue'), [{ vendor: venue, slug: 'barn' }]), collage);
+  assert.doesNotMatch(P.renderVendorPage(venue, ctx), collage);
+});
+
 test('sitemap adds every generated page', () => {
   const base = '<?xml version="1.0"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://www.easiyest.com/</loc></url>\n</urlset>\n';
   const xml = P.sitemapWithPages(base, ['/vendors/', '/vendors/venues/a&b/'], '2026-10-27');

@@ -23,8 +23,27 @@ test('shared links preview easiYESt, not other wedding sites', () => {
   }
 });
 
-test('shared links show a wedding photo, not the app icon', () => {
+test('shared links show the collage, not one vendor\'s photo', () => {
   for (const key of ['og:image', 'twitter:image']) {
-    assert.equal(meta(key), 'https://www.easiyest.com/images/hero-memorial-house-garden.jpg', key);
+    assert.equal(meta(key), 'https://www.easiyest.com/images/share-collage.jpg', key);
   }
+  assert.equal(meta('og:image:width'), '1200');
+  assert.equal(meta('og:image:height'), '630');
+});
+
+/** Width and height from a JPEG's start-of-frame marker. */
+function jpegSize(buf) {
+  for (let i = 2; i < buf.length;) {
+    const marker = buf[i + 1];
+    const len = buf.readUInt16BE(i + 2);
+    if (marker >= 0xC0 && marker <= 0xC2) return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) };
+    i += 2 + len;
+  }
+  return null;
+}
+
+test('the collage is the size link previews expect, and small enough to load fast', async () => {
+  const buf = await readFile(new URL('../../web/images/share-collage.jpg', import.meta.url));
+  assert.deepEqual(jpegSize(buf), { width: 1200, height: 630 });
+  assert.ok(buf.length < 300_000, `${buf.length} bytes`);
 });
