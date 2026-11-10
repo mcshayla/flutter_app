@@ -8,6 +8,7 @@ import '../utils/image_utils.dart';
 import '../widgets/spec_card.dart';
 import '../services/vendor_page_logic.dart';
 import '../widgets/vendor_page_parts.dart';
+import '../widgets/photo_lightbox.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'budget_item_form.dart';
@@ -198,7 +199,7 @@ class _CustomCardState extends State<IndividualCard> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Stack(
+                child: _openable(images, index, Stack(
                   fit: StackFit.expand,
                   children: [
                     Image.network(
@@ -223,7 +224,7 @@ class _CustomCardState extends State<IndividualCard> {
                         ),
                       ),
                   ],
-                ),
+                )),
               ),
             ),
           );
@@ -257,7 +258,7 @@ class _CustomCardState extends State<IndividualCard> {
                   borderRadius: BorderRadius.circular(12),
                   child: AspectRatio(
                     aspectRatio: 4 / 3,
-                    child: Image.network(
+                    child: _openable(images, startIndex + index, Image.network(
                       supabaseThumb(url, width: 800, quality: 75),
                       fit: BoxFit.cover,
                       width: double.infinity,
@@ -265,7 +266,7 @@ class _CustomCardState extends State<IndividualCard> {
                       errorBuilder: (context, error, stackTrace) {
                         return _photoPlaceholder();
                       },
-                    ),
+                    )),
                   ),
                 ),
 
@@ -502,7 +503,6 @@ class _CustomCardState extends State<IndividualCard> {
           const SizedBox(height: 22),
           ConstrainedBox(constraints: const BoxConstraints(maxWidth: 520), child: HighlightMedallions(items: slots.highlights)),
         ],
-        const SizedBox(height: 24),
       ],
     );
   }
@@ -531,13 +531,28 @@ class _CustomCardState extends State<IndividualCard> {
         if (mosaic.isNotEmpty) ...[
           PhotoMosaic(
             images: mosaic,
-            imageBuilder: (url) => Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: AppStyles.blush)),
+            imageBuilder: (url) => _openable(
+              images.where((u) => u.trim().isNotEmpty).toList(),
+              images.where((u) => u.trim().isNotEmpty).toList().indexOf(url),
+              Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const ColoredBox(color: AppStyles.blush)),
+            ),
           ),
           const SizedBox(height: 28),
         ],
       ],
     );
   }
+
+  /// Makes a photo clickable: tapping it opens every photo full screen,
+  /// starting on this one.
+  Widget _openable(List<String> images, int index, Widget child) => MouseRegion(
+        cursor: SystemMouseCursors.zoomIn,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => showPhotoLightbox(context, images, initialIndex: index),
+          child: child,
+        ),
+      );
 
   /// Shown when a vendor has no photos, or one fails to load. A soft brand
   /// panel rather than a stock photo, which would misrepresent the vendor.
@@ -686,14 +701,14 @@ class _CustomCardState extends State<IndividualCard> {
                   },
                   itemCount: images.length,
                   itemBuilder: (context, index) {
-                    return Image.network(
+                    return _openable(images, index, Image.network(
                       supabaseThumb(images[index], width: 1200, quality: 80),
                       width: double.infinity,
                       fit: BoxFit.fitWidth,
                       errorBuilder: (context, error, stackTrace) {
                         return _photoPlaceholder();
                       },
-                    );
+                    ));
                   },
                 ),
                 if (images.length > 1 && _currentImageIndex > 0)

@@ -6,7 +6,7 @@
 
 import { getClient, currentUser, openAuthDialog, signOut, paintAccountLinks, handleAccountClick } from './auth.js';
 import {
-  renderDashboard, renderStart, renderClaimResults, claimListing, renderListingForm, readListingForm, vendorPayload, filterGroups, storageFolder,
+  renderDashboard, renderStart, renderClaimResults, claimListing, renderListingForm, readListingForm, vendorPayload, filterGroups, storageFolder, photoRoom, PHOTO_LIMIT,
 } from './vendor-logic.js';
 import { openDialog, toast, field, showError } from './dialog.js';
 import { esc } from './plan-view.js';
@@ -16,7 +16,7 @@ const main = document.getElementById('content');
 const db = () => getClient();
 // claiming: true while the one-time code briefly swaps the login, so the
 // auth listener doesn't redraw the page for the business email's session.
-const state = { user: null, vendor: null, catalog: null, index: null, removed: new Set(), newFiles: [], claiming: false };
+const state = { photoLimit: PHOTO_LIMIT, user: null, vendor: null, catalog: null, index: null, removed: new Set(), newFiles: [], claiming: false };
 
 async function run(query) {
   const { data, error } = await query;
@@ -32,6 +32,10 @@ async function loadCatalog() {
     run(db().from('filter_options').select('*')),
   ]);
   state.catalog = { categories: categories.map(c => c.name.trim()), filters, options };
+  // The same app_config number the app uses, so the two can't disagree.
+  let cfg = null;
+  try { ({ data: cfg } = await db().from('app_config').select('value').eq('key', 'vendor_photo_limit').maybeSingle()); } catch { /* fall back */ }
+  state.photoLimit = Number.parseInt(cfg?.value, 10) || PHOTO_LIMIT;
   return state.catalog;
 }
 
@@ -91,12 +95,12 @@ async function showForm(isNew) {
   main.innerHTML = `<section class="intro intro-tight"><div class="intro-inner">
       <span class="eyebrow">${isNew ? 'New listing' : 'Edit listing'}</span>
       <h1>${isNew ? 'Create your <em>listing</em>' : esc(v.vendor_name)}</h1>
-    </div></section><div class="vform-wrap">${renderListingForm({ vendor: v, categories, groups, isNew })}</div>`;
+    </div></section><div class="vform-wrap">${renderListingForm({ vendor: v, categories, groups, isNew, photoLimit: state.photoLimit })}</div>`;
   const form = main.querySelector('form');
   // The filters depend on the vendor type, so redraw them when it changes.
   form.querySelector('[name=vendor_category]')?.addEventListener('change', e => {
     const kept = readListingForm(new FormData(form));
-    const html = renderListingForm({ vendor: { ...vendorPayload(kept), vendor_category: e.target.value }, categories, groups: filterGroups(e.target.value, filters, options), isNew });
+    const html = renderListingForm({ vendor: { ...vendorPayload(kept), vendor_category: e.target.value }, categories, groups: filterGroups(e.target.value, filters, options), isNew, photoLimit: state.photoLimit });
     const tmp = document.createElement('div');
     tmp.innerHTML = html;
     const oldFilters = [...form.querySelectorAll('.form-section')].find(s => s.querySelector('h2')?.textContent === 'Search filters');
@@ -105,7 +109,11 @@ async function showForm(isNew) {
     if (newFilters) form.querySelectorAll('.form-section')[2].after(newFilters);
   });
   form.querySelector('[name=photos]').addEventListener('change', e => {
-    state.newFiles.push(...e.target.files);
+    const files = [...e.target.files];
+    const kept = isNew ? 0 : (state.vendor.image_url ?? []).length - state.removed.size;
+    const room = photoRoom({ kept, queued: state.newFiles.length, limit: state.photoLimit });
+    state.newFiles.push(...files.slice(0, room));
+    if (files.length > room) toast(room ? `Only ${room} more fit: listings can have up to ${state.photoLimit} photos.` : `Listings can have up to ${state.photoLimit} photos. Remove one to add another.`);
     e.target.value = '';
     paintNewPhotos();
   });
