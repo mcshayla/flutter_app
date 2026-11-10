@@ -26,3 +26,9 @@ test('arrows know when the strip is at an end', () => {
   // Browsers report fractional scroll positions; a pixel short still counts.
   assert.deepEqual(atEnds(strip(899.4)), { start: false, end: true });
 });
+
+test('the full-screen viewer opens on the photo that was clicked', async () => {
+  const { startIndex } = await import('../../web/js/gallery.js');
+  assert.equal(startIndex(['a.jpg', 'b.jpg', 'c.jpg'], 'c.jpg'), 2);
+  assert.equal(startIndex(['a.jpg', 'b.jpg'], 'missing.jpg'), 0);
+});

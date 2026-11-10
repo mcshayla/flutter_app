@@ -35,4 +35,82 @@ function wire(gallery) {
   update();
 }
 
-if (typeof document !== 'undefined') document.querySelectorAll('.gallery').forEach(wire);
+/** Where a clicked photo sits in the full list, so the viewer opens on it. */
+export function startIndex(srcs, src) {
+  const i = srcs.indexOf(src);
+  return i < 0 ? 0 : i;
+}
+
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+
+// Click any vendor photo to see every photo full screen. Swipe on a phone,
+// arrows or the keyboard on a computer; Esc or the X closes it.
+function lightbox(srcs, alt) {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'lightbox';
+  dlg.setAttribute('aria-label', 'Photos');
+  dlg.innerHTML = `<div class="lightbox-track">${srcs.map((s, i) => `<div class="lightbox-slide"><img src="${s.replace(/"/g, '&quot;')}" alt="${alt(i)}" loading="lazy" decoding="async"></div>`).join('')}</div>
+    <span class="lightbox-count" aria-live="polite"></span>
+    <button type="button" class="lightbox-close" aria-label="Close photos">&times;</button>
+    ${srcs.length > 1 ? `<button type="button" class="gallery-btn gallery-prev" aria-label="Previous photo">${ARROW}</button>
+    <button type="button" class="gallery-btn gallery-next" aria-label="Next photo">${ARROW}</button>` : ''}`;
+  document.body.append(dlg);
+  const track = dlg.querySelector('.lightbox-track');
+  const count = dlg.querySelector('.lightbox-count');
+  const prev = dlg.querySelector('.gallery-prev');
+  const next = dlg.querySelector('.gallery-next');
+  const current = () => Math.round(track.scrollLeft / (track.clientWidth || 1));
+  const update = () => {
+    const i = current();
+    count.textContent = srcs.length > 1 ? `${i + 1} / ${srcs.length}` : '';
+    if (prev) prev.disabled = i <= 0;
+    if (next) next.disabled = i >= srcs.length - 1;
+  };
+  // Where the viewer is headed, so quick repeated presses each count even
+  // while the previous slide is still animating.
+  let at = 0;
+  const show = (i, smooth = true) => {
+    at = Math.min(srcs.length - 1, Math.max(0, i));
+    track.scrollTo({ left: at * track.clientWidth, behavior: smooth ? 'smooth' : 'instant' });
+  };
+  prev?.addEventListener('click', () => show(at - 1));
+  next?.addEventListener('click', () => show(at + 1));
+  dlg.querySelector('.lightbox-close').addEventListener('click', () => dlg.close());
+  // A click on the dark space around a photo closes it too.
+  dlg.addEventListener('click', e => { if (e.target.classList.contains('lightbox-slide')) dlg.close(); });
+  dlg.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); show(at + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); show(at - 1); }
+  });
+  dlg.addEventListener('close', () => { document.documentElement.style.overflow = ''; });
+  track.addEventListener('scroll', update, { passive: true });
+  // After a swipe, pick up from wherever the finger left it.
+  track.addEventListener('scrollend', () => { at = current(); });
+  addEventListener('resize', () => { if (dlg.open) show(at, false); });
+  return i => {
+    document.documentElement.style.overflow = 'hidden';
+    dlg.showModal();
+    show(i, false);
+    update();
+  };
+}
+
+function wireLightbox() {
+  const strip = [...document.querySelectorAll('.gallery-track img')];
+  if (!strip.length) return;
+  const srcs = strip.map(img => img.getAttribute('src'));
+  const open = lightbox(srcs, i => strip[i].alt.replace(/"/g, '&quot;'));
+  const photos = [...strip, ...document.querySelectorAll('.mosaic-img')];
+  photos.forEach(img => {
+    img.tabIndex = 0;
+    img.setAttribute('role', 'button');
+    const go = () => open(startIndex(srcs, img.getAttribute('src')));
+    img.addEventListener('click', go);
+    img.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+}
+
+if (typeof document !== 'undefined') {
+  document.querySelectorAll('.gallery').forEach(wire);
+  wireLightbox();
+}

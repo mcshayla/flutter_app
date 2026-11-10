@@ -301,3 +301,15 @@ test('category page with no filter data still works (no panel data, list as befo
   assert.match(html, /data-vid="d"/);
   assert.match(html, /"defs":\[\]/);
 });
+
+test('a vendor with one photo still gets the full-screen viewer script', () => {
+  const html = P.renderVendorPage({ ...venue, image_url: ['https://x.supabase.co/one.jpg'] }, ctx);
+  assert.match(html, /<script type="module" src="\/js\/gallery.js"><\/script>/);
+});
+
+test('name, words and buttons share one column so the facts beside them add no blank rows', () => {
+  const html = P.renderVendorPage(venue, ctx);
+  const intro = html.slice(html.indexOf('<div class="vendor-intro">'), html.indexOf('<div class="facts">'));
+  assert.match(intro, /<h1>/);
+  assert.match(intro, /class="picks"/);
+});

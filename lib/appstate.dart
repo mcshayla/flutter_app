@@ -37,7 +37,7 @@ class AppState extends ChangeNotifier {
   List<Map<String, dynamic>> guestLinkConfigs = [];
 
   // App Config
-  int vendorPhotoLimit = 5;
+  int vendorPhotoLimit = 10;
 
   final supabase = Supabase.instance.client;
 

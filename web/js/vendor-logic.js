@@ -199,7 +199,15 @@ const checks = (name, values, chosen, { label = v => v } = {}) =>
   values.map(v => `<label><input type="checkbox" name="${esc(name)}" value="${esc(v)}"${chosen.includes(v) ? ' checked' : ''}> ${esc(label(v))}</label>`).join('');
 
 /** The create / edit listing form. Category can only be picked when creating, like the app. */
-export function renderListingForm({ vendor: v, categories, groups, isNew }) {
+/** Most photos a vendor can have. The live number is app_config.vendor_photo_limit. */
+export const PHOTO_LIMIT = 10;
+
+/** How many more photos fit, given the ones kept and the ones already queued. */
+export function photoRoom({ kept, queued, limit = PHOTO_LIMIT }) {
+  return Math.max(0, limit - kept - queued);
+}
+
+export function renderListingForm({ vendor: v, categories, groups, isNew, photoLimit = PHOTO_LIMIT }) {
   const links = linksByKind(v.social_media_links);
   const states = v.vendor_state ?? [];
   const counties = v.vendor_county ?? [];
@@ -217,7 +225,7 @@ export function renderListingForm({ vendor: v, categories, groups, isNew }) {
 
     <section class="form-section">
       <h2>Photos</h2>
-      <p class="muted">The first photo leads your page. We resize photos for fast loading.</p>
+      <p class="muted">Up to ${photoLimit} photos. The first one leads your page. We resize photos for fast loading.</p>
       ${photos.length ? `<ul class="photo-grid">${photos.map((src, i) => `<li><img src="${esc(src)}" alt="Photo ${i + 1}"><button type="button" class="photo-remove" data-remove-photo="${i}" aria-label="Remove photo ${i + 1}">&times;</button></li>`).join('')}</ul>` : ''}
       <div class="field"><label for="f-photos">Add photos</label><input id="f-photos" type="file" name="photos" accept="image/*" multiple></div>
       <ul class="photo-grid photo-new" id="new-photos"></ul>

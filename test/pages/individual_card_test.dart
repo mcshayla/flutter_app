@@ -125,6 +125,20 @@ void main() {
         expect(title.style?.fontFamily, contains('PlayfairDisplay'));
         expect(title.style?.letterSpacing ?? 0, lessThanOrEqualTo(0.5));
       });
+
+      // The header used to end in its own 24px space and the page added another
+      // below it, leaving a blank band between the buttons and About.
+      testWidgets('About sits close under the name and buttons, with no blank band', (tester) async {
+        await pumpCard(tester, barn(), width);
+        double bottomOf(Finder f) => f.evaluate().isEmpty ? 0 : tester.getRect(f.first).bottom;
+        final headerBottom = [
+          bottomOf(find.byType(VendorActionRow)),
+          bottomOf(find.byType(AtAGlance)),
+          bottomOf(find.byType(HighlightMedallions)),
+        ].reduce((a, b) => a > b ? a : b);
+        final aboutTop = tester.getRect(find.text('About')).top;
+        expect(aboutTop - headerBottom, inInclusiveRange(8, 32));
+      });
     });
   }
 }

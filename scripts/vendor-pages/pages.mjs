@@ -291,6 +291,7 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
         <span class="gallery-count">${imgs.length} photos</span>` : ''}` : photoPlaceholder(v.vendor_name)}
       </div>
       <div class="vendor-head">
+        <div class="vendor-intro">
         <span class="eyebrow">${esc([cat.name, location].filter(Boolean).join(' · '))}</span>
         <h1>${esc(v.vendor_name)}</h1>
         ${avg != null ? `<p class="rating">${PICK_ICONS.star}<span>${avg} · ${rated.length} review${rated.length === 1 ? '' : 's'}</span></p>` : ''}
@@ -301,6 +302,7 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
         </div>
         <div class="yes-note" hidden>${PICK_ICONS.yes}<span>Your YES for ${esc(cat.name)}</span>
           <button type="button" class="text-btn" data-add-budget data-budget-name="${esc(v.vendor_name)}" data-budget-amount="${budgetAmount ?? ''}" data-vendor-id="${esc(v.vendor_id)}" data-category="${esc(cat.name)}">Add to budget</button></div>
+        </div>
         ${facts ? `<div class="facts">${facts}</div>` : ''}
       </div>
     </div>
@@ -325,7 +327,8 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
   return layout({
     title: `${v.vendor_name} – ${cat.name}${location ? ` in ${location}` : ' in Utah'} | easiYESt`,
     description, path, image: imgs[0], body, ld: [ld, crumbs],
-    scripts: imgs.length > 1 ? '\n  <script type="module" src="/js/gallery.js"></script>' : '',
+    // Also for a single photo: clicking it opens the full-screen viewer.
+    scripts: imgs.length ?'\n  <script type="module" src="/js/gallery.js"></script>' : '',
   });
 }
 

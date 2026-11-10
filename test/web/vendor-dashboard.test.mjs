@@ -188,3 +188,11 @@ test('social media photo permission: checked by default, saved either way', () =
   const no = new URLSearchParams('vendor_name=X');
   assert.equal(V.vendorPayload(V.readListingForm(no)).allow_social_photos, false);
 });
+
+test('photo limit: only as many new photos as still fit', () => {
+  assert.equal(V.PHOTO_LIMIT, 10);
+  assert.equal(V.photoRoom({ kept: 6, queued: 2 }), 2);
+  assert.equal(V.photoRoom({ kept: 10, queued: 0 }), 0);
+  assert.equal(V.photoRoom({ kept: 3, queued: 0, limit: 5 }), 2);
+  assert.equal(V.photoRoom({ kept: 12, queued: 0 }), 0);
+});
