@@ -313,3 +313,23 @@ test('name, words and buttons share one column so the facts beside them add no b
   assert.match(intro, /<h1>/);
   assert.match(intro, /class="picks"/);
 });
+
+test('each type cover is picked at random from its vendors\' lead photos on every visit', () => {
+  const entries = [
+    { vendor: { image_url: ['https://x/a1.jpg', 'https://x/a2.jpg'] } },
+    { vendor: { image_url: [] } },
+    { vendor: { image_url: ['https://x/b1.jpg'] } },
+  ];
+  const covers = P.coverChoices(entries);
+  assert.deepEqual(covers, ['https://x/a1.jpg', 'https://x/b1.jpg']);
+  const html = P.renderIndexPage([{ category: P.categoryInfo('Venue'), count: 3, cover: covers[0], covers }]);
+  assert.match(html, /src="https:\/\/x\/a1\.jpg"/);
+  assert.match(html, /data-covers="\[&quot;https:\/\/x\/a1\.jpg&quot;,&quot;https:\/\/x\/b1\.jpg&quot;\]"/);
+  assert.match(html, /Math\.random\(\)/);
+});
+
+test('a type with only one photo needs no picking', () => {
+  const html = P.renderIndexPage([{ category: P.categoryInfo('DJ'), count: 1, cover: 'https://x/a.jpg', covers: ['https://x/a.jpg'] }]);
+  assert.doesNotMatch(html, /data-covers/);
+  assert.doesNotMatch(html, /Math\.random/);
+});

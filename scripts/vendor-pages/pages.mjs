@@ -403,6 +403,18 @@ export function renderCategoryPage(cat, entries, filterSource = {}) {
   });
 }
 
+/** One photo per vendor in a type (their lead photo): the pool the cover is picked from. */
+export function coverChoices(entries) {
+  return entries.map(({ vendor }) => images(vendor)[0]).filter(Boolean);
+}
+
+// Each visit shows a different vendor's photo on each type. The page itself
+// is built once per deploy, so the pick happens in the browser; the built-in
+// src is the fallback when scripts are off.
+const PICK_COVERS = `<script>document.querySelectorAll('.type-arch img[data-covers]').forEach(function (img) {
+    try { var c = JSON.parse(img.getAttribute('data-covers')); if (c.length > 1) img.src = c[Math.floor(Math.random() * c.length)]; } catch (e) {}
+  });</script>`;
+
 export function renderIndexPage(groups) {
   const body = `
   <section class="intro intro-tight">
@@ -413,9 +425,10 @@ export function renderIndexPage(groups) {
     </div>
   </section>
   <section class="section">
-    <ul class="types">${groups.map(({ category: c, count, cover }) => `<li><a href="/vendors/${c.slug}/">
-      <span class="type-arch">${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" decoding="async">` : photoPlaceholder(c.plural)}</span>
+    <ul class="types">${groups.map(({ category: c, count, cover, covers = [] }) => `<li><a href="/vendors/${c.slug}/">
+      <span class="type-arch">${cover ? `<img src="${esc(cover)}" alt="" loading="lazy" decoding="async"${covers.length > 1 ? ` data-covers="${esc(JSON.stringify(covers))}"` : ''}>` : photoPlaceholder(c.plural)}</span>
       <span class="type-name">${esc(c.plural)}</span><span class="type-count">${esc(countLabel(c, count))}</span></a></li>`).join('')}</ul>
+  ${groups.some(g => (g.covers ?? []).length > 1) ? PICK_COVERS : ''}
   </section>`;
   return layout({
     title: 'Utah Wedding Vendors – Venues, Photographers, Florists & More | easiYESt',
