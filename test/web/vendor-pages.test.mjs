@@ -231,7 +231,7 @@ test('long price text shows as a normal detail, not a big number', () => {
   const html = P.renderVendorPage({ ...venue, vendor_price: long }, ctx);
   assert.doesNotMatch(html, /class="fact fact-big"><b>Rental/);
   assert.match(html, /<div class="fact fact-wide"><small>Pricing<\/small><b>Rental rates vary/);
-  assert.match(P.renderVendorPage(venue, ctx), /class="fact fact-big"><b>\$3,200<\/b><small>Starting price/);
+  assert.match(P.renderVendorPage(venue, ctx), /class="fact fact-big[^"]*"><b>\$3,200<\/b><small>Starting price/);
 });
 
 test('header: Find Vendors, Planning Tools, List Your Business, Log In (Blog hidden for now), and no gold button', () => {
@@ -312,4 +312,40 @@ test('name, words and buttons share one column so the facts beside them add no b
   const intro = html.slice(html.indexOf('<div class="vendor-intro">'), html.indexOf('<div class="facts">'));
   assert.match(intro, /<h1>/);
   assert.match(intro, /class="picks"/);
+});
+
+test('each type cover is picked at random from its vendors\' lead photos on every visit', () => {
+  const entries = [
+    { vendor: { image_url: ['https://x/a1.jpg', 'https://x/a2.jpg'] } },
+    { vendor: { image_url: [] } },
+    { vendor: { image_url: ['https://x/b1.jpg'] } },
+  ];
+  const covers = P.coverChoices(entries);
+  assert.deepEqual(covers, ['https://x/a1.jpg', 'https://x/b1.jpg']);
+  const html = P.renderIndexPage([{ category: P.categoryInfo('Venue'), count: 3, cover: covers[0], covers }]);
+  assert.match(html, /src="https:\/\/x\/a1\.jpg"/);
+  assert.match(html, /data-covers="\[&quot;https:\/\/x\/a1\.jpg&quot;,&quot;https:\/\/x\/b1\.jpg&quot;\]"/);
+  assert.match(html, /Math\.random\(\)/);
+});
+
+test('a type with only one photo needs no picking', () => {
+  const html = P.renderIndexPage([{ category: P.categoryInfo('DJ'), count: 1, cover: 'https://x/a.jpg', covers: ['https://x/a.jpg'] }]);
+  assert.doesNotMatch(html, /data-covers/);
+  assert.doesNotMatch(html, /Math\.random/);
+});
+
+test('facts fill their rows with no empty boxes', () => {
+  const wide = cells => P.factCells(cells).map(f => !!f.wide);
+  // Pricing (long), Guests, Venue type, Setting type, Catering: Provo City Library's case
+  assert.deepEqual(wide([{ wide: true }, {}, {}, {}, {}]), [true, false, false, false, false]);
+  assert.deepEqual(wide([{}, { wide: true }, {}, {}]), [true, true, false, false]);
+  assert.deepEqual(wide([{}, {}, {}]), [false, false, true]);
+});
+
+test('About follows the name in the left column; facts and contact share the right', () => {
+  const html = P.renderVendorPage(venue, ctx);
+  const side = html.slice(html.indexOf('<div class="vendor-side">'), html.indexOf('<div class="vendor-main">'));
+  assert.match(side, /class="facts"/);
+  assert.match(side, /class="contact"/);
+  assert.ok(html.indexOf('<div class="vendor-intro">') < html.indexOf('<div class="vendor-main">'));
 });

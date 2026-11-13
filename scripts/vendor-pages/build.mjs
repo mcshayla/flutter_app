@@ -10,7 +10,7 @@
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { SUPABASE_URL, SUPABASE_ANON } from '../../web/js/supabase-config.js';
-import { categoryInfo, isPublic, assignSlugs, renderVendorPage, renderCategoryPage, renderIndexPage, sitemapWithPages, vendorIndex } from './pages.mjs';
+import { categoryInfo, isPublic, assignSlugs, renderVendorPage, renderCategoryPage, renderIndexPage, sitemapWithPages, vendorIndex, coverChoices } from './pages.mjs';
 
 const VENDOR_COLUMNS = [
   'vendor_id', 'vendor_name', 'vendor_category', 'vendor_state', 'vendor_county', 'vendor_description', 'vendor_location', 'vendor_price', 'starting_price',
@@ -77,7 +77,8 @@ async function main() {
       await write(join(outDir, 'vendors', cat.slug, e.slug, 'index.html'), html);
       paths.push(`/vendors/${cat.slug}/${e.slug}/`);
     }
-    groups.push({ category: cat, count: entries.length, entries, cover: entries.find(e => e.vendor.image_url?.length)?.vendor.image_url[0] ?? null });
+    const covers = coverChoices(entries);
+    groups.push({ category: cat, count: entries.length, entries, cover: covers[0] ?? null, covers });
   }
   await write(join(outDir, 'vendors', 'index.html'), renderIndexPage(groups));
   await write(join(outDir, 'vendors', 'index.json'), JSON.stringify(vendorIndex(groups, reviewsByVendor)));

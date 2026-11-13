@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../utils/app_styles.dart';
 import '../utils/category_names.dart';
@@ -26,16 +27,30 @@ class ExplorePage extends StatelessWidget {
 }
 
 
-String? _extractImageUrl(List<Map<String, dynamic>> vendors) {
+/// Every vendor's lead photo in a category: the pool its cover is picked from.
+List<String> coverChoices(List<Map<String, dynamic>> vendors) {
+  final urls = <String>[];
   for (final v in vendors) {
     final raw = v['image_url'];
-    if (raw is List && raw.isNotEmpty) {
-      final first = raw.first?.toString();
-      if (first != null && first.trim().isNotEmpty) return first.trim();
-    }
-    if (raw is String && raw.trim().isNotEmpty) return raw.trim();
+    String? first;
+    if (raw is List && raw.isNotEmpty) first = raw.first?.toString();
+    if (raw is String) first = raw;
+    if (first != null && first.trim().isNotEmpty) urls.add(first.trim());
   }
-  return null;
+  return urls;
+}
+
+/// Picked fresh each time the app opens, so the category covers show
+/// different vendors from visit to visit but don't change while someone is
+/// using the page (hearting a vendor rebuilds it).
+final int _coverSeed = Random().nextInt(1 << 30);
+
+/// A random vendor's photo for [category], stable for this app session.
+String? pickCover(String category, List<Map<String, dynamic>> vendors, {int? seed}) {
+  final urls = coverChoices(vendors);
+  if (urls.isEmpty) return null;
+  final mixed = (seed ?? _coverSeed) ^ category.hashCode;
+  return urls[mixed.abs() % urls.length];
 }
 
 
@@ -110,7 +125,7 @@ class CategoryLanding extends StatelessWidget {
                           final name = categoryNames[index];
                           return _CategoryCard(
                             categoryName: name,
-                            imageUrl: _extractImageUrl(categories[name] ?? const []),
+                            imageUrl: pickCover(name, categories[name] ?? const []),
                             showOnlyLoved: isLovedPage,
                           );
                         },
