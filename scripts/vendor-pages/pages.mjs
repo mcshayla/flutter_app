@@ -229,6 +229,26 @@ const photoPlaceholder = name => `<div class="photo-placeholder" aria-hidden="tr
 
 // ---------------------------------------------------------------- vendor page
 
+/**
+ * Lays the facts out two to a row with no empty cells. Long values already
+ * take a whole row; a short fact that would be left alone in its row (just
+ * before a full-width one, or last) is stretched across instead.
+ */
+export function factCells(items) {
+  const out = items.map(f => ({ ...f }));
+  let col = 0;
+  out.forEach((f, i) => {
+    if (f.wide) {
+      if (col === 1) out[i - 1].wide = true;
+      col = 0;
+    } else {
+      col = col === 0 ? 1 : 0;
+    }
+  });
+  if (col === 1) out[out.length - 1].wide = true;
+  return out;
+}
+
 export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey, reviews }) {
   const path = vendorPath(cat, slug);
   const imgs = images(v);
@@ -267,10 +287,14 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
 
   // Short values ("$3,200", "50–300") get the big number; a vendor's
   // paragraph about seasonal rates reads better as ordinary text.
-  const facts = [...slots.glance.map(g => (g.value.length <= 18
-    ? `<div class="fact fact-big"><b>${esc(g.value)}</b><small>${esc(g.label)}</small></div>`
-    : `<div class="fact fact-wide"><small>${g.label === 'Starting price' ? 'Pricing' : esc(g.label)}</small><b>${esc(g.value)}</b></div>`)),
-    ...slots.details.map(d => `<div class="fact"><small>${esc(d.label)}</small><b>${esc(d.value)}</b></div>`)].join('');
+  const facts = factCells([
+    ...slots.glance.map(g => (g.value.length <= 18
+      ? { big: true, label: g.label, value: g.value }
+      : { wide: true, label: g.label === 'Starting price' ? 'Pricing' : g.label, value: g.value })),
+    ...slots.details.map(d => ({ label: d.label, value: d.value })),
+  ]).map(f => (f.big
+    ? `<div class="fact fact-big${f.wide ? ' fact-wide' : ''}"><b>${esc(f.value)}</b><small>${esc(f.label)}</small></div>`
+    : `<div class="fact${f.wide ? ' fact-wide' : ''}"><small>${esc(f.label)}</small><b>${esc(f.value)}</b></div>`)).join('');
 
   const contact = [
     address || location ? `<li><small>${address ? 'Address' : 'Location'}</small><a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(address || location)}" rel="noopener" target="_blank">${esc(address || location)}</a></li>` : '',
@@ -290,7 +314,12 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
         <button type="button" class="gallery-btn gallery-next" aria-label="Next photos" data-gallery-next>${PICK_ICONS.back}</button>
         <span class="gallery-count">${imgs.length} photos</span>` : ''}` : photoPlaceholder(v.vendor_name)}
       </div>
-      <div class="vendor-head">
+    </div>
+
+    <!-- One grid: name, then About and the rest on the left; facts and contact
+         in the right column. About follows the name directly, however tall
+         the facts are. On phones it is one column: name, facts, About, contact. -->
+    <div class="vendor-layout">
         <div class="vendor-intro">
         <span class="eyebrow">${esc([cat.name, location].filter(Boolean).join(' · '))}</span>
         <h1>${esc(v.vendor_name)}</h1>
@@ -303,11 +332,11 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
         <div class="yes-note" hidden>${PICK_ICONS.yes}<span>Your YES for ${esc(cat.name)}</span>
           <button type="button" class="text-btn" data-add-budget data-budget-name="${esc(v.vendor_name)}" data-budget-amount="${budgetAmount ?? ''}" data-vendor-id="${esc(v.vendor_id)}" data-category="${esc(cat.name)}">Add to budget</button></div>
         </div>
+      <div class="vendor-side">
         ${facts ? `<div class="facts">${facts}</div>` : ''}
+        ${contact ? `<aside class="contact"><span class="eyebrow">Contact &amp; location</span><ul>${contact}</ul>
+        ${email ? `<a class="btn btn-plum" href="mailto:${esc(email)}?subject=${encodeURIComponent('Wedding inquiry from easiYESt')}">Contact ${esc(v.vendor_name)}</a>` : website ? `<a class="btn btn-plum" href="${esc(website)}" rel="noopener" target="_blank">Visit their website</a>` : ''}</aside>` : ''}
       </div>
-    </div>
-
-    <div class="vendor-body">
       <div class="vendor-main">
         ${paragraphs.length ? `<section><span class="eyebrow">About</span><h2>About ${esc(v.vendor_name)}</h2>${paragraphs.map(p => `<p>${esc(p)}</p>`).join('\n')}</section>` : ''}
         ${slots.included.length ? `<section class="included"><span class="eyebrow">What's included</span>${slots.included.map(g => `${g.title ? `<h3>${esc(g.title)}</h3>` : ''}<ul>${g.items.map(i => `<li>${esc(i.label)}</li>`).join('')}</ul>`).join('')}</section>` : ''}
@@ -318,8 +347,6 @@ export function renderVendorPage(v, { category: cat, slug, filters, optionsByKey
           ${reviews.filter(r => r !== quote && String(r.comment ?? '').trim()).map(r => `<div class="review"><p>${esc(r.comment)}</p>${Number(r.rating) > 0 ? `<small>${'★'.repeat(Number(r.rating))}</small>` : ''}</div>`).join('')}
         </section>
       </div>
-      ${contact ? `<aside class="contact"><span class="eyebrow">Contact &amp; location</span><ul>${contact}</ul>
-        ${email ? `<a class="btn btn-plum" href="mailto:${esc(email)}?subject=${encodeURIComponent('Wedding inquiry from easiYESt')}">Contact ${esc(v.vendor_name)}</a>` : website ? `<a class="btn btn-plum" href="${esc(website)}" rel="noopener" target="_blank">Visit their website</a>` : ''}</aside>` : ''}
     </div>
     <p class="back-link"><a href="/vendors/${cat.slug}/">${PICK_ICONS.back}<span>All ${esc(cat.plural.toLowerCase())}</span></a></p>
   </article>`;

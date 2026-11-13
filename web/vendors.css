@@ -80,15 +80,23 @@ dialog.lightbox .gallery-btn:disabled { opacity: 0; }
 @media (max-width: 520px) { dialog.lightbox .gallery-btn { display: none; } }
 @media (max-width: 520px) { .gallery-btn { width: 40px; height: 40px; } .gallery-prev { left: 8px; } .gallery-next { right: 8px; } }
 
-.vendor-head, .vendor-intro { display: flex; flex-direction: column; gap: 12px; }
-/* Desktop: name, words and buttons on the left; the at-a-glance facts beside them.
-   The left side is one wrapper so the facts never stretch it with empty rows,
-   which used to leave a tall blank band above About. */
+.vendor-intro { display: flex; flex-direction: column; gap: 12px; }
+/* Phones: one column in reading order. The side wrapper dissolves so its two
+   boxes can sit where they belong: facts after the name, contact at the end. */
+.vendor-layout { display: flex; flex-direction: column; gap: clamp(32px, 5vw, 48px); margin-top: clamp(28px, 4vw, 48px); }
+.vendor-side { display: contents; }
+.vendor-intro { order: 1; } .vendor-side > .facts { order: 2; margin-top: -12px; } .vendor-main { order: 3; } .vendor-side > .contact { order: 4; }
+/* Desktop: the right column spans both rows, and the second row is the
+   flexible one, so the first row is only as tall as the name and buttons.
+   A tall facts box grows down the side instead of pushing About down. */
 @media (min-width: 861px) {
-  .vendor-head { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: clamp(32px, 5vw, 64px); align-items: start; }
-  .vendor-head > .facts { margin-top: 0; }
+  .vendor-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-rows: auto 1fr; column-gap: clamp(28px, 5vw, 64px); row-gap: clamp(32px, 4vw, 48px); }
+  .vendor-intro { grid-column: 1; grid-row: 1; }
+  .vendor-main { grid-column: 1; grid-row: 2; }
+  .vendor-side { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; gap: 24px; }
+  .vendor-side > .facts { margin-top: 0; }
 }
-.vendor-head h1 { font-size: clamp(2rem, 4.2vw, 2.9rem); overflow-wrap: anywhere; }
+.vendor-intro h1 { font-size: clamp(2rem, 4.2vw, 2.9rem); overflow-wrap: anywhere; }
 .rating { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; font-size: 0.86rem; color: var(--ink-soft); }
 .rating svg { width: 16px; height: 16px; color: var(--plum); }
 /* Descriptive words, not controls: plain italic text, nothing boxed like the buttons. */
@@ -119,10 +127,8 @@ dialog.lightbox .gallery-btn:disabled { opacity: 0; }
 .fact b { font-weight: 500; font-size: 0.92rem; color: var(--ink); }
 .fact-big { flex-direction: column-reverse; }
 .fact-big b { font-family: var(--display); font-weight: 500; font-size: 1.7rem; line-height: 1.15; color: var(--plum); overflow-wrap: anywhere; }
-.facts > :last-child:nth-child(odd), .fact-wide { grid-column: 1 / -1; }
+.fact-wide { grid-column: 1 / -1; }
 
-.vendor-body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: clamp(28px, 5vw, 64px); margin-top: clamp(32px, 4vw, 48px); align-items: start; }
-@media (max-width: 860px) { .vendor-body { grid-template-columns: 1fr; } }
 .vendor-main { display: flex; flex-direction: column; gap: clamp(36px, 5vw, 56px); min-width: 0; }
 .vendor-main h2 { margin: 8px 0 14px; }
 .vendor-main p { margin: 0 0 14px; max-width: 68ch; }
